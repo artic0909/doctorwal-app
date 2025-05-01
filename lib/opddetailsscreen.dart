@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'opddoctordetailsscreen.dart'; // import the details screen
 
 class OPDDetailsScreen extends StatelessWidget {
   const OPDDetailsScreen({super.key});
@@ -72,7 +73,7 @@ class OPDDetailsScreen extends StatelessWidget {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
-              itemBuilder: (_, index) => _doctorCard(),
+              itemBuilder: (context, index) => _doctorCard(context),
             ),
 
             const SizedBox(height: 30),
@@ -140,14 +141,14 @@ class OPDDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              "Lorem Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis itaque provident eum cum ratione fugit fugiat voluptate, unde enim sed quo molestiae, excepturi adipisci repudiandae eos ipsum expedita illum, nesciunt accusantium ipsam. Necessitatibus officia atque quibusdam corrupti. ipsum dolor sit amet consectetur adipisicing elit. ",
+            const Text(
+              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 10),
 
-            // Mission
+            // Vision
             const Text(
               "VISION",
               style: TextStyle(
@@ -157,15 +158,15 @@ class OPDDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              "Lorem Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis itaque provident eum cum ratione fugit fugiat voluptate, unde enim sed quo molestiae, excepturi adipisci repudiandae eos ipsum expedita illum, nesciunt accusantium ipsam. Necessitatibus officia atque quibusdam corrupti. ipsum dolor sit amet consectetur adipisicing elit. ",
+            const Text(
+              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
 
             const SizedBox(height: 10),
 
-            // Vision
+            // Mission
             const Text(
               "MISSION",
               style: TextStyle(
@@ -175,8 +176,8 @@ class OPDDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              "Lorem Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis itaque provident eum cum ratione fugit fugiat voluptate, unde enim sed quo molestiae, excepturi adipisci repudiandae eos ipsum expedita illum, nesciunt accusantium ipsam. Necessitatibus officia atque quibusdam corrupti. ipsum dolor sit amet consectetur adipisicing elit. ",
+            const Text(
+              "Lorem ipsum dolor sit amet consectetur, adipisicing elitLorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
@@ -220,7 +221,6 @@ class OPDDetailsScreen extends StatelessWidget {
           _infoRow(Icons.phone, '+91 123 456 789'),
           _infoRow(Icons.email, 'doctorwala9@gmail.com'),
           _infoRow(Icons.person, 'Contact: Saklin Mustak'),
-          const SizedBox(height: 8),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -267,7 +267,7 @@ class OPDDetailsScreen extends StatelessWidget {
     );
   }
 
-  static Widget _doctorCard() {
+  static Widget _doctorCard(BuildContext context) {
     return Card(
       color: Colors.white,
       elevation: 3,
@@ -276,7 +276,7 @@ class OPDDetailsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [
-            const Icon(Icons.medical_services, size: 40),
+            const Icon(Icons.medical_services, size: 40, color: Colors.green),
             const SizedBox(height: 6),
             const Text(
               "Dr. Doctor Name",
@@ -288,7 +288,7 @@ class OPDDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Designation: MBBS", style: TextStyle(fontSize: 12)),
+                  Text("MBBS, MD, SP, DG", style: TextStyle(fontSize: 12)),
                   SizedBox(height: 4),
                   Text(
                     "Specialist: Psychologist",
@@ -303,14 +303,28 @@ class OPDDetailsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ODPDoctorDetailScreen(),
+                    ),
+                  );
+                },
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Colors.blue[900],
                   padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: const Text(
                   "View Details",
-                  style: TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),

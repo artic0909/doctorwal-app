@@ -1,3 +1,4 @@
+import 'package:demoapp/pathologytestsdetailsscreen.dart';
 import 'package:flutter/material.dart';
 
 class PathologyDetailsScreen extends StatelessWidget {
@@ -72,7 +73,7 @@ class PathologyDetailsScreen extends StatelessWidget {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
-              itemBuilder: (_, index) => _doctorCard(),
+              itemBuilder: (context, index) => _doctorCard(context),
             ),
 
             const SizedBox(height: 30),
@@ -267,7 +268,7 @@ class PathologyDetailsScreen extends StatelessWidget {
     );
   }
 
-  static Widget _doctorCard() {
+  static Widget _doctorCard(BuildContext context) {
     return Card(
       color: Colors.white,
       elevation: 3,
@@ -276,7 +277,7 @@ class PathologyDetailsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [
-            const Icon(Icons.bloodtype, size: 40),
+            const Icon(Icons.bloodtype, size: 40, color: Colors.red),
             const SizedBox(height: 6),
             const Text(
               "Test Name",
@@ -301,14 +302,28 @@ class PathologyDetailsScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PathologyTestsDetailsScreen(),
+                    ),
+                  );
+                },
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Colors.blue[900],
                   padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: const Text(
                   "View Details",
-                  style: TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),

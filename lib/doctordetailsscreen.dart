@@ -1,3 +1,4 @@
+import 'package:demoapp/doctortimedetailsscreen.dart';
 import 'package:flutter/material.dart';
 
 class DoctorDetailsScreen extends StatelessWidget {
@@ -16,7 +17,7 @@ class DoctorDetailsScreen extends StatelessWidget {
           ),
           child: AppBar(
             title: const Text(
-              'Doctor Details',
+              'Dr. Moanoj Dey',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -47,21 +48,9 @@ class DoctorDetailsScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Info Section
-            _infoSection(),
+            _infoSection(context),
 
             const SizedBox(height: 20),
-
-            // OPD DETAILS
-            const Text(
-              "DOCTOR DETAILS",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-
-            const SizedBox(height: 30),
 
             // SERVICES
             const Text(
@@ -116,7 +105,6 @@ class DoctorDetailsScreen extends StatelessWidget {
               },
             ),
 
-            // About
             const Text(
               "ABOUT",
               style: TextStyle(
@@ -127,13 +115,13 @@ class DoctorDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              "Lorem Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis itaque provident eum cum ratione fugit fugiat voluptate, unde enim sed quo molestiae, excepturi adipisci repudiandae eos ipsum expedita illum, nesciunt accusantium ipsam. Necessitatibus officia atque quibusdam corrupti. ipsum dolor sit amet consectetur adipisicing elit. ",
+              "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
+
             const SizedBox(height: 10),
 
-            // Mission
             const Text(
               "VISION",
               style: TextStyle(
@@ -144,14 +132,13 @@ class DoctorDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              "Lorem Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis itaque provident eum cum ratione fugit fugiat voluptate, unde enim sed quo molestiae, excepturi adipisci repudiandae eos ipsum expedita illum, nesciunt accusantium ipsam. Necessitatibus officia atque quibusdam corrupti. ipsum dolor sit amet consectetur adipisicing elit. ",
+              "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
 
             const SizedBox(height: 10),
 
-            // Vision
             const Text(
               "MISSION",
               style: TextStyle(
@@ -162,7 +149,7 @@ class DoctorDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              "Lorem Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis itaque provident eum cum ratione fugit fugiat voluptate, unde enim sed quo molestiae, excepturi adipisci repudiandae eos ipsum expedita illum, nesciunt accusantium ipsam. Necessitatibus officia atque quibusdam corrupti. ipsum dolor sit amet consectetur adipisicing elit. ",
+              "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
@@ -173,7 +160,7 @@ class DoctorDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoSection() {
+  Widget _infoSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -183,17 +170,9 @@ class DoctorDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'JIO JI BHARKA',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.blue,
-              fontSize: 16,
-            ),
-          ),
           const SizedBox(height: 4),
           const Text(
-            'Dr. Moanmohan Sing',
+            'Dr. Moanoj Dey',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -215,15 +194,21 @@ class DoctorDetailsScreen extends StatelessWidget {
           _infoRow(Icons.phone, '+91 123 456 789'),
           _infoRow(Icons.email, 'doctorwala9@gmail.com'),
           _infoRow(Icons.person, 'Contact: Saklin Mustak'),
-          const SizedBox(height: 8),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _actionButton("Send Inquiry", Colors.red),
-              _actionButton("See Location", Colors.green),
-              _actionButton("Day & Time", Colors.teal),
+              _actionButton("Send Inquiry", Colors.red, () {}),
+              _actionButton("See Location", Colors.green, () {}),
+              _actionButton("Day & Time", Colors.teal, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DoctorTimeDetailsScreen(),
+                  ),
+                );
+              }),
             ],
           ),
         ],
@@ -244,11 +229,15 @@ class DoctorDetailsScreen extends StatelessWidget {
     );
   }
 
-  static Widget _actionButton(String label, Color color) {
+  static Widget _actionButton(
+    String label,
+    Color color,
+    VoidCallback onPressed,
+  ) {
     return SizedBox(
       height: 38,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           padding: const EdgeInsets.symmetric(horizontal: 14),
