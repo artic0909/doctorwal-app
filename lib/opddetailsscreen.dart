@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'opddoctordetailsscreen.dart'; // import the details screen
+import 'opddoctordetailsscreen.dart'; // import the doctor details screen
+import 'opdinquiryscreen.dart'; // import the inquiry screen
 
 class OPDDetailsScreen extends StatelessWidget {
   const OPDDetailsScreen({super.key});
@@ -35,7 +36,6 @@ class OPDDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Main Image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.asset(
@@ -47,12 +47,10 @@ class OPDDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Info Section
-            _infoSection(),
+            _infoSection(context),
 
             const SizedBox(height: 20),
 
-            // OPD DETAILS
             const Text(
               "OPD DETAILS",
               style: TextStyle(
@@ -78,7 +76,6 @@ class OPDDetailsScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            // SERVICES
             const Text(
               "SERVICE LISTS",
               style: TextStyle(
@@ -101,7 +98,6 @@ class OPDDetailsScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            // PHOTOS
             const Text(
               "PHOTOS",
               style: TextStyle(
@@ -131,7 +127,6 @@ class OPDDetailsScreen extends StatelessWidget {
               },
             ),
 
-            // About
             const Text(
               "ABOUT",
               style: TextStyle(
@@ -142,13 +137,12 @@ class OPDDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             const Text(
-              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
+              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 10),
 
-            // Vision
             const Text(
               "VISION",
               style: TextStyle(
@@ -159,14 +153,13 @@ class OPDDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             const Text(
-              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
+              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
 
             const SizedBox(height: 10),
 
-            // Mission
             const Text(
               "MISSION",
               style: TextStyle(
@@ -177,7 +170,7 @@ class OPDDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             const Text(
-              "Lorem ipsum dolor sit amet consectetur, adipisicing elitLorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit...Lorem ipsum dolor sit amet consectetur, adipisicing elit",
+              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
@@ -188,7 +181,7 @@ class OPDDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoSection() {
+  Widget _infoSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -226,9 +219,16 @@ class OPDDetailsScreen extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _actionButton("Send Inquiry", Colors.red),
-              _actionButton("See Location", Colors.green),
-              _actionButton("Feedback", Colors.teal),
+              _actionButton("Send Inquiry", Colors.red, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const OPDInquiryScreen(),
+                  ),
+                );
+              }),
+              _actionButton("See Location", Colors.green, () {}),
+              _actionButton("Feedback", Colors.teal, () {}),
             ],
           ),
         ],
@@ -249,11 +249,15 @@ class OPDDetailsScreen extends StatelessWidget {
     );
   }
 
-  static Widget _actionButton(String label, Color color) {
+  static Widget _actionButton(
+    String label,
+    Color color,
+    VoidCallback onPressed,
+  ) {
     return SizedBox(
       height: 38,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           padding: const EdgeInsets.symmetric(horizontal: 14),

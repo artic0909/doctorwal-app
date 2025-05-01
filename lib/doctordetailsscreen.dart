@@ -1,5 +1,6 @@
-import 'package:demoapp/doctortimedetailsscreen.dart';
 import 'package:flutter/material.dart';
+import 'doctorinquiryscreen.dart';
+import 'doctortimedetailsscreen.dart';
 
 class DoctorDetailsScreen extends StatelessWidget {
   const DoctorDetailsScreen({super.key});
@@ -35,7 +36,6 @@ class DoctorDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Main Image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.asset(
@@ -46,13 +46,8 @@ class DoctorDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-
-            // Info Section
             _infoSection(context),
-
             const SizedBox(height: 20),
-
-            // SERVICES
             const Text(
               "SERVICE LISTS",
               style: TextStyle(
@@ -72,10 +67,7 @@ class DoctorDetailsScreen extends StatelessWidget {
                 _bulletItem('Sanitized Premises'),
               ],
             ),
-
             const SizedBox(height: 30),
-
-            // PHOTOS
             const Text(
               "PHOTOS",
               style: TextStyle(
@@ -104,7 +96,7 @@ class DoctorDetailsScreen extends StatelessWidget {
                 );
               },
             ),
-
+            const SizedBox(height: 20),
             const Text(
               "ABOUT",
               style: TextStyle(
@@ -114,14 +106,12 @@ class DoctorDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
+            const Text(
               "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
-
             const SizedBox(height: 10),
-
             const Text(
               "VISION",
               style: TextStyle(
@@ -131,14 +121,12 @@ class DoctorDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
+            const Text(
               "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
-
             const SizedBox(height: 10),
-
             const Text(
               "MISSION",
               style: TextStyle(
@@ -148,7 +136,7 @@ class DoctorDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
+            const Text(
               "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
@@ -170,7 +158,6 @@ class DoctorDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 4),
           const Text(
             'Dr. Moanoj Dey',
             style: TextStyle(
@@ -199,8 +186,17 @@ class DoctorDetailsScreen extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _actionButton("Send Inquiry", Colors.red, () {}),
-              _actionButton("See Location", Colors.green, () {}),
+              _actionButton("Send Inquiry", Colors.red, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DoctorInquiryScreen(),
+                  ),
+                );
+              }),
+              _actionButton("See Location", Colors.green, () {
+                // Add location code here
+              }),
               _actionButton("Day & Time", Colors.teal, () {
                 Navigator.push(
                   context,

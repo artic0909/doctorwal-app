@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class OPDInquiryScreen extends StatefulWidget {
-  const OPDInquiryScreen({super.key});
+class PathologyInquiryScreen extends StatefulWidget {
+  const PathologyInquiryScreen({super.key});
 
   @override
-  State<OPDInquiryScreen> createState() => _OPDInquiryScreenState();
+  State<PathologyInquiryScreen> createState() => _PathologyInquiryScreenState();
 }
 
-class _OPDInquiryScreenState extends State<OPDInquiryScreen> {
+class _PathologyInquiryScreenState extends State<PathologyInquiryScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _enquiryAboutController = TextEditingController();

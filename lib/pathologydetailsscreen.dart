@@ -1,5 +1,6 @@
-import 'package:demoapp/pathologytestsdetailsscreen.dart';
 import 'package:flutter/material.dart';
+import 'package:demoapp/pathologytestsdetailsscreen.dart';
+import 'package:demoapp/pathologyinquiryscreen.dart';
 
 class PathologyDetailsScreen extends StatelessWidget {
   const PathologyDetailsScreen({super.key});
@@ -35,7 +36,6 @@ class PathologyDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Main Image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.asset(
@@ -46,13 +46,8 @@ class PathologyDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-
-            // Info Section
-            _infoSection(),
-
+            _infoSection(context),
             const SizedBox(height: 20),
-
-            // OPD DETAILS
             const Text(
               "PATHOLOGY DETAILS",
               style: TextStyle(
@@ -75,10 +70,7 @@ class PathologyDetailsScreen extends StatelessWidget {
               ),
               itemBuilder: (context, index) => _doctorCard(context),
             ),
-
             const SizedBox(height: 30),
-
-            // SERVICES
             const Text(
               "SERVICE LISTS",
               style: TextStyle(
@@ -98,10 +90,7 @@ class PathologyDetailsScreen extends StatelessWidget {
                 _bulletItem('Sanitized Premises'),
               ],
             ),
-
             const SizedBox(height: 30),
-
-            // PHOTOS
             const Text(
               "PHOTOS",
               style: TextStyle(
@@ -130,8 +119,6 @@ class PathologyDetailsScreen extends StatelessWidget {
                 );
               },
             ),
-
-            // About
             const Text(
               "ABOUT",
               style: TextStyle(
@@ -141,14 +128,12 @@ class PathologyDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              "Lorem Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis itaque provident eum cum ratione fugit fugiat voluptate, unde enim sed quo molestiae, excepturi adipisci repudiandae eos ipsum expedita illum, nesciunt accusantium ipsam. Necessitatibus officia atque quibusdam corrupti. ipsum dolor sit amet consectetur adipisicing elit. ",
+            const Text(
+              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 10),
-
-            // Mission
             const Text(
               "VISION",
               style: TextStyle(
@@ -158,15 +143,12 @@ class PathologyDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              "Lorem Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis itaque provident eum cum ratione fugit fugiat voluptate, unde enim sed quo molestiae, excepturi adipisci repudiandae eos ipsum expedita illum, nesciunt accusantium ipsam. Necessitatibus officia atque quibusdam corrupti. ipsum dolor sit amet consectetur adipisicing elit. ",
+            const Text(
+              "Vision content goes here...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
-
             const SizedBox(height: 10),
-
-            // Vision
             const Text(
               "MISSION",
               style: TextStyle(
@@ -176,8 +158,8 @@ class PathologyDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              "Lorem Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis itaque provident eum cum ratione fugit fugiat voluptate, unde enim sed quo molestiae, excepturi adipisci repudiandae eos ipsum expedita illum, nesciunt accusantium ipsam. Necessitatibus officia atque quibusdam corrupti. ipsum dolor sit amet consectetur adipisicing elit. ",
+            const Text(
+              "Mission content goes here...",
               textAlign: TextAlign.justify,
               style: TextStyle(fontSize: 14),
             ),
@@ -188,7 +170,7 @@ class PathologyDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoSection() {
+  Widget _infoSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -208,7 +190,7 @@ class PathologyDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           const Text(
-            'OPD Title',
+            'Pathology Title',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -221,15 +203,25 @@ class PathologyDetailsScreen extends StatelessWidget {
           _infoRow(Icons.phone, '+91 123 456 789'),
           _infoRow(Icons.email, 'doctorwala9@gmail.com'),
           _infoRow(Icons.person, 'Contact: Saklin Mustak'),
-          const SizedBox(height: 8),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _actionButton("Send Inquiry", Colors.red),
-              _actionButton("See Location", Colors.green),
-              _actionButton("Feedback", Colors.teal),
+              _actionButton("Send Inquiry", Colors.red, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PathologyInquiryScreen(),
+                  ),
+                );
+              }),
+              _actionButton("See Location", Colors.green, () {
+                // Add map logic
+              }),
+              _actionButton("Feedback", Colors.teal, () {
+                // Add feedback navigation
+              }),
             ],
           ),
         ],
@@ -250,11 +242,15 @@ class PathologyDetailsScreen extends StatelessWidget {
     );
   }
 
-  static Widget _actionButton(String label, Color color) {
+  static Widget _actionButton(
+    String label,
+    Color color,
+    VoidCallback onPressed,
+  ) {
     return SizedBox(
       height: 38,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           padding: const EdgeInsets.symmetric(horizontal: 14),
