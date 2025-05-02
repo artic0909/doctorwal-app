@@ -1,3 +1,4 @@
+import 'package:demoapp/pathologyfeedbackscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:demoapp/pathologytestsdetailsscreen.dart';
 import 'package:demoapp/pathologyinquiryscreen.dart';
@@ -220,7 +221,12 @@ class PathologyDetailsScreen extends StatelessWidget {
                 // Add map logic
               }),
               _actionButton("Feedback", Colors.teal, () {
-                // Add feedback navigation
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PathologyFeedbackScreen(),
+                  ),
+                );
               }),
             ],
           ),

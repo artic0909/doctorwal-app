@@ -1,3 +1,4 @@
+import 'package:demoapp/opdfeedbackscreen.dart';
 import 'package:flutter/material.dart';
 import 'opddoctordetailsscreen.dart'; // import the doctor details screen
 import 'opdinquiryscreen.dart'; // import the inquiry screen
@@ -228,7 +229,14 @@ class OPDDetailsScreen extends StatelessWidget {
                 );
               }),
               _actionButton("See Location", Colors.green, () {}),
-              _actionButton("Feedback", Colors.teal, () {}),
+              _actionButton("Feedback", Colors.teal, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const OpdFeedbackScreen(),
+                  ),
+                );
+              }),
             ],
           ),
         ],
