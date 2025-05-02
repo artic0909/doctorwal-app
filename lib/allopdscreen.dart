@@ -111,7 +111,7 @@ class _AllOpdScreenState extends State<AllOpdScreen> {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.withOpacity(0.3),
+                                color: Colors.grey.withAlpha(76),
                                 blurRadius: 5,
                                 offset: const Offset(0, 3),
                               ),

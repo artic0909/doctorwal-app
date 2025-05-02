@@ -67,7 +67,7 @@ class _AllAvailablePathologyScreenState
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withAlpha(76),
                     blurRadius: 5,
                     offset: const Offset(0, 3),
                   ),
