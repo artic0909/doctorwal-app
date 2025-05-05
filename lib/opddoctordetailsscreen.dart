@@ -56,7 +56,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 4,
-      shadowColor: Colors.grey.withOpacity(0.2),
+      shadowColor: Colors.grey.withAlpha(76),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -165,7 +165,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
               ],
             ),
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(Colors.orange[100]),
+              headingRowColor: WidgetStateProperty.all(Colors.orange[100]),
               columnSpacing: 20,
               horizontalMargin: 16,
 
