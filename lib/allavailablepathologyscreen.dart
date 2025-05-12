@@ -31,7 +31,7 @@ class _AllAvailablePathologyScreenState
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
-        final List data = jsonData['allPathologyContacts'] ?? [];
+        final List data = jsonData['data'] ?? [];
 
         setState(() {
           _clinics =
@@ -135,8 +135,9 @@ class _AllAvailablePathologyScreenState
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (context) =>
-                                              const PathologyDetailsScreen(),
+                                          (context) => PathologyDetailsScreen(
+                                            pathology: clinic,
+                                          ),
                                     ),
                                   );
                                 },

@@ -11,6 +11,10 @@ class AllAvailablePathModel {
   final String clinicGoogleMapLink;
   final String clinicAddress;
   final String bannerImage;
+  final List<dynamic> tests;
+  final List<dynamic> services;
+  final List<dynamic> photos;
+  final List<dynamic> aboutClinics;
 
   AllAvailablePathModel({
     required this.contactPersonName,
@@ -25,28 +29,35 @@ class AllAvailablePathModel {
     required this.clinicGoogleMapLink,
     required this.clinicAddress,
     required this.bannerImage,
+    required this.tests,
+    required this.services,
+    required this.photos,
+    required this.aboutClinics,
   });
 
   factory AllAvailablePathModel.fromJson(Map<String, dynamic> json) {
+    final contact = json['pathologyContact'] ?? {};
+    final banner = contact['banner'];
+
     return AllAvailablePathModel(
-      contactPersonName: json['contact_person_name'] ?? '',
-      clinicName: json['clinic_name'] ?? '',
-      clinicGstin: json['clinic_gstin'] ?? '',
-      clinicMobileNumber: json['clinic_mobile_number'] ?? '',
-      clinicEmail: json['clinic_email'] ?? '',
-      clinicLandmark: json['clinic_landmark'] ?? '',
-      clinicPincode: json['clinic_pincode'] ?? '',
-      clinicState: json['clinic_state'] ?? '',
-      clinicCity: json['clinic_city'] ?? '',
-      clinicGoogleMapLink: json['clinic_google_map_link'] ?? '',
-      clinicAddress: json['clinic_address'] ?? '',
-      bannerImage:
-          (json['banner'] != null && json['banner']['pathologybanner'] != null)
-              ? json['banner']['pathologybanner'].toString().replaceFirst(
-                '127.0.0.1',
-                '10.0.2.2',
-              )
-              : '',
+      contactPersonName: contact['clinic_contact_person_name'] ?? '',
+      clinicName: contact['clinic_name'] ?? '',
+      clinicGstin: contact['clinic_gstin'] ?? '',
+      clinicMobileNumber: contact['clinic_mobile_number'] ?? '',
+      clinicEmail: contact['clinic_email'] ?? '',
+      clinicLandmark: contact['clinic_landmark'] ?? '',
+      clinicPincode: contact['clinic_pincode'] ?? '',
+      clinicState: contact['clinic_state'] ?? '',
+      clinicCity: contact['clinic_city'] ?? '',
+      clinicGoogleMapLink: contact['clinic_google_map_link'] ?? '',
+      clinicAddress: contact['clinic_address'] ?? '',
+      bannerImage: (banner != null && banner['pathologybanner'] != null)
+          ? banner['pathologybanner'].toString().replaceFirst('127.0.0.1', '10.0.2.2')
+          : '',
+      tests: json['tests'] ?? [],
+      services: json['services'] ?? [],
+      photos: json['photos'] ?? [],
+      aboutClinics: json['aboutClinics'] ?? [],
     );
   }
 }

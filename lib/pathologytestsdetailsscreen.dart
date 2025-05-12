@@ -1,7 +1,27 @@
 import 'package:flutter/material.dart';
 
 class PathologyTestsDetailsScreen extends StatelessWidget {
-  const PathologyTestsDetailsScreen({super.key});
+  final Map<String, dynamic> test;
+
+  // Parse everything up front into final fields
+  late final String clinicName;
+  late final String testName;
+  late final String testType;
+  late final String testPrice;
+  late final List<Map<String, dynamic>> testDayTime;
+
+  PathologyTestsDetailsScreen({super.key, required this.test}) {
+    clinicName = test['clinic_name'] ?? 'N/A';
+    testName = test['test_name'] ?? 'N/A';
+    testType = test['test_type'] ?? 'N/A';
+    // your JSON uses `test_price`
+    testPrice = test['test_price']?.toString() ?? '0';
+    // JSON uses a list under `test_day_time`
+    testDayTime =
+        (test['test_day_time'] as List<dynamic>?)
+            ?.cast<Map<String, dynamic>>() ??
+        [];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,33 +82,36 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 12),
+            // Test Name Row
             Row(
-              children: const [
-                Icon(Icons.medical_services, color: Colors.blue, size: 24),
-                SizedBox(width: 10),
-                Text(
-                  "Clinic Name:",
+              children: [
+                const Icon(Icons.text_fields, color: Colors.purple, size: 24),
+                const SizedBox(width: 10),
+                const Text(
+                  "Test Name:",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(width: 5),
+                const SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    "XYZ Clinic",
-                    style: TextStyle(fontSize: 15, color: Colors.black54),
+                    testName,
+                    style: const TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
+            // Test Type Row
             Row(
-              children: const [
-                Icon(Icons.science, color: Colors.redAccent, size: 24),
-                SizedBox(width: 10),
-                Text(
+              children: [
+                const Icon(Icons.science, color: Colors.redAccent, size: 24),
+                const SizedBox(width: 10),
+                const Text(
                   "Test Type:",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -96,15 +119,16 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(width: 5),
+                const SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    "Blood",
-                    style: TextStyle(fontSize: 15, color: Colors.black54),
+                    testType,
+                    style: const TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
           ],
         ),
       ),
@@ -112,10 +136,17 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
   }
 
   Widget _availabilityTable() {
-    final tableData = [
-      {'day': 'Monday', 'time': '10:00 AM - 11:00 AM', 'price': '900'},
-      {'day': 'Wednesday', 'time': '11:00 AM - 01:00 PM', 'price': '1000'},
-    ];
+    if (testDayTime.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            "No Availability Data Found",
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+        ),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -138,7 +169,6 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
               headingRowColor: WidgetStateProperty.all(Colors.orange[100]),
               columnSpacing: 20,
               horizontalMargin: 16,
-
               border: TableBorder.all(
                 color: const Color.fromARGB(255, 255, 255, 255),
                 borderRadius: BorderRadius.circular(16),
@@ -169,14 +199,18 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                   ),
                 ),
               ],
-              rows: List.generate(tableData.length, (index) {
-                final row = tableData[index];
+              rows: List.generate(testDayTime.length, (index) {
+                final item = testDayTime[index];
+                final start = item['start_time'] ?? '';
+                final end = item['end_time'] ?? '';
+                final time = '$start - $end';
+
                 return DataRow(
                   cells: [
-                    DataCell(Text((index + 1).toString())),
-                    DataCell(Text(row['day']!)),
-                    DataCell(Text(row['time']!)),
-                    DataCell(Text('₹${row['price']}')),
+                    DataCell(Text('${index + 1}')),
+                    DataCell(Text(item['day'] ?? '-')),
+                    DataCell(Text(time)),
+                    DataCell(Text('₹$testPrice')),
                   ],
                 );
               }),

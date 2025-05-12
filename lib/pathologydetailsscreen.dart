@@ -1,10 +1,13 @@
-import 'package:demoapp/pathologyfeedbackscreen.dart';
 import 'package:flutter/material.dart';
-import 'package:demoapp/pathologytestsdetailsscreen.dart';
+import 'package:demoapp/Models/all_available_path_model.dart';
+import 'package:demoapp/pathologyfeedbackscreen.dart';
 import 'package:demoapp/pathologyinquiryscreen.dart';
+import 'package:demoapp/pathologytestsdetailsscreen.dart';
 
 class PathologyDetailsScreen extends StatelessWidget {
-  const PathologyDetailsScreen({super.key});
+  final AllAvailablePathModel pathology;
+
+  const PathologyDetailsScreen({super.key, required this.pathology});
 
   @override
   Widget build(BuildContext context) {
@@ -39,12 +42,27 @@ class PathologyDetailsScreen extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/images/blog.jpg',
-                width: double.infinity,
-                height: 180,
-                fit: BoxFit.cover,
-              ),
+              child:
+                  pathology.bannerImage.isNotEmpty
+                      ? Image.network(
+                        pathology.bannerImage,
+                        width: double.infinity,
+                        height: 180,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (context, error, stackTrace) => Image.asset(
+                              'assets/images/logo.png',
+                              width: double.infinity,
+                              height: 180,
+                              fit: BoxFit.cover,
+                            ),
+                      )
+                      : Image.asset(
+                        'assets/images/logo.png',
+                        width: double.infinity,
+                        height: 180,
+                        fit: BoxFit.cover,
+                      ),
             ),
             const SizedBox(height: 12),
             _infoSection(context),
@@ -58,19 +76,34 @@ class PathologyDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 6,
-              padding: EdgeInsets.zero,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisExtent: 230,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemBuilder: (context, index) => _doctorCard(context),
-            ),
+            pathology.tests.isNotEmpty
+                ? GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: pathology.tests.length,
+                  padding: EdgeInsets.zero,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisExtent: 230,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemBuilder:
+                      (context, index) => _doctorCard(
+                        context,
+                        pathology.tests[index],
+                        pathology,
+                      ),
+                )
+                : const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      "No Tests Found",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ),
+                ),
             const SizedBox(height: 30),
             const Text(
               "SERVICE LISTS",
@@ -81,16 +114,25 @@ class PathologyDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _bulletItem('Parking Facility'),
-                _bulletItem('Free Wi-Fi'),
-                _bulletItem('24/7 Emergency'),
-                _bulletItem('Flexible Timing'),
-                _bulletItem('Sanitized Premises'),
-              ],
-            ),
+            pathology.services.isNotEmpty
+                ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children:
+                      pathology.services
+                          .map<Widget>(
+                            (service) => _bulletItem(service.toString()),
+                          )
+                          .toList(),
+                )
+                : const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      "No Services Found",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ),
+                ),
             const SizedBox(height: 30),
             const Text(
               "PHOTOS",
@@ -101,69 +143,41 @@ class PathologyDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 8,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemBuilder: (_, index) {
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: Image.asset(
-                    'assets/images/blog.jpg',
-                    fit: BoxFit.cover,
+            pathology.photos.isNotEmpty
+                ? GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: pathology.photos.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                   ),
-                );
-              },
-            ),
-            const Text(
-              "ABOUT",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
-              textAlign: TextAlign.justify,
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "VISION",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Vision content goes here...",
-              textAlign: TextAlign.justify,
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "MISSION",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Mission content goes here...",
-              textAlign: TextAlign.justify,
-              style: TextStyle(fontSize: 14),
-            ),
+                  itemBuilder: (_, index) {
+                    final photoUrl = pathology.photos[index]
+                        .toString()
+                        .replaceFirst('127.0.0.1', '10.0.2.2');
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.network(
+                        photoUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (context, error, stackTrace) =>
+                                Image.asset('assets/images/blog.jpg'),
+                      ),
+                    );
+                  },
+                )
+                : const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      "No Photos Found",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ),
+                ),
             const SizedBox(height: 30),
           ],
         ),
@@ -181,17 +195,17 @@ class PathologyDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'JIO JI BHARKA',
-            style: TextStyle(
+          Text(
+            'Jio Ji Bharka',
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.blue,
               fontSize: 16,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Pathology Title',
+          Text(
+            pathology.clinicName,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -199,11 +213,11 @@ class PathologyDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _infoRow(Icons.location_on, 'Ranhati, Kolkata, 700126'),
-          _infoRow(Icons.location_city, 'Landmark: Ranhati'),
-          _infoRow(Icons.phone, '+91 123 456 789'),
-          _infoRow(Icons.email, 'doctorwala9@gmail.com'),
-          _infoRow(Icons.person, 'Contact: Saklin Mustak'),
+          _infoRow(Icons.location_on, pathology.clinicAddress),
+          _infoRow(Icons.location_city, pathology.clinicLandmark),
+          _infoRow(Icons.phone, pathology.clinicMobileNumber),
+          _infoRow(Icons.email, pathology.clinicEmail),
+          _infoRow(Icons.person, 'Contact: ${pathology.contactPersonName}'),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -218,7 +232,7 @@ class PathologyDetailsScreen extends StatelessWidget {
                 );
               }),
               _actionButton("See Location", Colors.green, () {
-                // Add map logic
+                // TODO: Add location logic
               }),
               _actionButton("Feedback", Colors.teal, () {
                 Navigator.push(
@@ -270,7 +284,11 @@ class PathologyDetailsScreen extends StatelessWidget {
     );
   }
 
-  static Widget _doctorCard(BuildContext context) {
+  static Widget _doctorCard(
+    BuildContext context,
+    dynamic test,
+    AllAvailablePathModel pathology,
+  ) {
     return Card(
       color: Colors.white,
       elevation: 3,
@@ -281,21 +299,24 @@ class PathologyDetailsScreen extends StatelessWidget {
           children: [
             const Icon(Icons.bloodtype, size: 40, color: Colors.red),
             const SizedBox(height: 6),
-            const Text(
-              "Test Name",
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              test['test_name'] ?? 'N/A',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const Divider(),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Test Type: Blood", style: TextStyle(fontSize: 12)),
-                  SizedBox(height: 4),
                   Text(
-                    "Clinic Name: XYZ Clinic",
-                    style: TextStyle(fontSize: 12),
+                    "Test Type: ${test['test_type'] ?? 'N/A'}",
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Clinic: ${pathology.clinicName ?? 'N/A'}",
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ],
               ),
@@ -308,7 +329,7 @@ class PathologyDetailsScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const PathologyTestsDetailsScreen(),
+                      builder: (context) => PathologyTestsDetailsScreen(test: test),
                     ),
                   );
                 },
