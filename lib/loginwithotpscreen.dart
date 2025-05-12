@@ -21,18 +21,12 @@ class LoginWithScreen extends StatelessWidget {
           children: [
             Text(
               'Login with OTP',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
             Text(
               'Enter your registered email and we will send an OTP to your address.',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 15,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 15),
             ),
             SizedBox(height: 30),
             TextField(
@@ -43,6 +37,16 @@ class LoginWithScreen extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
+
+            // SizedBox(height: 30),
+            // TextField(
+            //   controller: emailController,
+            //   keyboardType: TextInputType.emailAddress,
+            //   decoration: InputDecoration(
+            //     labelText: 'Enter OTP',
+            //     border: OutlineInputBorder(),
+            //   ),
+            // ),
             SizedBox(height: 30),
             SizedBox(
               width: double.infinity,
@@ -50,7 +54,7 @@ class LoginWithScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Add your OTP login logic here
-                  print('Send OTP to ${emailController.text}');
+                  // print('Send OTP to ${emailController.text}');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepOrange,
@@ -68,6 +72,32 @@ class LoginWithScreen extends StatelessWidget {
                 ),
               ),
             ),
+
+            // SizedBox(height: 30),
+            // SizedBox(
+            //   width: double.infinity,
+            //   height: 50,
+            //   child: ElevatedButton(
+            //     onPressed: () {
+            //       // Add your OTP login logic here
+            //       print('Send OTP to ${emailController.text}');
+            //     },
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: Colors.deepOrange,
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //     ),
+            //     child: Text(
+            //       'SUBMIT',
+            //       style: TextStyle(
+            //         color: Colors.white,
+            //         fontWeight: FontWeight.bold,
+            //         letterSpacing: 1,
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),

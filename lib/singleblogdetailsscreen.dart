@@ -46,7 +46,7 @@ class SingleBlogDetailsScreen extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
+              child: Image.network(
                 imageUrl,
                 height: 200,
                 width: double.infinity,

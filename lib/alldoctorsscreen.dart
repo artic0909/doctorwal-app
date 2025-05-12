@@ -1,5 +1,8 @@
-import 'package:demoapp/doctordetailsscreen.dart';
 import 'package:flutter/material.dart';
+import 'package:demoapp/doctordetailsscreen.dart';
+import 'package:demoapp/models/all_available_doctors_model.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AllDoctorsScreen extends StatefulWidget {
   const AllDoctorsScreen({super.key});
@@ -9,27 +12,50 @@ class AllDoctorsScreen extends StatefulWidget {
 }
 
 class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
-  final List<Map<String, String>> _clinics = List.generate(
-    10,
-    (index) => {
-      "name": "Moanoj Dey $index",
-      "address": "Bazarpapara, Uluberia, Howrah - 711316",
-      "image": 'assets/images/doc.png',
-    },
-  );
-
+  List<AllAvailableDoctorsModel> _doctors = [];
   String _searchQuery = '';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDoctors();
+  }
+
+  // Fetch doctors from the API
+  Future<void> fetchDoctors() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/all-doctors-contacts'), // Replace with actual endpoint
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data =
+            json.decode(response.body)['allDoctorContacts'];
+        setState(() {
+          _doctors =
+              data.map((json) => AllAvailableDoctorsModel.fromJson(json)).toList();
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load doctors');
+      }
+    } catch (e) {
+      print("Error: $e");
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filteredClinics =
-        _clinics
-            .where(
-              (clinic) => clinic['name']!.toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ),
-            )
-            .toList();
+    final filteredDoctors = _doctors
+        .where(
+          (doctor) => doctor.partnerDoctorName != null &&
+                      doctor.partnerDoctorName!.toLowerCase().contains(
+                        _searchQuery.toLowerCase(),
+                      ),
+        )
+        .toList();
 
     return Scaffold(
       appBar: PreferredSize(
@@ -65,7 +91,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withAlpha(76),
                     blurRadius: 5,
                     offset: const Offset(0, 3),
                   ),
@@ -92,136 +118,85 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
 
           // Scrollable content
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children:
-                    filteredClinics.map((clinic) {
-                      return InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const DoctorDetailsScreen(),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: filteredDoctors.map((doctor) {
+                        return InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DoctorDetailsScreen(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: MediaQuery.of(context).size.width / 2 - 20,
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withAlpha(76),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width / 2 - 20,
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withAlpha(76),
-                                blurRadius: 5,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    doctor.banner ?? 'assets/images/logo.png', // Fallback image
+                                    height: 100,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Image.asset(
+                                              'assets/images/logo.png', // Fallback to logo if image fails
+                                              height: 100,
+                                              width: double.infinity,
+                                              fit: BoxFit.cover,
+                                            ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  doctor.partnerDoctorName ?? 'Unknown Doctor',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Text(
+                                  doctor.partnerDoctorAddress ?? 'No Address Provided',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.asset(
-                                  //must add Image.network for network image
-                                  clinic["image"]!,
-                                  height: 100,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  errorBuilder:
-                                      (context, error, stackTrace) =>
-                                          Image.asset(
-                                            'assets/images/doc.png',
-                                            height: 100,
-                                            width: double.infinity,
-                                            fit: BoxFit.cover,
-                                          ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                clinic["name"]!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              Text(
-                                clinic["address"]!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-            ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
           ),
-
-          // Pagination Buttons
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: Handle previous page
-                  },
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text(
-                    "Prev",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: Handle next page
-                  },
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text(
-                    "Next",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 35),
         ],
       ),
       backgroundColor: const Color(0xFFF5F9FD),
