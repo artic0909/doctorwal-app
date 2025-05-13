@@ -1,4 +1,4 @@
-class AllAvailableOpdModel {
+class AllAvailableOPDModel {
   final String contactPersonName;
   final String clinicName;
   final String clinicGstin;
@@ -11,8 +11,10 @@ class AllAvailableOpdModel {
   final String clinicGoogleMapLink;
   final String clinicAddress;
   final String bannerImage;
+  final List<dynamic> doctors;
+  final List<dynamic> services;
 
-  AllAvailableOpdModel({
+  AllAvailableOPDModel({
     required this.contactPersonName,
     required this.clinicName,
     required this.clinicGstin,
@@ -25,28 +27,31 @@ class AllAvailableOpdModel {
     required this.clinicGoogleMapLink,
     required this.clinicAddress,
     required this.bannerImage,
+    required this.doctors,
+    required this.services,
   });
 
-  factory AllAvailableOpdModel.fromJson(Map<String, dynamic> json) {
-    return AllAvailableOpdModel(
-      contactPersonName: json['contact_person_name'] ?? '',
-      clinicName: json['clinic_name'] ?? '',
-      clinicGstin: json['clinic_gstin'] ?? '',
-      clinicMobileNumber: json['clinic_mobile_number'] ?? '',
-      clinicEmail: json['clinic_email'] ?? '',
-      clinicLandmark: json['clinic_landmark'] ?? '',
-      clinicPincode: json['clinic_pincode'] ?? '',
-      clinicState: json['clinic_state'] ?? '',
-      clinicCity: json['clinic_city'] ?? '',
-      clinicGoogleMapLink: json['clinic_google_map_link'] ?? '',
-      clinicAddress: json['clinic_address'] ?? '',
-      bannerImage:
-          (json['banner'] != null && json['banner']['opdbanner'] != null)
-              ? json['banner']['opdbanner'].toString().replaceFirst(
-                '127.0.0.1',
-                '10.0.2.2',
-              )
-              : '',
+  factory AllAvailableOPDModel.fromJson(Map<String, dynamic> json) {
+    final contact = json['opdContact'] ?? {};
+    final banner = contact['banner'];
+
+    return AllAvailableOPDModel(
+      contactPersonName: contact['clinic_contact_person_name'] ?? '',
+      clinicName: contact['clinic_name'] ?? '',
+      clinicGstin: contact['clinic_gstin'] ?? '',
+      clinicMobileNumber: contact['clinic_mobile_number'] ?? '',
+      clinicEmail: contact['clinic_email'] ?? '',
+      clinicLandmark: contact['clinic_landmark'] ?? '',
+      clinicPincode: contact['clinic_pincode'] ?? '',
+      clinicState: contact['clinic_state'] ?? '',
+      clinicCity: contact['clinic_city'] ?? '',
+      clinicGoogleMapLink: contact['clinic_google_map_link'] ?? '',
+      clinicAddress: contact['clinic_address'] ?? '',
+      bannerImage: (banner != null && banner['opdbanner'] != null)
+          ? banner['opdbanner'].toString().replaceFirst('127.0.0.1', '10.0.2.2')
+          : '',
+      doctors: json['doctors'] ?? [],
+      services: json['services'] ?? [],
     );
   }
 }

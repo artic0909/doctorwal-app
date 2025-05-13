@@ -3,6 +3,7 @@ import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:demoapp/pathologyfeedbackscreen.dart';
 import 'package:demoapp/pathologyinquiryscreen.dart';
 import 'package:demoapp/pathologytestsdetailsscreen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PathologyDetailsScreen extends StatelessWidget {
   final AllAvailablePathModel pathology;
@@ -118,62 +119,19 @@ class PathologyDetailsScreen extends StatelessWidget {
                 ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children:
-                      pathology.services
-                          .map<Widget>(
-                            (service) => _bulletItem(service.toString()),
-                          )
-                          .toList(),
+                      pathology.services.expand<Widget>((service) {
+                        final List<dynamic> list =
+                            service['service_lists'] ?? [];
+                        return list.map<Widget>(
+                          (item) => _bulletItem(item.toString()),
+                        );
+                      }).toList(),
                 )
                 : const Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
                     child: Text(
                       "No Services Found",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ),
-                ),
-            const SizedBox(height: 30),
-            const Text(
-              "PHOTOS",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            pathology.photos.isNotEmpty
-                ? GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: pathology.photos.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                  ),
-                  itemBuilder: (_, index) {
-                    final photoUrl = pathology.photos[index]
-                        .toString()
-                        .replaceFirst('127.0.0.1', '10.0.2.2');
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.network(
-                        photoUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (context, error, stackTrace) =>
-                                Image.asset('assets/images/blog.jpg'),
-                      ),
-                    );
-                  },
-                )
-                : const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text(
-                      "No Photos Found",
                       style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ),
@@ -186,6 +144,16 @@ class PathologyDetailsScreen extends StatelessWidget {
   }
 
   Widget _infoSection(BuildContext context) {
+    String capitalizeWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -204,8 +172,9 @@ class PathologyDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
+
           Text(
-            pathology.clinicName,
+            capitalizeWords(pathology.clinicName),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -231,9 +200,20 @@ class PathologyDetailsScreen extends StatelessWidget {
                   ),
                 );
               }),
-              _actionButton("See Location", Colors.green, () {
-                // TODO: Add location logic
+              _actionButton("See Location", Colors.green, () async {
+                final url = pathology.clinicGoogleMapLink;
+                if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
+                  await launchUrl(
+                    Uri.parse(url),
+                    mode: LaunchMode.externalApplication,
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Unable to open map link.")),
+                  );
+                }
               }),
+
               _actionButton("Feedback", Colors.teal, () {
                 Navigator.push(
                   context,
@@ -329,7 +309,8 @@ class PathologyDetailsScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PathologyTestsDetailsScreen(test: test),
+                      builder:
+                          (context) => PathologyTestsDetailsScreen(test: test),
                     ),
                   );
                 },

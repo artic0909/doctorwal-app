@@ -215,7 +215,7 @@ class CategoryHomeScreen extends StatelessWidget {
                   ontap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AllOpdScreen()),
+                      MaterialPageRoute(builder: (context) => AllAvailableOPDScreen()),
                     );
                   },
                 ),

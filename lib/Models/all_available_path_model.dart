@@ -13,7 +13,7 @@ class AllAvailablePathModel {
   final String bannerImage;
   final List<dynamic> tests;
   final List<dynamic> services;
-  final List<dynamic> photos;
+  final List<dynamic> images;
   final List<dynamic> aboutClinics;
 
   AllAvailablePathModel({
@@ -31,7 +31,7 @@ class AllAvailablePathModel {
     required this.bannerImage,
     required this.tests,
     required this.services,
-    required this.photos,
+    required this.images,
     required this.aboutClinics,
   });
 
@@ -56,7 +56,7 @@ class AllAvailablePathModel {
           : '',
       tests: json['tests'] ?? [],
       services: json['services'] ?? [],
-      photos: json['photos'] ?? [],
+      images: json['images'] ?? [],
       aboutClinics: json['aboutClinics'] ?? [],
     );
   }
