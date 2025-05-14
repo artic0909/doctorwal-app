@@ -1,9 +1,13 @@
+import 'package:demoapp/Models/all_available_doctors_model.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'doctorinquiryscreen.dart';
 import 'doctortimedetailsscreen.dart';
 
 class DoctorDetailsScreen extends StatelessWidget {
-  const DoctorDetailsScreen({super.key});
+  final AllAvailableDoctorsModel doctor;
+
+  const DoctorDetailsScreen({Key? key, required this.doctor}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -17,8 +21,8 @@ class DoctorDetailsScreen extends StatelessWidget {
             bottomRight: Radius.circular(20),
           ),
           child: AppBar(
-            title: const Text(
-              'Dr. Moanoj Dey',
+            title: Text(
+              doctor.partnerDoctorName ?? "Dr. Doctor Name",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -38,8 +42,11 @@ class DoctorDetailsScreen extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/images/blog.jpg',
+              child: Image(
+                image:
+                    doctor.banner != null
+                        ? NetworkImage(doctor.banner!)
+                        : AssetImage("assets/images/logo.png"),
                 width: double.infinity,
                 height: 180,
                 fit: BoxFit.cover,
@@ -47,101 +54,6 @@ class DoctorDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _infoSection(context),
-            const SizedBox(height: 20),
-            const Text(
-              "SERVICE LISTS",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _bulletItem('Parking Facility'),
-                _bulletItem('Free Wi-Fi'),
-                _bulletItem('24/7 Emergency'),
-                _bulletItem('Flexible Timing'),
-                _bulletItem('Sanitized Premises'),
-              ],
-            ),
-            const SizedBox(height: 30),
-            const Text(
-              "PHOTOS",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 8,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemBuilder: (_, index) {
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: Image.asset(
-                    'assets/images/blog.jpg',
-                    fit: BoxFit.cover,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "ABOUT",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis...",
-              textAlign: TextAlign.justify,
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "VISION",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis...",
-              textAlign: TextAlign.justify,
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "MISSION",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Magnam dolor architecto corporis...",
-              textAlign: TextAlign.justify,
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -158,8 +70,8 @@ class DoctorDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Dr. Moanoj Dey',
+          Text(
+            doctor.partnerDoctorName ?? "Dr. Doctor Name",
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -167,8 +79,8 @@ class DoctorDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'MBBS, MD',
+          Text(
+            doctor.partnerDoctorSpecialist ?? "Not Defined",
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
@@ -176,11 +88,29 @@ class DoctorDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _infoRow(Icons.location_on, 'Ranhati, Kolkata, 700126'),
-          _infoRow(Icons.location_city, 'Landmark: Ranhati'),
-          _infoRow(Icons.phone, '+91 123 456 789'),
-          _infoRow(Icons.email, 'doctorwala9@gmail.com'),
-          _infoRow(Icons.person, 'Contact: Saklin Mustak'),
+          _infoRow(
+            Icons.person,
+            'Designation: ${doctor.partnerDoctorDesignation ?? "Not Defined"}',
+          ),
+          _infoRow(Icons.phone, doctor.partnerDoctorMobile ?? "Not Defined"),
+          _infoRow(Icons.email, doctor.partnerDoctorEmail ?? "Not Defined"),
+          _infoRow(
+            Icons.location_city,
+            'Landmark: ${doctor.partnerDoctorLandmark ?? "Not Defined"}',
+          ),
+          _infoRow(
+            Icons.location_history,
+            'State: ${doctor.partnerDoctorState ?? "Not Defined"}',
+          ),
+          _infoRow(
+            Icons.location_searching,
+            'City: ${doctor.partnerDoctorCity ?? "Not Defined"}',
+          ),
+          _infoRow(
+            Icons.location_pin,
+            'City: ${doctor.partnerDoctorAddress ?? "Not Defined"}',
+          ),
+
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -194,14 +124,25 @@ class DoctorDetailsScreen extends StatelessWidget {
                   ),
                 );
               }),
-              _actionButton("See Location", Colors.green, () {
-                // Add location code here
+              _actionButton("See Location", Colors.green, () async {
+                final url = doctor.partnerDoctorGoogleMapLink ?? "";
+                if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
+                  await launchUrl(
+                    Uri.parse(url),
+                    mode: LaunchMode.externalApplication,
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Unable to open map link.")),
+                  );
+                }
               }),
               _actionButton("Day & Time", Colors.teal, () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const DoctorTimeDetailsScreen(),
+                    builder:
+                        (context) => DoctorTimeDetailsScreen(doctor: doctor),
                   ),
                 );
               }),

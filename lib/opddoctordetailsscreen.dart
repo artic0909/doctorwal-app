@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:collection/collection.dart';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class ODPDoctorDetailScreen extends StatelessWidget {
   final dynamic opd;
@@ -258,7 +258,16 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                 final day = item['day'] ?? '-';
                 final start = item['start_time'] ?? '-';
                 final end = item['end_time'] ?? '-';
-                final time = '$start - $end';
+                String formatTime(String timeStr) {
+                  try {
+                    final time = DateFormat("HH:mm").parse(timeStr);
+                    return DateFormat("h:mm a").format(time);
+                  } catch (e) {
+                    return timeStr;
+                  }
+                }
+
+                final time = '${formatTime(start)} - ${formatTime(end)}';
 
                 return DataRow(
                   cells: [

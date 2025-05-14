@@ -48,23 +48,51 @@ class AllAvailableDoctorsModel {
       id: json['id'],
       currentlyLoggedinPartnerId: json['currently_loggedin_partner_id'],
       clinicRegistrationType: json['clinic_registration_type'] ?? '',
-      partnerDoctorName: json['partner_doctor_name'] == 'null' ? null : json['partner_doctor_name'],
-      partnerDoctorSpecialist: json['partner_doctor_specialist'] == 'null' ? null : json['partner_doctor_specialist'],
-      partnerDoctorDesignation: json['partner_doctor_designation'] == 'null' ? null : json['partner_doctor_designation'],
+      partnerDoctorName:
+          json['partner_doctor_name'] == 'null'
+              ? null
+              : json['partner_doctor_name'],
+      partnerDoctorSpecialist:
+          json['partner_doctor_specialist'] == 'null'
+              ? null
+              : json['partner_doctor_specialist'],
+      partnerDoctorDesignation:
+          json['partner_doctor_designation'] == 'null'
+              ? null
+              : json['partner_doctor_designation'],
       partnerDoctorFees: json['partner_doctor_fees'] ?? '',
       partnerDoctorMobile: json['partner_doctor_mobile'] ?? '',
       partnerDoctorEmail: json['partner_doctor_email'] ?? '',
-      partnerDoctorLandmark: json['partner_doctor_landmark'] == 'null' ? null : json['partner_doctor_landmark'],
+      partnerDoctorLandmark:
+          json['partner_doctor_landmark'] == 'null'
+              ? null
+              : json['partner_doctor_landmark'],
       partnerDoctorPincode: json['partner_doctor_pincode'] ?? '',
-      partnerDoctorGoogleMapLink: json['partner_doctor_google_map_link'] == 'null' ? null : json['partner_doctor_google_map_link'],
-      partnerDoctorState: json['partner_doctor_state'] == 'null' ? null : json['partner_doctor_state'],
-      partnerDoctorCity: json['partner_doctor_city'] == 'null' ? null : json['partner_doctor_city'],
-      partnerDoctorAddress: json['partner_doctor_address'] == 'null' ? null : json['partner_doctor_address'],
-      visitDayTime: json['visit_day_time'] is List ? json['visit_day_time'] : [],
+      partnerDoctorGoogleMapLink:
+          json['partner_doctor_google_map_link'] == 'null'
+              ? null
+              : json['partner_doctor_google_map_link'],
+      partnerDoctorState:
+          json['partner_doctor_state'] == 'null'
+              ? null
+              : json['partner_doctor_state'],
+      partnerDoctorCity:
+          json['partner_doctor_city'] == 'null'
+              ? null
+              : json['partner_doctor_city'],
+      partnerDoctorAddress:
+          json['partner_doctor_address'] == 'null'
+              ? null
+              : json['partner_doctor_address'],
+      visitDayTime:
+          json['visit_day_time'] is List ? json['visit_day_time'] : [],
       status: json['status'] ?? '',
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
-      banner: json['banner']?['docotorbanner'],
+      banner:
+          json['banner'] != null
+              ? 'http://10.0.2.2:8000/${json['banner']['doctorbanner']}'
+              : '',
     );
   }
 }

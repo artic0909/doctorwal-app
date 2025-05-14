@@ -3,8 +3,7 @@ import 'package:demoapp/opddetailsscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'Models/all_available_opd_model.dart'; // Updated import path
-import 'pathologydetailsscreen.dart';
+import 'Models/all_available_opd_model.dart';
 
 class AllAvailableOPDScreen extends StatefulWidget {
   const AllAvailableOPDScreen({super.key});

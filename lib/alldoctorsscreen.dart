@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:demoapp/doctordetailsscreen.dart';
-import 'package:demoapp/models/all_available_doctors_model.dart';
+import 'package:demoapp/Models/all_available_doctors_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -131,7 +131,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => DoctorDetailsScreen(),
+                                builder: (context) => DoctorDetailsScreen(doctor: doctor),
                               ),
                             );
                           },
@@ -154,20 +154,26 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    doctor.banner ?? 'assets/images/logo.png', // Fallback image
-                                    height: 100,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Image.asset(
-                                              'assets/images/logo.png', // Fallback to logo if image fails
-                                              height: 100,
-                                              width: double.infinity,
-                                              fit: BoxFit.cover,
-                                            ),
-                                  ),
+                                  child: doctor.banner != null && doctor.banner!.isNotEmpty
+                                      ? Image.network(
+                                          doctor.banner!,
+                                          height: 100,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) =>
+                                              Image.asset(
+                                                'assets/images/logo.png', // Fallback to logo if image fails
+                                                height: 100,
+                                                width: double.infinity,
+                                                fit: BoxFit.cover,
+                                              ),
+                                        )
+                                      : Image.asset(
+                                          'assets/images/logo.png', // Fallback image if no banner
+                                          height: 100,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(

@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'package:intl/intl.dart';
+import 'package:demoapp/Models/all_available_doctors_model.dart';
 import 'package:flutter/material.dart';
 
 class DoctorTimeDetailsScreen extends StatelessWidget {
-  const DoctorTimeDetailsScreen({super.key});
+  final AllAvailableDoctorsModel doctor;
+
+  const DoctorTimeDetailsScreen({Key? key, required this.doctor})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -15,8 +21,8 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
             bottomRight: Radius.circular(20),
           ),
           child: AppBar(
-            title: const Text(
-              'Dr. Name',
+            title: Text(
+              doctor.partnerDoctorName ?? "Dr. Doctor Name",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -45,7 +51,7 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            _availabilityTable(),
+            _availabilityTable(doctor.visitDayTime),
           ],
         ),
       ),
@@ -63,11 +69,11 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
+              children: [
                 Icon(Icons.person, color: Colors.blue, size: 24),
                 SizedBox(width: 10),
                 Text(
-                  "Doctor Name:",
+                  "Designation:",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
@@ -77,7 +83,7 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    "Dr. John Doe",
+                    doctor.partnerDoctorDesignation ?? "Not Defined",
                     style: TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
@@ -85,7 +91,7 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Row(
-              children: const [
+              children: [
                 Icon(
                   Icons.medical_information,
                   color: Colors.redAccent,
@@ -103,7 +109,7 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    "Gastroenterology",
+                    doctor.partnerDoctorSpecialist ?? "Not Defined",
                     style: TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
@@ -111,7 +117,7 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Row(
-              children: const [
+              children: [
                 Icon(
                   Icons.currency_rupee_rounded,
                   color: Colors.green,
@@ -129,7 +135,7 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    "900",
+                    doctor.partnerDoctorFees ?? "Not Defined",
                     style: TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
@@ -141,11 +147,27 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _availabilityTable() {
-    final tableData = [
-      {'day': 'Monday', 'time': '10:00 AM - 11:00 AM'},
-      {'day': 'Wednesday', 'time': '11:00 AM - 01:00 PM'},
-    ];
+  Widget _availabilityTable(List<dynamic>? visitDayTimeRaw) {
+    List<Map<String, dynamic>> visitDayTime = [];
+
+    if (visitDayTimeRaw != null && visitDayTimeRaw.isNotEmpty) {
+      visitDayTime =
+          visitDayTimeRaw
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+    }
+
+    if (visitDayTime.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            "No Availability Data Found",
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+        ),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -168,7 +190,6 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
               headingRowColor: WidgetStateProperty.all(Colors.orange[100]),
               columnSpacing: 20,
               horizontalMargin: 16,
-
               border: TableBorder.all(
                 color: const Color.fromARGB(255, 255, 255, 255),
                 borderRadius: BorderRadius.circular(16),
@@ -193,13 +214,27 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
                   ),
                 ),
               ],
-              rows: List.generate(tableData.length, (index) {
-                final row = tableData[index];
+              rows: List.generate(visitDayTime.length, (index) {
+                final item = visitDayTime[index];
+                final day = item['day'] ?? '-';
+                final start = item['start_time'] ?? '-';
+                final end = item['end_time'] ?? '-';
+                String formatTime(String timeStr) {
+                  try {
+                    final time = DateFormat("HH:mm").parse(timeStr);
+                    return DateFormat("h:mm a").format(time);
+                  } catch (e) {
+                    return timeStr;
+                  }
+                }
+
+                final time = '${formatTime(start)} - ${formatTime(end)}';
+
                 return DataRow(
                   cells: [
-                    DataCell(Text((index + 1).toString())),
-                    DataCell(Text(row['day']!)),
-                    DataCell(Text(row['time']!)),
+                    DataCell(Text('${index + 1}')),
+                    DataCell(Text(day)),
+                    DataCell(Text(time)),
                   ],
                 );
               }),
