@@ -282,6 +282,8 @@ class PathologyDetailsScreen extends StatelessWidget {
             Text(
               test['test_name'] ?? 'N/A',
               style: const TextStyle(fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             const Divider(),
             Padding(
@@ -297,6 +299,8 @@ class PathologyDetailsScreen extends StatelessWidget {
                   Text(
                     "Clinic: ${pathology.clinicName ?? 'N/A'}",
                     style: const TextStyle(fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

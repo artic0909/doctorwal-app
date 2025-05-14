@@ -21,7 +21,9 @@ class _BlogsScreenState extends State<BlogsScreen> {
   }
 
   Future<List<Blog>> fetchBlogs() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/blogs'));
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8000/api/blogs'),
+    );
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
@@ -76,31 +78,33 @@ class _BlogsScreenState extends State<BlogsScreen> {
                 Wrap(
                   spacing: 12,
                   runSpacing: 12,
-                  children: blogs.map((blog) {
-                    return SizedBox(
-                      width: (MediaQuery.of(context).size.width / 2) - 18,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => SingleBlogDetailsScreen(
-                                imageUrl: blog.imageUrl,
-                                title: blog.title,
-                                date: blog.date,
-                                content: blog.content,
-                              ),
+                  children:
+                      blogs.map((blog) {
+                        return SizedBox(
+                          width: (MediaQuery.of(context).size.width / 2) - 18,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => SingleBlogDetailsScreen(
+                                        imageUrl: blog.imageUrl,
+                                        title: blog.title,
+                                        date: blog.date,
+                                        content: blog.content,
+                                      ),
+                                ),
+                              );
+                            },
+                            child: _buildBlogCard(
+                              imageUrl: blog.imageUrl,
+                              title: blog.title,
+                              date: blog.date,
                             ),
-                          );
-                        },
-                        child: _buildBlogCard(
-                          imageUrl: blog.imageUrl,
-                          title: blog.title,
-                          date: blog.date,
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                          ),
+                        );
+                      }).toList(),
                 ),
               ],
             );
@@ -129,8 +133,9 @@ class _BlogsScreenState extends State<BlogsScreen> {
               height: 100,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.broken_image),
+              errorBuilder:
+                  (context, error, stackTrace) =>
+                      Image(image: AssetImage('assets/images/logo.png')),
             ),
           ),
           Padding(

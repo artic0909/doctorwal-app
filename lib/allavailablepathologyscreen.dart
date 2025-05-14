@@ -50,13 +50,13 @@ class _AllAvailablePathologyScreenState
   @override
   Widget build(BuildContext context) {
     final filteredClinics =
-        _clinics
-            .where(
-              (clinic) => clinic.clinicName.toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ),
-            )
-            .toList();
+        _clinics.where((clinic) {
+          final name = clinic.clinicName.toLowerCase();
+          final address = clinic.clinicAddress.toLowerCase();
+          final query = _searchQuery.toLowerCase();
+
+          return name.contains(query) || address.contains(query);
+        }).toList();
 
     return Scaffold(
       appBar: PreferredSize(

@@ -25,7 +25,9 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   }
 
   Future<void> fetchClinics() async {
-    final url = Uri.parse("http://10.0.2.2:8000/api/all-opd-contacts"); // Updated endpoint
+    final url = Uri.parse(
+      "http://10.0.2.2:8000/api/all-opd-contacts",
+    ); // Updated endpoint
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -49,11 +51,13 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredClinics =
-        _clinics.where(
-          (clinic) => clinic.clinicName.toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          ),
-        ).toList();
+        _clinics.where((clinic) {
+          final name = clinic.clinicName.toLowerCase();
+          final address = clinic.clinicAddress.toLowerCase();
+          final query = _searchQuery.toLowerCase();
+
+          return name.contains(query) || address.contains(query);
+        }).toList();
 
     return Scaffold(
       appBar: PreferredSize(
@@ -78,132 +82,143 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Search Bar
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withAlpha(76),
-                          blurRadius: 5,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: "Search For OPD",
-                        prefixIcon: Icon(Icons.search),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 16,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-
-                // Scrollable content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: filteredClinics.map((clinic) {
-                        return InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => OPDDetailsScreen(
-                                  
-                                ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            width: MediaQuery.of(context).size.width / 2 - 20,
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withAlpha(76),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: clinic.bannerImage.isNotEmpty
-                                      ? Image.network(
-                                          clinic.bannerImage,
-                                          height: 100,
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) => Image.asset(
-                                            'assets/images/logo.png',
-                                            height: 100,
-                                            width: double.infinity,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        )
-                                      : Image.asset(
-                                          'assets/images/logo.png',
-                                          height: 100,
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                        ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  clinic.clinicName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                Text(
-                                  clinic.clinicAddress,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                children: [
+                  // Search Bar
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withAlpha(76),
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
                           ),
-                        );
-                      }).toList(),
+                        ],
+                      ),
+                      child: TextField(
+                        decoration: const InputDecoration(
+                          hintText: "Search For OPD",
+                          prefixIcon: Icon(Icons.search),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                        },
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 35),
-              ],
-            ),
+
+                  // Scrollable content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children:
+                            filteredClinics.map((clinic) {
+                              return InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) =>
+                                              OPDDetailsScreen(opd: clinic),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width:
+                                      MediaQuery.of(context).size.width / 2 -
+                                      20,
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withAlpha(76),
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child:
+                                            clinic.bannerImage.isNotEmpty
+                                                ? Image.network(
+                                                  clinic.bannerImage,
+                                                  height: 100,
+                                                  width: double.infinity,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder:
+                                                      (
+                                                        context,
+                                                        error,
+                                                        stackTrace,
+                                                      ) => Image.asset(
+                                                        'assets/images/logo.png',
+                                                        height: 100,
+                                                        width: double.infinity,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                )
+                                                : Image.asset(
+                                                  'assets/images/logo.png',
+                                                  height: 100,
+                                                  width: double.infinity,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        clinic.clinicName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      Text(
+                                        clinic.clinicAddress,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 35),
+                ],
+              ),
       backgroundColor: const Color(0xFFF5F9FD),
     );
   }

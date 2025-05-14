@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:collection/collection.dart';
+import 'dart:convert';
 
 class ODPDoctorDetailScreen extends StatelessWidget {
-  const ODPDoctorDetailScreen({super.key});
+  final dynamic opd;
+  final dynamic doctor;
+
+  const ODPDoctorDetailScreen({required this.opd, required this.doctor});
 
   @override
   Widget build(BuildContext context) {
@@ -15,8 +20,8 @@ class ODPDoctorDetailScreen extends StatelessWidget {
             bottomRight: Radius.circular(20),
           ),
           child: AppBar(
-            title: const Text(
-              'Dr. Name',
+            title: Text(
+              doctor['doctor_name'] ?? "Dr. Doctor Name",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -45,7 +50,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            _availabilityTable(),
+            _availabilityTable(doctor),
           ],
         ),
       ),
@@ -63,7 +68,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
+              children: [
                 Icon(Icons.person, color: Colors.blue, size: 24),
                 SizedBox(width: 10),
                 Text(
@@ -77,7 +82,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    "Dr. John Doe",
+                    doctor['doctor_name'] ?? "Dr. Doctor Name",
                     style: TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
@@ -85,7 +90,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Row(
-              children: const [
+              children: [
                 Icon(
                   Icons.medical_information,
                   color: Colors.redAccent,
@@ -103,7 +108,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    "Gastroenterology",
+                    doctor['doctor_specialist'] ?? "Not Defined",
                     style: TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
@@ -111,7 +116,33 @@ class ODPDoctorDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Row(
-              children: const [
+              children: [
+                Icon(
+                  Icons.medical_services,
+                  color: Color.fromARGB(255, 199, 131, 255),
+                  size: 24,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  "More Details:",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    doctor['doctor_more'] ?? "Not Defined",
+                    style: TextStyle(fontSize: 15, color: Colors.black54),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
                 Icon(
                   Icons.currency_rupee_rounded,
                   color: Colors.green,
@@ -129,7 +160,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    "900",
+                    doctor['doctor_fees'] ?? "Not Defined",
                     style: TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
@@ -141,11 +172,41 @@ class ODPDoctorDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _availabilityTable() {
-    final tableData = [
-      {'day': 'Monday', 'time': '10:00 AM - 11:00 AM'},
-      {'day': 'Wednesday', 'time': '11:00 AM - 01:00 PM'},
-    ];
+  Widget _availabilityTable(Map<String, dynamic> doctor) {
+    final visitDayTimeRaw = doctor['visit_day_time'];
+
+    List<Map<String, dynamic>> visitDayTime = [];
+
+    if (visitDayTimeRaw is String && visitDayTimeRaw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(visitDayTimeRaw);
+        if (decoded is List) {
+          visitDayTime =
+              decoded.map<Map<String, dynamic>>((e) {
+                if (e is Map<String, dynamic>) {
+                  return e;
+                } else if (e is Map) {
+                  return Map<String, dynamic>.from(e);
+                }
+                return <String, dynamic>{};
+              }).toList();
+        }
+      } catch (e) {
+        print('Error decoding visit_day_time: $e');
+      }
+    }
+
+    if (visitDayTime.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            "No Availability Data Found",
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+        ),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -168,7 +229,6 @@ class ODPDoctorDetailScreen extends StatelessWidget {
               headingRowColor: WidgetStateProperty.all(Colors.orange[100]),
               columnSpacing: 20,
               horizontalMargin: 16,
-
               border: TableBorder.all(
                 color: const Color.fromARGB(255, 255, 255, 255),
                 borderRadius: BorderRadius.circular(16),
@@ -193,13 +253,18 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                   ),
                 ),
               ],
-              rows: List.generate(tableData.length, (index) {
-                final row = tableData[index];
+              rows: List.generate(visitDayTime.length, (index) {
+                final item = visitDayTime[index];
+                final day = item['day'] ?? '-';
+                final start = item['start_time'] ?? '-';
+                final end = item['end_time'] ?? '-';
+                final time = '$start - $end';
+
                 return DataRow(
                   cells: [
-                    DataCell(Text((index + 1).toString())),
-                    DataCell(Text(row['day']!)),
-                    DataCell(Text(row['time']!)),
+                    DataCell(Text('${index + 1}')),
+                    DataCell(Text(day)),
+                    DataCell(Text(time)),
                   ],
                 );
               }),

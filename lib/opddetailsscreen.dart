@@ -1,10 +1,14 @@
+import 'package:demoapp/Models/all_available_opd_model.dart';
 import 'package:demoapp/opdfeedbackscreen.dart';
 import 'package:flutter/material.dart';
-import 'opddoctordetailsscreen.dart'; // import the doctor details screen
-import 'opdinquiryscreen.dart'; // import the inquiry screen
+import 'package:url_launcher/url_launcher.dart';
+import 'opddoctordetailsscreen.dart';
+import 'opdinquiryscreen.dart';
 
 class OPDDetailsScreen extends StatelessWidget {
-  const OPDDetailsScreen({super.key});
+  final AllAvailableOPDModel opd;
+
+  const OPDDetailsScreen({super.key, required this.opd});
 
   @override
   Widget build(BuildContext context) {
@@ -39,19 +43,24 @@ class OPDDetailsScreen extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/images/blog.jpg',
-                width: double.infinity,
-                height: 180,
-                fit: BoxFit.cover,
-              ),
+              child:
+                  opd.bannerImage.isNotEmpty
+                      ? Image.network(
+                        opd.bannerImage,
+                        width: double.infinity,
+                        height: 180,
+                        fit: BoxFit.cover,
+                      )
+                      : Image.asset(
+                        'assets/images/logo.png',
+                        width: double.infinity,
+                        height: 180,
+                        fit: BoxFit.cover,
+                      ),
             ),
             const SizedBox(height: 12),
-
             _infoSection(context),
-
             const SizedBox(height: 20),
-
             const Text(
               "OPD DETAILS",
               style: TextStyle(
@@ -61,119 +70,61 @@ class OPDDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 6,
-              padding: EdgeInsets.zero,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisExtent: 230,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemBuilder: (context, index) => _doctorCard(context),
-            ),
+            opd.doctors.isEmpty
+                ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      "No doctors are found",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ),
+                )
+                : GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: opd.doctors.length,
+                  padding: EdgeInsets.zero,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisExtent: 230,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemBuilder:
+                      (context, index) =>
+                          _doctorCard(context, opd.doctors[index]),
+                ),
 
             const SizedBox(height: 30),
-
-            const Text(
-              "SERVICE LISTS",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-                fontSize: 16,
-              ),
-            ),
+            opd.services.isEmpty
+                ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      "No services are found",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ),
+                )
+                : const Text(
+                  "SERVICE LISTS",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                    fontSize: 16,
+                  ),
+                ),
             const SizedBox(height: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _bulletItem('Parking Facility'),
-                _bulletItem('Free Wi-Fi'),
-                _bulletItem('24/7 Emergency'),
-                _bulletItem('Flexible Timing'),
-                _bulletItem('Sanitized Premises'),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            const Text(
-              "PHOTOS",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 8,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemBuilder: (_, index) {
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: Image.asset(
-                    'assets/images/blog.jpg',
-                    fit: BoxFit.cover,
-                  ),
-                );
-              },
-            ),
-
-            const Text(
-              "ABOUT",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
-              textAlign: TextAlign.justify,
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 10),
-
-            const Text(
-              "VISION",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
-              textAlign: TextAlign.justify,
-              style: TextStyle(fontSize: 14),
-            ),
-
-            const SizedBox(height: 10),
-
-            const Text(
-              "MISSION",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Lorem ipsum dolor sit amet consectetur, adipisicing elit...",
-              textAlign: TextAlign.justify,
-              style: TextStyle(fontSize: 14),
+              children:
+                  opd.services.expand<Widget>((service) {
+                    final List<dynamic> list = service['service_lists'] ?? [];
+                    return list.map<Widget>(
+                      (item) => _bulletItem(item.toString()),
+                    );
+                  }).toList(),
             ),
             const SizedBox(height: 30),
           ],
@@ -193,7 +144,7 @@ class OPDDetailsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'JIO JI BHARKA',
+            'Jio Ji Bharka',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.blue,
@@ -201,8 +152,8 @@ class OPDDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'OPD Title',
+          Text(
+            opd.clinicName,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -210,11 +161,11 @@ class OPDDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _infoRow(Icons.location_on, 'Ranhati, Kolkata, 700126'),
-          _infoRow(Icons.location_city, 'Landmark: Ranhati'),
-          _infoRow(Icons.phone, '+91 123 456 789'),
-          _infoRow(Icons.email, 'doctorwala9@gmail.com'),
-          _infoRow(Icons.person, 'Contact: Saklin Mustak'),
+          _infoRow(Icons.location_on, opd.clinicAddress),
+          _infoRow(Icons.location_city, 'Landmark: ${opd.clinicLandmark}'),
+          _infoRow(Icons.phone, opd.clinicMobileNumber),
+          _infoRow(Icons.email, opd.clinicEmail),
+          _infoRow(Icons.person, 'Contact: ${opd.contactPersonName}'),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -228,7 +179,19 @@ class OPDDetailsScreen extends StatelessWidget {
                   ),
                 );
               }),
-              _actionButton("See Location", Colors.green, () {}),
+              _actionButton("See Location", Colors.green, () async {
+                final url = opd.clinicGoogleMapLink;
+                if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
+                  await launchUrl(
+                    Uri.parse(url),
+                    mode: LaunchMode.externalApplication,
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Unable to open map link.")),
+                  );
+                }
+              }),
               _actionButton("Feedback", Colors.teal, () {
                 Navigator.push(
                   context,
@@ -279,7 +242,7 @@ class OPDDetailsScreen extends StatelessWidget {
     );
   }
 
-  static Widget _doctorCard(BuildContext context) {
+  Widget _doctorCard(BuildContext context, dynamic doctor) {
     return Card(
       color: Colors.white,
       elevation: 3,
@@ -290,24 +253,35 @@ class OPDDetailsScreen extends StatelessWidget {
           children: [
             const Icon(Icons.medical_services, size: 40, color: Colors.green),
             const SizedBox(height: 6),
-            const Text(
-              "Dr. Doctor Name",
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              doctor['doctor_name'] ?? "Dr. Doctor Name",
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const Divider(),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("MBBS, MD, SP, DG", style: TextStyle(fontSize: 12)),
+                  Text(
+                    doctor['doctor_more'] ?? "Not Defined",
+                    style: const TextStyle(fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
                   SizedBox(height: 4),
                   Text(
-                    "Specialist: Psychologist",
-                    style: TextStyle(fontSize: 12),
+                    doctor['doctor_specialist'] ?? "Specialist: Not Defined",
+                    style: const TextStyle(fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4),
-                  Text("Fees: ₹ 900", style: TextStyle(fontSize: 12)),
+                  Text(
+                    "Fees: ₹${doctor['doctor_fees'] ?? "Not Defined"}",
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -319,7 +293,9 @@ class OPDDetailsScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ODPDoctorDetailScreen(),
+                      builder:
+                          (context) =>
+                              ODPDoctorDetailScreen(opd: opd, doctor: doctor),
                     ),
                   );
                 },
