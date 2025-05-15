@@ -144,12 +144,12 @@ class PathologyDetailsScreen extends StatelessWidget {
   }
 
   Widget _infoSection(BuildContext context) {
-    String capitalizeWords(String input) {
+    String uppercaseWords(String input) {
       return input
           .split(' ')
           .map((word) {
             if (word.isEmpty) return word;
-            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+            return word[0].toUpperCase() + word.substring(1).toUpperCase();
           })
           .join(' ');
     }
@@ -174,7 +174,7 @@ class PathologyDetailsScreen extends StatelessWidget {
           const SizedBox(height: 4),
 
           Text(
-            capitalizeWords(pathology.clinicName),
+            uppercaseWords(pathology.clinicName),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -269,6 +269,16 @@ class PathologyDetailsScreen extends StatelessWidget {
     dynamic test,
     AllAvailablePathModel pathology,
   ) {
+    String uppercaseWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toUpperCase();
+          })
+          .join(' ');
+    }
+
     return Card(
       color: Colors.white,
       elevation: 3,
@@ -280,7 +290,7 @@ class PathologyDetailsScreen extends StatelessWidget {
             const Icon(Icons.bloodtype, size: 40, color: Colors.red),
             const SizedBox(height: 6),
             Text(
-              test['test_name'] ?? 'N/A',
+              uppercaseWords(test['test_name'] ?? 'N/A'),
               style: const TextStyle(fontWeight: FontWeight.bold),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -292,12 +302,12 @@ class PathologyDetailsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Test Type: ${test['test_type'] ?? 'N/A'}",
+                    "Test Type: ${uppercaseWords(test['test_type'] ?? 'N/A')}",
                     style: const TextStyle(fontSize: 12),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Clinic: ${pathology.clinicName ?? 'N/A'}",
+                    "Clinic: ${uppercaseWords(pathology.clinicName ?? 'N/A')}",
                     style: const TextStyle(fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

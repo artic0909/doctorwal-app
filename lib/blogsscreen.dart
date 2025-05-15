@@ -3,6 +3,7 @@ import 'package:demoapp/Models/blog_model.dart';
 import 'package:demoapp/singleblogdetailsscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class BlogsScreen extends StatefulWidget {
   const BlogsScreen({super.key});
@@ -119,6 +120,25 @@ class _BlogsScreenState extends State<BlogsScreen> {
     required String title,
     required String date,
   }) {
+    String formatDate(String rawDate) {
+      try {
+        DateTime parsedDate = DateTime.parse(rawDate);
+        return DateFormat('d MMM y').format(parsedDate);
+      } catch (e) {
+        return rawDate;
+      }
+    }
+
+    String capitalizeWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+    }
+
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -144,7 +164,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  capitalizeWords(title),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -154,7 +174,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  date,
+                  formatDate(date),
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],

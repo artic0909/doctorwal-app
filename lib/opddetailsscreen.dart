@@ -134,6 +134,16 @@ class OPDDetailsScreen extends StatelessWidget {
   }
 
   Widget _infoSection(BuildContext context) {
+    String capitalizeWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -153,7 +163,7 @@ class OPDDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            opd.clinicName,
+            capitalizeWords(opd.clinicName),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -165,7 +175,10 @@ class OPDDetailsScreen extends StatelessWidget {
           _infoRow(Icons.location_city, 'Landmark: ${opd.clinicLandmark}'),
           _infoRow(Icons.phone, opd.clinicMobileNumber),
           _infoRow(Icons.email, opd.clinicEmail),
-          _infoRow(Icons.person, 'Contact: ${opd.contactPersonName}'),
+          _infoRow(
+            Icons.person,
+            'Contact: ${capitalizeWords(opd.contactPersonName)}',
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -243,6 +256,16 @@ class OPDDetailsScreen extends StatelessWidget {
   }
 
   Widget _doctorCard(BuildContext context, dynamic doctor) {
+    String capitalizeWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+    }
+
     return Card(
       color: Colors.white,
       elevation: 3,
@@ -254,7 +277,7 @@ class OPDDetailsScreen extends StatelessWidget {
             const Icon(Icons.medical_services, size: 40, color: Colors.green),
             const SizedBox(height: 6),
             Text(
-              doctor['doctor_name'] ?? "Dr. Doctor Name",
+              capitalizeWords(doctor['doctor_name'] ?? "Dr. Doctor Name"),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const Divider(),

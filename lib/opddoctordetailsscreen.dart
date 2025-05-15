@@ -6,10 +6,24 @@ class ODPDoctorDetailScreen extends StatelessWidget {
   final dynamic opd;
   final dynamic doctor;
 
-  const ODPDoctorDetailScreen({super.key, required this.opd, required this.doctor});
+  const ODPDoctorDetailScreen({
+    super.key,
+    required this.opd,
+    required this.doctor,
+  });
 
   @override
   Widget build(BuildContext context) {
+    String capitalizeWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F9FF),
       appBar: PreferredSize(
@@ -21,7 +35,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
           ),
           child: AppBar(
             title: Text(
-              doctor['doctor_name'] ?? "Dr. Doctor Name",
+              capitalizeWords(doctor['doctor_name'] ?? "Dr. Doctor Name"),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -58,6 +72,16 @@ class ODPDoctorDetailScreen extends StatelessWidget {
   }
 
   Widget _doctorDetailsCard() {
+    String capitalizeWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+    }
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 4,
@@ -82,7 +106,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    doctor['doctor_name'] ?? "Dr. Doctor Name",
+                    capitalizeWords(doctor['doctor_name'] ?? "Dr. Doctor Name"),
                     style: TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),

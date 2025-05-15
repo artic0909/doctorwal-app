@@ -129,6 +129,17 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
                         runSpacing: 12,
                         children:
                             filteredClinics.map((clinic) {
+                              String capitalizeWords(String input) {
+                                return input
+                                    .split(' ')
+                                    .map((word) {
+                                      if (word.isEmpty) return word;
+                                      return word[0].toUpperCase() +
+                                          word.substring(1).toLowerCase();
+                                    })
+                                    .join(' ');
+                              }
+
                               return InkWell(
                                 onTap: () {
                                   Navigator.push(
@@ -190,7 +201,7 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        clinic.clinicName,
+                                        capitalizeWords(clinic.clinicName),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
@@ -199,7 +210,7 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
                                         ),
                                       ),
                                       Text(
-                                        clinic.clinicAddress,
+                                        capitalizeWords(clinic.clinicAddress),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(

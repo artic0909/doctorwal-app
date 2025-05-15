@@ -74,6 +74,16 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
   }
 
   Widget _clinicTestDetailsCard() {
+    String uppercaseWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toUpperCase();
+          })
+          .join(' ');
+    }
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 4,
@@ -100,7 +110,7 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                 const SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    testName,
+                    uppercaseWords(testName),
                     style: const TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
@@ -123,7 +133,7 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                 const SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    testType,
+                    uppercaseWords(testType),
                     style: const TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),

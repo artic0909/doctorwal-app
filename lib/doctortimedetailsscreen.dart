@@ -10,6 +10,16 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String capitalizeWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F9FF),
       appBar: PreferredSize(
@@ -21,7 +31,7 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
           ),
           child: AppBar(
             title: Text(
-              doctor.partnerDoctorName ?? "Dr. Doctor Name",
+              capitalizeWords(doctor.partnerDoctorName ?? "Dr. Doctor Name"),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,

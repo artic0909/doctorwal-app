@@ -11,6 +11,16 @@ class DoctorDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String capitalizeWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFEFF9FF),
       appBar: PreferredSize(
@@ -22,7 +32,7 @@ class DoctorDetailsScreen extends StatelessWidget {
           ),
           child: AppBar(
             title: Text(
-              doctor.partnerDoctorName ?? "Dr. Doctor Name",
+              capitalizeWords(doctor.partnerDoctorName ?? "Dr. Doctor Name"),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -61,6 +71,16 @@ class DoctorDetailsScreen extends StatelessWidget {
   }
 
   Widget _infoSection(BuildContext context) {
+    String capitalizeWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -71,7 +91,7 @@ class DoctorDetailsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            doctor.partnerDoctorName ?? "Dr. Doctor Name",
+            capitalizeWords(doctor.partnerDoctorName ?? "Dr. Doctor Name"),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
