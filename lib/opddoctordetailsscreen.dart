@@ -6,7 +6,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
   final dynamic opd;
   final dynamic doctor;
 
-  const ODPDoctorDetailScreen({required this.opd, required this.doctor});
+  const ODPDoctorDetailScreen({super.key, required this.opd, required this.doctor});
 
   @override
   Widget build(BuildContext context) {

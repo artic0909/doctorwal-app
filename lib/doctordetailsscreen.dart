@@ -7,7 +7,7 @@ import 'doctortimedetailsscreen.dart';
 class DoctorDetailsScreen extends StatelessWidget {
   final AllAvailableDoctorsModel doctor;
 
-  const DoctorDetailsScreen({Key? key, required this.doctor}) : super(key: key);
+  const DoctorDetailsScreen({super.key, required this.doctor});
 
   @override
   Widget build(BuildContext context) {

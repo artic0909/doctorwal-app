@@ -6,8 +6,7 @@ import 'package:flutter/material.dart';
 class DoctorTimeDetailsScreen extends StatelessWidget {
   final AllAvailableDoctorsModel doctor;
 
-  const DoctorTimeDetailsScreen({Key? key, required this.doctor})
-    : super(key: key);
+  const DoctorTimeDetailsScreen({super.key, required this.doctor});
 
   @override
   Widget build(BuildContext context) {
