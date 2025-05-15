@@ -123,11 +123,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => CategoryHomeScreen()),
-                      );
+                      // Navigator.pushReplacement(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //       builder: (context) => CategoryHomeScreen()),
+                      // );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepOrange,
