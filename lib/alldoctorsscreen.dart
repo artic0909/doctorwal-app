@@ -53,15 +53,13 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredDoctors =
-        _doctors
-            .where(
-              (doctor) =>
-                  doctor.partnerDoctorName != null &&
-                  doctor.partnerDoctorName!.toLowerCase().contains(
-                    _searchQuery.toLowerCase(),
-                  ),
-            )
-            .toList();
+        _doctors.where((doctor) {
+          final name = doctor.partnerDoctorName?.toLowerCase() ?? '';
+          final address = doctor.partnerDoctorAddress?.toLowerCase() ?? '';
+          final query = _searchQuery.toLowerCase();
+
+          return name.contains(query) || address.contains(query);
+        }).toList();
 
     return Scaffold(
       appBar: PreferredSize(

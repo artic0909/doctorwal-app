@@ -25,13 +25,13 @@ class ApiService {
       });
 
       if (response.statusCode == 200 && response.data['status'] == true) {
-        print("✅ Login successful. Session cookies saved.");
+        print("Login successful. Session cookies saved.");
       } else {
-        print("❌ Login failed: ${response.data['message']}");
+        print("Login failed: ${response.data['message']}");
         throw Exception('Login failed');
       }
     } catch (e) {
-      print("❌ Error during login: $e");
+      print("Error during login: $e");
       throw Exception('Login error');
     }
   }

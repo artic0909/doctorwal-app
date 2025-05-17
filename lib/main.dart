@@ -293,9 +293,49 @@ class CategoryHomeScreen extends StatelessWidget {
 
   const CategoryHomeScreen({super.key, required this.userData});
 
+  Future<void> logoutUser(BuildContext context) async {
+    final url = Uri.parse('http://10.0.2.2:8000/api/dw-user-logout');
+
+    try {
+      final response = await http.post(url);
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == true) {
+        // Clear any locally stored login info here, if needed
+
+        // Navigate back to login
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      } else {
+        _showErrorDialog(context, data['message'] ?? 'Logout failed');
+      }
+    } catch (e) {
+      _showErrorDialog(context, 'Logout error: $e');
+    }
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       drawer: Drawer(
         child: ListView(
@@ -305,10 +345,7 @@ class CategoryHomeScreen extends StatelessWidget {
               decoration: const BoxDecoration(color: Colors.white),
               child: Row(
                 children: [
-                  Image.asset(
-                    'assets/images/logo.png',
-                    height: 40,
-                  ),
+                  Image.asset('assets/images/logo.png', height: 40),
                   const SizedBox(width: 10),
                   RichText(
                     text: const TextSpan(
@@ -399,7 +436,7 @@ class CategoryHomeScreen extends StatelessWidget {
                 );
               },
             ),
-      
+
             ListTile(
               leading: Icon(Icons.edit),
               title: Text('Edit Profile'),
@@ -407,12 +444,18 @@ class CategoryHomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>  ProfileEditScreen(userData: userData),
+                    builder: (context) => ProfileEditScreen(userData: userData),
                   ),
                 );
               },
             ),
-            const ListTile(leading: Icon(Icons.logout), title: Text('Logout')),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text('Logout'),
+              onTap: () {
+                 logoutUser(context);
+              },
+            ),
           ],
         ),
       ),
@@ -460,7 +503,8 @@ class CategoryHomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ProfileEditScreen( userData: userData,),
+                        builder:
+                            (context) => ProfileEditScreen(userData: userData),
                       ),
                     );
                   },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class SingleBlogDetailsScreen extends StatelessWidget {
   final String imageUrl;
@@ -16,6 +17,25 @@ class SingleBlogDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String formatDate(String rawDate) {
+      try {
+        DateTime parsedDate = DateTime.parse(rawDate);
+        return DateFormat('d MMM y').format(parsedDate);
+      } catch (e) {
+        return rawDate;
+      }
+    }
+
+    String capitalizeWords(String input) {
+      return input
+          .split(' ')
+          .map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          })
+          .join(' ');
+    }
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(65),
@@ -55,11 +75,14 @@ class SingleBlogDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              title,
+              capitalizeWords(title),
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(date, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+            Text(
+              formatDate(date),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
             const SizedBox(height: 20),
             Text(
               content,

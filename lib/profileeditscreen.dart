@@ -2,8 +2,6 @@ import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/changepasswordscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class ProfileEditScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
