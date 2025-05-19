@@ -6,7 +6,8 @@ import 'package:http/http.dart' as http;
 import 'Models/all_available_opd_model.dart';
 
 class AllAvailableOPDScreen extends StatefulWidget {
-  const AllAvailableOPDScreen({super.key});
+  final Map<String, dynamic> userData;
+  const AllAvailableOPDScreen({super.key, required this.userData});
 
   @override
   State<AllAvailableOPDScreen> createState() => _AllAvailableOPDScreenState();
@@ -146,8 +147,10 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (context) =>
-                                              OPDDetailsScreen(opd: clinic),
+                                          (context) => OPDDetailsScreen(
+                                            opd: clinic,
+                                            userData: widget.userData,
+                                          ),
                                     ),
                                   );
                                 },

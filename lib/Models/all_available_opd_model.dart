@@ -11,6 +11,7 @@ class AllAvailableOPDModel {
   final String clinicGoogleMapLink;
   final String clinicAddress;
   final String bannerImage;
+  final String currentlyLoggedInPartnerId;
   final List<dynamic> doctors;
   final List<dynamic> services;
 
@@ -27,6 +28,7 @@ class AllAvailableOPDModel {
     required this.clinicGoogleMapLink,
     required this.clinicAddress,
     required this.bannerImage,
+    required this.currentlyLoggedInPartnerId,
     required this.doctors,
     required this.services,
   });
@@ -47,9 +49,15 @@ class AllAvailableOPDModel {
       clinicCity: contact['clinic_city'] ?? '',
       clinicGoogleMapLink: contact['clinic_google_map_link'] ?? '',
       clinicAddress: contact['clinic_address'] ?? '',
-      bannerImage: (banner != null && banner['opdbanner'] != null)
-          ? banner['opdbanner'].toString().replaceFirst('127.0.0.1', '10.0.2.2')
-          : '',
+      bannerImage:
+          (banner != null && banner['opdbanner'] != null)
+              ? banner['opdbanner'].toString().replaceFirst(
+                '127.0.0.1',
+                '10.0.2.2',
+              )
+              : '',
+      currentlyLoggedInPartnerId:
+          contact['currently_loggedin_partner_id']?.toString() ?? '',
       doctors: json['doctors'] ?? [],
       services: json['services'] ?? [],
     );

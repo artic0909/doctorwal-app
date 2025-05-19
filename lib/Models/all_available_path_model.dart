@@ -11,6 +11,7 @@ class AllAvailablePathModel {
   final String clinicGoogleMapLink;
   final String clinicAddress;
   final String bannerImage;
+  final String currentlyLoggedInPartnerId;
   final List<dynamic> tests;
   final List<dynamic> services;
   final List<dynamic> images;
@@ -29,6 +30,7 @@ class AllAvailablePathModel {
     required this.clinicGoogleMapLink,
     required this.clinicAddress,
     required this.bannerImage,
+    required this.currentlyLoggedInPartnerId,
     required this.tests,
     required this.services,
     required this.images,
@@ -51,9 +53,15 @@ class AllAvailablePathModel {
       clinicCity: contact['clinic_city'] ?? '',
       clinicGoogleMapLink: contact['clinic_google_map_link'] ?? '',
       clinicAddress: contact['clinic_address'] ?? '',
-      bannerImage: (banner != null && banner['pathologybanner'] != null)
-          ? banner['pathologybanner'].toString().replaceFirst('127.0.0.1', '10.0.2.2')
-          : '',
+      bannerImage:
+          (banner != null && banner['pathologybanner'] != null)
+              ? banner['pathologybanner'].toString().replaceFirst(
+                '127.0.0.1',
+                '10.0.2.2',
+              )
+              : '',
+      currentlyLoggedInPartnerId:
+          contact['currently_loggedin_partner_id']?.toString() ?? '',
       tests: json['tests'] ?? [],
       services: json['services'] ?? [],
       images: json['images'] ?? [],

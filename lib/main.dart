@@ -492,7 +492,7 @@ class CategoryHomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AllAvailablePathologyScreen(),
+                        builder: (context) => AllAvailablePathologyScreen(userData: userData),
                       ),
                     );
                   },
@@ -506,7 +506,7 @@ class CategoryHomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AllAvailableOPDScreen(),
+                        builder: (context) => AllAvailableOPDScreen(userData: userData),
                       ),
                     );
                   },

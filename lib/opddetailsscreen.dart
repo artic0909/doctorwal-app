@@ -1,6 +1,7 @@
 import 'package:demoapp/Models/all_available_opd_model.dart';
+import 'package:demoapp/opdpatientinquryscreen.dart';
 import 'package:demoapp/patientfeedbackscreen.dart';
-import 'package:demoapp/patientinquiryscreen.dart';
+import 'package:demoapp/pathologypatientinquiryscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'opddoctordetailsscreen.dart';
@@ -8,7 +9,13 @@ import 'opddoctordetailsscreen.dart';
 class OPDDetailsScreen extends StatelessWidget {
   final AllAvailableOPDModel opd;
 
-  const OPDDetailsScreen({super.key, required this.opd});
+  final Map<String, dynamic> userData;
+
+  const OPDDetailsScreen({
+    super.key,
+    required this.opd,
+    required this.userData,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +195,10 @@ class OPDDetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const PatientInquiryScreen(),
+                    builder: (context) => OPDPatientInquiryScreen(
+                      opd: opd,
+                      userData: userData,
+                    ),
                   ),
                 );
               }),

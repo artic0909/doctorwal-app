@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:demoapp/patientfeedbackscreen.dart';
-import 'package:demoapp/patientinquiryscreen.dart';
+import 'package:demoapp/pathologypatientinquiryscreen.dart';
 import 'package:demoapp/pathologytestsdetailsscreen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PathologyDetailsScreen extends StatelessWidget {
   final AllAvailablePathModel pathology;
 
-  const PathologyDetailsScreen({super.key, required this.pathology});
+  final Map<String, dynamic> userData;
+
+  const PathologyDetailsScreen({
+    super.key,
+    required this.pathology,
+    required this.userData,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +202,11 @@ class PathologyDetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const PatientInquiryScreen(),
+                    builder: (context) => PathologyPatientInquiryScreen(
+                      
+                      pathology: pathology,
+                      userData: userData,
+                    ),
                   ),
                 );
               }),
@@ -218,7 +228,8 @@ class PathologyDetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const PatientFeedbackScreen(),
+                    builder: (context) => PatientFeedbackScreen(
+                    ),
                   ),
                 );
               }),

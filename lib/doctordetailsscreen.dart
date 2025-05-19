@@ -1,5 +1,5 @@
 import 'package:demoapp/Models/all_available_doctors_model.dart';
-import 'package:demoapp/patientinquiryscreen.dart';
+import 'package:demoapp/pathologypatientinquiryscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'doctortimedetailsscreen.dart';
@@ -137,12 +137,12 @@ class DoctorDetailsScreen extends StatelessWidget {
             runSpacing: 8,
             children: [
               _actionButton("Send Inquiry", Colors.red, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PatientInquiryScreen(),
-                  ),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) => const PatientInquiryScreen(),
+                //   ),
+                // );
               }),
               _actionButton("See Location", Colors.green, () async {
                 final url = doctor.partnerDoctorGoogleMapLink ?? "";

@@ -6,8 +6,8 @@ import 'Models/all_available_path_model.dart';
 import 'pathologydetailsscreen.dart';
 
 class AllAvailablePathologyScreen extends StatefulWidget {
-  final String userData = '';
-  const AllAvailablePathologyScreen({super.key});
+  final Map<String, dynamic> userData;
+const AllAvailablePathologyScreen({super.key, required this.userData});
 
   @override
   State<AllAvailablePathologyScreen> createState() =>
@@ -149,6 +149,7 @@ class _AllAvailablePathologyScreenState
                                       builder:
                                           (context) => PathologyDetailsScreen(
                                             pathology: clinic,
+                                            userData: widget.userData,
                                           ),
                                     ),
                                   );
