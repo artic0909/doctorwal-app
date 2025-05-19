@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
-class PathologyFeedbackScreen extends StatefulWidget {
-  const PathologyFeedbackScreen({super.key});
+class PatientFeedbackScreen extends StatefulWidget {
+  const PatientFeedbackScreen({super.key});
 
   @override
-  State<PathologyFeedbackScreen> createState() => _PathologyFeedbackScreenState();
+  State<PatientFeedbackScreen> createState() =>
+      _PatientFeedbackScreenState();
 }
 
-class _PathologyFeedbackScreenState extends State<PathologyFeedbackScreen> {
+class _PatientFeedbackScreenState extends State<PatientFeedbackScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  final TextEditingController _partnerIdController = TextEditingController();
   final TextEditingController _enquiryAboutController = TextEditingController();
   final TextEditingController _nameController = TextEditingController(
     text: "test saklin",
@@ -24,6 +26,10 @@ class _PathologyFeedbackScreenState extends State<PathologyFeedbackScreen> {
     text: "6123456890",
   );
   final TextEditingController _messageController = TextEditingController();
+
+  bool _inquiryOPD = false;
+  bool _inquiryPath = false;
+  bool _inquiryDoctor = false;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +76,8 @@ class _PathologyFeedbackScreenState extends State<PathologyFeedbackScreen> {
               const SizedBox(height: 20),
 
               // Input Fields
-              _buildTextField("Enquiry About", _enquiryAboutController),
+              _buildTextField("Partner ID", _partnerIdController),
+              _buildTextField("Feedback About", _enquiryAboutController),
               _buildTextField("Name", _nameController),
               _buildTextField("City", _cityController),
               _buildTextField(
@@ -83,7 +90,46 @@ class _PathologyFeedbackScreenState extends State<PathologyFeedbackScreen> {
                 _phoneController,
                 keyboardType: TextInputType.phone,
               ),
-              _buildTextField("Feedback", _messageController, maxLines: 3),
+
+              const SizedBox(height: 20),
+
+              // Inquiry Type Chips
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Feedback Type:",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 10,
+                children: [
+                  FilterChip(
+                    label: const Text("OPD"),
+                    selected: _inquiryOPD,
+                    onSelected: (val) => setState(() => _inquiryOPD = val),
+                  ),
+                  FilterChip(
+                    label: const Text("Path"),
+                    selected: _inquiryPath,
+                    onSelected: (val) => setState(() => _inquiryPath = val),
+                  ),
+                  FilterChip(
+                    label: const Text("Doctor"),
+                    selected: _inquiryDoctor,
+                    onSelected: (val) => setState(() => _inquiryDoctor = val),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              _buildTextField(
+                "Your Valuable Feedback",
+                _messageController,
+                maxLines: 3,
+              ),
 
               const SizedBox(height: 30),
 
@@ -91,18 +137,7 @@ class _PathologyFeedbackScreenState extends State<PathologyFeedbackScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Handle your inquiry submission logic here
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Thank you for your valuable feedback !",
-                          ),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: _handleSubmit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepOrange,
                     foregroundColor: Colors.white,
@@ -117,6 +152,8 @@ class _PathologyFeedbackScreenState extends State<PathologyFeedbackScreen> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -149,5 +186,38 @@ class _PathologyFeedbackScreenState extends State<PathologyFeedbackScreen> {
         ),
       ),
     );
+  }
+
+  void _handleSubmit() {
+    if (_formKey.currentState!.validate()) {
+      if (!_inquiryOPD && !_inquiryPath && !_inquiryDoctor) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Please select at least one inquiry type."),
+          ),
+        );
+        return;
+      }
+
+      final inquiryTypes = [];
+      if (_inquiryOPD) inquiryTypes.add("OPD");
+      if (_inquiryPath) inquiryTypes.add("Path");
+      if (_inquiryDoctor) inquiryTypes.add("Doctor");
+
+      print("Partner ID: ${_partnerIdController.text}");
+      print("Name: ${_nameController.text}");
+      print("City: ${_cityController.text}");
+      print("Email: ${_emailController.text}");
+      print("Phone: ${_phoneController.text}");
+      print("Message: ${_messageController.text}");
+      print("Enquiry About: ${_enquiryAboutController.text}");
+      print("Inquiry Types: $inquiryTypes");
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Inquiry submitted!")));
+
+      // You can now send this data to your API using http.post or Dio
+    }
   }
 }

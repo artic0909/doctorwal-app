@@ -12,10 +12,18 @@ class _PatientInquiryScreenState extends State<PatientInquiryScreen> {
 
   final TextEditingController _partnerIdController = TextEditingController();
   final TextEditingController _enquiryAboutController = TextEditingController();
-  final TextEditingController _nameController = TextEditingController(text: "test saklin");
-  final TextEditingController _cityController = TextEditingController(text: "haldia");
-  final TextEditingController _emailController = TextEditingController(text: "ts@gmail.com");
-  final TextEditingController _phoneController = TextEditingController(text: "6123456890");
+  final TextEditingController _nameController = TextEditingController(
+    text: "test saklin",
+  );
+  final TextEditingController _cityController = TextEditingController(
+    text: "haldia",
+  );
+  final TextEditingController _emailController = TextEditingController(
+    text: "ts@gmail.com",
+  );
+  final TextEditingController _phoneController = TextEditingController(
+    text: "6123456890",
+  );
   final TextEditingController _messageController = TextEditingController();
 
   bool _inquiryOPD = false;
@@ -71,8 +79,16 @@ class _PatientInquiryScreenState extends State<PatientInquiryScreen> {
               _buildTextField("Enquiry About", _enquiryAboutController),
               _buildTextField("Name", _nameController),
               _buildTextField("City", _cityController),
-              _buildTextField("Email", _emailController, keyboardType: TextInputType.emailAddress),
-              _buildTextField("Phone No", _phoneController, keyboardType: TextInputType.phone),
+              _buildTextField(
+                "Email",
+                _emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              _buildTextField(
+                "Phone No",
+                _phoneController,
+                keyboardType: TextInputType.phone,
+              ),
 
               const SizedBox(height: 20),
 
@@ -108,7 +124,11 @@ class _PatientInquiryScreenState extends State<PatientInquiryScreen> {
 
               const SizedBox(height: 20),
 
-              _buildTextField("Inquiry Message", _messageController, maxLines: 3),
+              _buildTextField(
+                "Inquiry Message",
+                _messageController,
+                maxLines: 3,
+              ),
 
               const SizedBox(height: 30),
 
@@ -131,6 +151,8 @@ class _PatientInquiryScreenState extends State<PatientInquiryScreen> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -150,8 +172,9 @@ class _PatientInquiryScreenState extends State<PatientInquiryScreen> {
         controller: controller,
         keyboardType: keyboardType,
         maxLines: maxLines,
-        validator: (value) =>
-            value == null || value.isEmpty ? 'Please enter $label' : null,
+        validator:
+            (value) =>
+                value == null || value.isEmpty ? 'Please enter $label' : null,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -168,7 +191,9 @@ class _PatientInquiryScreenState extends State<PatientInquiryScreen> {
     if (_formKey.currentState!.validate()) {
       if (!_inquiryOPD && !_inquiryPath && !_inquiryDoctor) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please select at least one inquiry type.")),
+          const SnackBar(
+            content: Text("Please select at least one inquiry type."),
+          ),
         );
         return;
       }
@@ -187,9 +212,9 @@ class _PatientInquiryScreenState extends State<PatientInquiryScreen> {
       print("Enquiry About: ${_enquiryAboutController.text}");
       print("Inquiry Types: $inquiryTypes");
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Inquiry submitted!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Inquiry submitted!")));
 
       // You can now send this data to your API using http.post or Dio
     }
