@@ -1,9 +1,9 @@
 import 'package:demoapp/Models/all_available_opd_model.dart';
 import 'package:demoapp/opdfeedbackscreen.dart';
+import 'package:demoapp/patientinquiryscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'opddoctordetailsscreen.dart';
-import 'opdinquiryscreen.dart';
 
 class OPDDetailsScreen extends StatelessWidget {
   final AllAvailableOPDModel opd;
@@ -188,7 +188,7 @@ class OPDDetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const OPDInquiryScreen(),
+                    builder: (context) => const PatientInquiryScreen(),
                   ),
                 );
               }),

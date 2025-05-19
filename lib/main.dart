@@ -293,47 +293,6 @@ class CategoryHomeScreen extends StatelessWidget {
 
   const CategoryHomeScreen({super.key, required this.userData});
 
-  Future<void> logoutUser(BuildContext context) async {
-    final url = Uri.parse('http://10.0.2.2:8000/api/dw-user-logout');
-
-    try {
-      final response = await http.post(url);
-
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['status'] == true) {
-        // Clear any locally stored login info here, if needed
-
-        // Navigate back to login
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (route) => false,
-        );
-      } else {
-        _showErrorDialog(context, data['message'] ?? 'Logout failed');
-      }
-    } catch (e) {
-      _showErrorDialog(context, 'Logout error: $e');
-    }
-  }
-
-  void _showErrorDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text('Error'),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -453,7 +412,10 @@ class CategoryHomeScreen extends StatelessWidget {
               leading: Icon(Icons.logout),
               title: Text('Logout'),
               onTap: () {
-                 logoutUser(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
               },
             ),
           ],

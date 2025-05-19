@@ -1,7 +1,7 @@
 import 'package:demoapp/Models/all_available_doctors_model.dart';
+import 'package:demoapp/patientinquiryscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'doctorinquiryscreen.dart';
 import 'doctortimedetailsscreen.dart';
 
 class DoctorDetailsScreen extends StatelessWidget {
@@ -140,7 +140,7 @@ class DoctorDetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const DoctorInquiryScreen(),
+                    builder: (context) => const PatientInquiryScreen(),
                   ),
                 );
               }),

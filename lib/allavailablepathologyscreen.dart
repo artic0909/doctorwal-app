@@ -6,6 +6,7 @@ import 'Models/all_available_path_model.dart';
 import 'pathologydetailsscreen.dart';
 
 class AllAvailablePathologyScreen extends StatefulWidget {
+  final String userData = '';
   const AllAvailablePathologyScreen({super.key});
 
   @override

@@ -1,17 +1,22 @@
+import 'package:demoapp/Services/apiservice.dart';
 import 'package:flutter/material.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
-  const ChangePasswordScreen({super.key});
+  final String email;
+
+  const ChangePasswordScreen({super.key, required this.email});
 
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
-  final TextEditingController emailController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+
+  bool isNewPasswordVisible = false;
+  bool isConfirmPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +54,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             ),
             const SizedBox(height: 20),
             TextField(
-              controller: emailController,
+              readOnly: true,
+              controller: TextEditingController(text: widget.email),
               decoration: const InputDecoration(
                 labelText: "Email",
                 border: OutlineInputBorder(),
@@ -58,19 +64,43 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             const SizedBox(height: 15),
             TextField(
               controller: newPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
+              obscureText: !isNewPasswordVisible,
+              decoration: InputDecoration(
                 labelText: "New Password",
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    isNewPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      isNewPasswordVisible = !isNewPasswordVisible;
+                    });
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 15),
             TextField(
               controller: confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
+              obscureText: !isConfirmPasswordVisible,
+              decoration: InputDecoration(
                 labelText: "Confirm Password",
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    isConfirmPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      isConfirmPasswordVisible = !isConfirmPasswordVisible;
+                    });
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 30),
@@ -84,9 +114,69 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                onPressed: () {
-                  // Add your logic here
+                onPressed: () async {
+                  String email = widget.email;
+                  String newPassword = newPasswordController.text.trim();
+                  String confirmPassword =
+                      confirmPasswordController.text.trim();
+
+                  if (newPassword.isEmpty || confirmPassword.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Please fill in all fields"),
+                      ),
+                    );
+                    return;
+                  }
+
+                  if (newPassword != confirmPassword) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Passwords do not match")),
+                    );
+                    return;
+                  }
+
+                  try {
+                    final apiService = ApiService();
+                    final response = await apiService.updatePassword({
+                      'user_email': email,
+                      'user_password': newPassword,
+                      'user_password_confirmation': confirmPassword,
+                    });
+
+                    if (response.statusCode == 200 &&
+                        response.data['status'] == true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            response.data['message'] ??
+                                'Password changed successfully',
+                          ),
+                        ),
+                      );
+                      Navigator.pop(context); // Go back after success
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            response.data['message'] ??
+                                'Failed to change password',
+                          ),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    print('Password update error: $e');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          "An error occurred while changing password",
+                        ),
+                      ),
+                    );
+                  }
                 },
+
                 child: const Text(
                   "Change Password",
                   style: TextStyle(

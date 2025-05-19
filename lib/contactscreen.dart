@@ -15,7 +15,7 @@ class ContactScreen extends StatelessWidget {
   }
 
   Future<void> _launchPhone() async {
-    final Uri phoneLaunchUri = Uri(scheme: 'tel', path: '+919088242431');
+    final Uri phoneLaunchUri = Uri(scheme: 'tel', path: '+916292237205');
     if (await canLaunchUrl(phoneLaunchUri)) {
       await launchUrl(phoneLaunchUri);
     }
