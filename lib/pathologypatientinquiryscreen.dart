@@ -106,11 +106,11 @@ class _PathologyPatientInquiryScreenState extends State<PathologyPatientInquiryS
                 ),
               ),
               const SizedBox(height: 20),
-              _buildTextField(
-                "Partner ID",
-                _partnerIdController,
-                readOnly: true,
-              ),
+              // _buildTextField(
+              //   "Partner ID",
+              //   _partnerIdController,
+              //   readOnly: true,
+              // ),
               _buildTextField(
                 "Enquiry About",
                 _enquiryAboutController,
