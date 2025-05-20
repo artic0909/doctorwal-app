@@ -37,7 +37,7 @@ class ApiService {
     return _dio.put('/api/update-password', data: data);
   }
 
-  
+  // SEND PATIENT INQUIRY
   Future<Map<String, dynamic>> sendPatientInquiry({
     required String currentlyLoggedinPartnerId,
     required String clinicType,
@@ -67,7 +67,7 @@ class ApiService {
         return {
           'success': response.data['status'] == true,
           'message': response.data['message'] ?? '',
-          'data': response.data['data'] ?? null,
+          'data': response.data['data'],
         };
       } else {
         return {
@@ -88,15 +88,70 @@ class ApiService {
       } else {
         errorMessage = e.message ?? 'An unknown error occurred';
       }
-      return {
-        'success': false,
-        'message': errorMessage,
-      };
+      return {'success': false, 'message': errorMessage};
     } catch (e) {
-      return {
-        'success': false,
-        'message': e.toString(),
-      };
+      return {'success': false, 'message': e.toString()};
     }
   }
+
+
+
+
+  // PATIENT FEEDBACK
+  Future<Map<String, dynamic>> sendPatientFeedback({
+    required String currentlyLoggedinPartnerId,
+    required String clinicType,
+    required String clinicName,
+    required String userName,
+    required String userEmail,
+    required String userRating,
+    required String userFeedback,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/patient-feedback',
+        data: {
+          'currenty_loggedin_partner_id': currentlyLoggedinPartnerId,
+          'clinic_type': clinicType,
+          'clinic_name': clinicName,
+          'user_name': userName,
+          'user_email': userEmail,
+          'rating': userRating,
+          'feedback': userFeedback,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return {
+          'success': response.data['status'] == true,
+          'message': response.data['message'] ?? '',
+          'data': response.data['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed with status code: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      String errorMessage = 'Unknown error occurred';
+      if (e.response != null && e.response?.data != null) {
+        // If API sends error message in JSON
+        final data = e.response?.data;
+        if (data is Map && data.containsKey('message')) {
+          errorMessage = data['message'];
+        } else {
+          errorMessage = e.response.toString();
+        }
+      } else {
+        errorMessage = e.message ?? 'An unknown error occurred';
+      }
+      return {'success': false, 'message': errorMessage};
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+
+  
 }

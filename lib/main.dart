@@ -331,12 +331,14 @@ class CategoryHomeScreen extends StatelessWidget {
               leading: Icon(Icons.category),
               title: Text('Category'),
               onTap: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => const CategoryHomeScreen(),
-                //   ),
-                // );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CategoryHomeScreen(
+                      userData: userData,
+                    ),
+                  ),
+                );
               },
             ),
             ListTile(

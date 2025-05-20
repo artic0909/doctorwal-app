@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:demoapp/Models/all_available_opd_model.dart';
 import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -16,10 +15,12 @@ class PathologyPatientInquiryScreen extends StatefulWidget {
   });
 
   @override
-  State<PathologyPatientInquiryScreen> createState() => _PathologyPatientInquiryScreenState();
+  State<PathologyPatientInquiryScreen> createState() =>
+      _PathologyPatientInquiryScreenState();
 }
 
-class _PathologyPatientInquiryScreenState extends State<PathologyPatientInquiryScreen> {
+class _PathologyPatientInquiryScreenState
+    extends State<PathologyPatientInquiryScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _partnerIdController = TextEditingController();
@@ -47,7 +48,7 @@ class _PathologyPatientInquiryScreenState extends State<PathologyPatientInquiryS
     _emailController.text = widget.userData['email'] ?? '';
     _phoneController.text = widget.userData['mobile'] ?? '';
 
-    // ✅ Automatically pre-select Path as the inquiry type
+    // Automatically pre-select Path as the inquiry type
     _inquiryPath = true;
   }
 
@@ -130,35 +131,35 @@ class _PathologyPatientInquiryScreenState extends State<PathologyPatientInquiryS
                 keyboardType: TextInputType.phone,
                 readOnly: true,
               ),
-              const SizedBox(height: 20),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Inquiry Type:",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 10,
-                children: [
-                  FilterChip(
-                    label: const Text("OPD"),
-                    selected: _inquiryOPD,
-                    onSelected: (val) => setState(() => _inquiryOPD = val),
-                  ),
-                  FilterChip(
-                    label: const Text("Path"),
-                    selected: _inquiryPath,
-                    onSelected: (val) => setState(() => _inquiryPath = val),
-                  ),
-                  FilterChip(
-                    label: const Text("Doctor"),
-                    selected: _inquiryDoctor,
-                    onSelected: (val) => setState(() => _inquiryDoctor = val),
-                  ),
-                ],
-              ),
+              // const SizedBox(height: 20),
+              // const Align(
+              //   alignment: Alignment.centerLeft,
+              //   child: Text(
+              //     "Inquiry Type:",
+              //     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              //   ),
+              // ),
+              // const SizedBox(height: 8),
+              // Wrap(
+              //   spacing: 10,
+              //   children: [
+              //     FilterChip(
+              //       label: const Text("OPD"),
+              //       selected: _inquiryOPD,
+              //       onSelected: (val) => setState(() => _inquiryOPD = val),
+              //     ),
+              //     FilterChip(
+              //       label: const Text("Path"),
+              //       selected: _inquiryPath,
+              //       onSelected: (val) => setState(() => _inquiryPath = val),
+              //     ),
+              //     FilterChip(
+              //       label: const Text("Doctor"),
+              //       selected: _inquiryDoctor,
+              //       onSelected: (val) => setState(() => _inquiryDoctor = val),
+              //     ),
+              //   ],
+              // ),
               const SizedBox(height: 20),
               _buildTextField(
                 "Inquiry Message",
@@ -236,18 +237,6 @@ class _PathologyPatientInquiryScreenState extends State<PathologyPatientInquiryS
         );
         return;
       }
-
-      // Debug print all form data to console:
-      print('partnerId: ${_partnerIdController.text}');
-      print('enquiryAbout: ${_enquiryAboutController.text}');
-      print('name: ${_nameController.text}');
-      print('city: ${_cityController.text}');
-      print('email: ${_emailController.text}');
-      print('phone: ${_phoneController.text}');
-      print('message: ${_messageController.text}');
-      print(
-        'Inquiry Types: OPD=$_inquiryOPD, Path=$_inquiryPath, Doctor=$_inquiryDoctor',
-      );
 
       final inquiryType =
           _inquiryOPD

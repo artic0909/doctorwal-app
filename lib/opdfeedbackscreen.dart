@@ -1,52 +1,49 @@
 import 'dart:convert';
-
 import 'package:demoapp/Models/all_available_opd_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class OPDPatientInquiryScreen extends StatefulWidget {
+class OPDFeedbackScreen extends StatefulWidget {
   final AllAvailableOPDModel opd;
   final dynamic userData;
 
-  const OPDPatientInquiryScreen({
+  const OPDFeedbackScreen({
     super.key,
     required this.opd,
     required this.userData,
   });
 
   @override
-  State<OPDPatientInquiryScreen> createState() =>
-      _OPDPatientInquiryScreenState();
+  State<OPDFeedbackScreen> createState() =>
+      _OPDFeedbackScreenState();
 }
 
-class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
+class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _partnerIdController = TextEditingController();
   final TextEditingController _enquiryAboutController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _cityController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _feedbackController = TextEditingController();
 
   bool _inquiryOPD = false;
   bool _inquiryPath = false;
   bool _inquiryDoctor = false;
 
+  int _rating = 0;
+
   @override
   void initState() {
     super.initState();
 
-    _partnerIdController.text = widget.opd.currentlyLoggedInPartnerId ?? '';
+    _partnerIdController.text =
+        widget.opd.currentlyLoggedInPartnerId ?? '';
     _enquiryAboutController.text = widget.opd.clinicName ?? '';
-
     _nameController.text = widget.userData['name'] ?? '';
-    _cityController.text = widget.userData['city'] ?? '';
     _emailController.text = widget.userData['email'] ?? '';
-    _phoneController.text = widget.userData['mobile'] ?? '';
 
-    // ✅ Automatically pre-select Path as the inquiry type
+    // Pre-select Path as the inquiry type
     _inquiryOPD = true;
   }
 
@@ -55,10 +52,8 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
     _partnerIdController.dispose();
     _enquiryAboutController.dispose();
     _nameController.dispose();
-    _cityController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
-    _messageController.dispose();
+    _feedbackController.dispose();
     super.dispose();
   }
 
@@ -75,7 +70,7 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
           ),
           child: AppBar(
             title: const Text(
-              'Enquiry Now',
+              'Feedback',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -97,7 +92,7 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
             children: [
               const SizedBox(height: 10),
               const Text(
-                "Fill this form to get best deals",
+                "Please fill the following details",
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -105,35 +100,24 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              // _buildTextField(
-              //   "Partner ID",
-              //   _partnerIdController,
-              //   readOnly: true,
-              // ),
               _buildTextField(
-                "Enquiry About",
+                "Feedback About",
                 _enquiryAboutController,
                 readOnly: true,
               ),
               _buildTextField("Name", _nameController, readOnly: true),
-              _buildTextField("City", _cityController, readOnly: true),
               _buildTextField(
                 "Email",
                 _emailController,
                 keyboardType: TextInputType.emailAddress,
                 readOnly: true,
               ),
-              _buildTextField(
-                "Phone No",
-                _phoneController,
-                keyboardType: TextInputType.phone,
-                readOnly: true,
-              ),
               // const SizedBox(height: 20),
+
               // const Align(
               //   alignment: Alignment.centerLeft,
               //   child: Text(
-              //     "Inquiry Type:",
+              //     "Feedback Type:",
               //     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               //   ),
               // ),
@@ -144,26 +128,67 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
               //     FilterChip(
               //       label: const Text("OPD"),
               //       selected: _inquiryOPD,
-              //       onSelected: (val) => setState(() => _inquiryOPD = val),
+              //       onSelected:
+              //           (val) => setState(() {
+              //             _inquiryOPD = val;
+              //             _inquiryPath = false;
+              //             _inquiryDoctor = false;
+              //           }),
               //     ),
               //     FilterChip(
               //       label: const Text("Path"),
               //       selected: _inquiryPath,
-              //       onSelected: (val) => setState(() => _inquiryPath = val),
+              //       onSelected:
+              //           (val) => setState(() {
+              //             _inquiryPath = val;
+              //             _inquiryOPD = false;
+              //             _inquiryDoctor = false;
+              //           }),
               //     ),
               //     FilterChip(
               //       label: const Text("Doctor"),
               //       selected: _inquiryDoctor,
-              //       onSelected: (val) => setState(() => _inquiryDoctor = val),
+              //       onSelected:
+              //           (val) => setState(() {
+              //             _inquiryDoctor = val;
+              //             _inquiryOPD = false;
+              //             _inquiryPath = false;
+              //           }),
               //     ),
               //   ],
               // ),
+
+              const SizedBox(height: 20),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Rate our service:",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(
+                      Icons.star,
+                      color: index < _rating ? Colors.orange : Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _rating = index + 1;
+                      });
+                    },
+                  );
+                }),
+              ),
+
               const SizedBox(height: 20),
               _buildTextField(
-                "Inquiry Message",
-                _messageController,
+                "Give your feedback",
+                _feedbackController,
                 maxLines: 3,
-                readOnly: false,
               ),
               const SizedBox(height: 30),
               SizedBox(
@@ -207,7 +232,7 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
         maxLines: maxLines,
         readOnly: readOnly,
         validator: (value) {
-          if (readOnly) return null; // skip validation for readonly fields
+          if (readOnly) return null;
           if (value == null || value.isEmpty) {
             return 'Please enter $label';
           }
@@ -230,44 +255,38 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
       if (!_inquiryOPD && !_inquiryPath && !_inquiryDoctor) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Please select at least one inquiry type."),
+            content: Text("Please select at least one feedback type."),
           ),
         );
         return;
       }
 
-      // Debug print all form data to console:
-      print('partnerId: ${_partnerIdController.text}');
-      print('enquiryAbout: ${_enquiryAboutController.text}');
-      print('name: ${_nameController.text}');
-      print('city: ${_cityController.text}');
-      print('email: ${_emailController.text}');
-      print('phone: ${_phoneController.text}');
-      print('message: ${_messageController.text}');
-      print(
-        'Inquiry Types: OPD=$_inquiryOPD, Path=$_inquiryPath, Doctor=$_inquiryDoctor',
-      );
+      if (_rating == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Please provide a rating before submitting."),
+          ),
+        );
+        return;
+      }
 
       final inquiryType =
           _inquiryOPD
               ? 'OPD'
               : _inquiryPath
               ? 'Path'
-              : 'Doctor'; // First selected one
+              : 'Doctor';
 
-      final url = Uri.parse(
-        'http://10.0.2.2:8000/api/patient-inquiry',
-      ); // replace with your actual API endpoint
+      final url = Uri.parse('http://10.0.2.2:8000/api/patient-feedback');
 
       final body = {
         "currently_loggedin_partner_id": _partnerIdController.text,
         "clinic_type": inquiryType,
         "clinic_name": _enquiryAboutController.text,
         "user_name": _nameController.text,
-        "user_city": _cityController.text,
-        "user_mobile": _phoneController.text,
         "user_email": _emailController.text,
-        "user_inquiry": _messageController.text,
+        "feedback": _feedbackController.text,
+        "rating": _rating.toString(),
       };
 
       try {
@@ -280,9 +299,9 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
         final data = jsonDecode(response.body);
         if (response.statusCode == 200 && data['status'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Inquiry submitted successfully!")),
+            const SnackBar(content: Text("Thanks for your valuable feedback!")),
           );
-          Navigator.pop(context); // Close the screen or reset form
+          Navigator.pop(context);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(data['message'] ?? 'Submission failed')),

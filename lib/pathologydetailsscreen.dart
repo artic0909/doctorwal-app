@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:demoapp/Models/all_available_path_model.dart';
-import 'package:demoapp/patientfeedbackscreen.dart';
+import 'package:demoapp/pathologyfeedbackscreen.dart';
 import 'package:demoapp/pathologypatientinquiryscreen.dart';
 import 'package:demoapp/pathologytestsdetailsscreen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -202,11 +202,11 @@ class PathologyDetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PathologyPatientInquiryScreen(
-                      
-                      pathology: pathology,
-                      userData: userData,
-                    ),
+                    builder:
+                        (context) => PathologyPatientInquiryScreen(
+                          pathology: pathology,
+                          userData: userData,
+                        ),
                   ),
                 );
               }),
@@ -228,8 +228,11 @@ class PathologyDetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PatientFeedbackScreen(
-                    ),
+                    builder:
+                        (context) => PathologyFeedbackScreen(
+                          pathology: pathology,
+                          userData: userData,
+                        ),
                   ),
                 );
               }),

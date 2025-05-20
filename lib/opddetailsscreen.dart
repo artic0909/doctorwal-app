@@ -1,7 +1,7 @@
 import 'package:demoapp/Models/all_available_opd_model.dart';
+import 'package:demoapp/opdfeedbackscreen.dart';
 import 'package:demoapp/opdpatientinquryscreen.dart';
-import 'package:demoapp/patientfeedbackscreen.dart';
-import 'package:demoapp/pathologypatientinquiryscreen.dart';
+import 'package:demoapp/pathologyfeedbackscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'opddoctordetailsscreen.dart';
@@ -195,10 +195,11 @@ class OPDDetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => OPDPatientInquiryScreen(
-                      opd: opd,
-                      userData: userData,
-                    ),
+                    builder:
+                        (context) => OPDPatientInquiryScreen(
+                          opd: opd,
+                          userData: userData,
+                        ),
                   ),
                 );
               }),
@@ -219,7 +220,9 @@ class OPDDetailsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const PatientFeedbackScreen(),
+                    builder:
+                        (context) =>
+                            OPDFeedbackScreen(opd: opd, userData: userData),
                   ),
                 );
               }),
