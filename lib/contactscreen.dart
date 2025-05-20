@@ -103,7 +103,7 @@ class ContactScreen extends StatelessWidget {
                     child: const Text(
                       'info@doctorwala.info',
                       style: TextStyle(
-                        decoration: TextDecoration.underline,
+                        // decoration: TextDecoration.underline,
                         color: Colors.blue,
                       ),
                     ),
@@ -122,9 +122,9 @@ class ContactScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: _launchPhone,
                     child: const Text(
-                      '+91 9088242431',
+                      '+916292237205',
                       style: TextStyle(
-                        decoration: TextDecoration.underline,
+                        // decoration: TextDecoration.underline,
                         color: Colors.blue,
                       ),
                     ),

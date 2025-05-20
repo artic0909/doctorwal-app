@@ -51,6 +51,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   Future<void> _updateProfile() async {
     setState(() => isLoading = true);
 
+    Map<String, dynamic>? updatedData;
+
     try {
       final response = await apiService.updateProfile({
         'user_name': _nameController.text,
@@ -61,19 +63,21 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
       if (response.statusCode == 200 && response.data['status'] == true) {
         // Fetch latest profile
-        final updatedData = await apiService.getProfile(_emailController.text);
+        updatedData = await apiService.getProfile(_emailController.text);
 
         if (updatedData != null) {
           setState(() {
-            _nameController.text = updatedData['user_name'] ?? '';
-            _emailController.text = updatedData['user_email'] ?? '';
-            _mobileController.text = updatedData['user_mobile'] ?? '';
-            _cityController.text = updatedData['user_city'] ?? '';
+            _nameController.text = updatedData?['user_name'] ?? '';
+            _emailController.text = updatedData?['user_email'] ?? '';
+            _mobileController.text = updatedData?['user_mobile'] ?? '';
+            _cityController.text = updatedData?['user_city'] ?? '';
           });
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Updated successfully ! Please Re-Login')),
+          const SnackBar(
+            content: Text('Updated successfully! Please Re-Login'),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -86,6 +90,15 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => isLoading = false);
+    }
+
+    if (updatedData != null) {
+      Navigator.pop(context, {
+        'name': updatedData['user_name'],
+        'email': updatedData['user_email'],
+        'mobile': updatedData['user_mobile'],
+        'city': updatedData['user_city'],
+      });
     }
   }
 
@@ -173,7 +186,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ChangePasswordScreen(email: _emailController.text)
+                      builder:
+                          (context) => ChangePasswordScreen(
+                            email: _emailController.text,
+                          ),
                     ),
                   );
                 },

@@ -334,9 +334,8 @@ class CategoryHomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CategoryHomeScreen(
-                      userData: userData,
-                    ),
+                    builder:
+                        (context) => CategoryHomeScreen(userData: userData),
                   ),
                 );
               },
@@ -401,13 +400,24 @@ class CategoryHomeScreen extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.edit),
               title: Text('Edit Profile'),
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ProfileEditScreen(userData: userData),
                   ),
                 );
+
+                if (result != null && result is Map<String, dynamic>) {
+                  // Rebuild with new data
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => CategoryHomeScreen(userData: result),
+                    ),
+                  );
+                }
               },
             ),
             ListTile(
@@ -463,14 +473,25 @@ class CategoryHomeScreen extends StatelessWidget {
                 ),
                 const Spacer(),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder:
                             (context) => ProfileEditScreen(userData: userData),
                       ),
                     );
+
+                    if (result != null && result is Map<String, dynamic>) {
+                      // Rebuild with new data
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => CategoryHomeScreen(userData: result),
+                        ),
+                      );
+                    }
                   },
                   child: CircleAvatar(
                     backgroundColor: Colors.white,
@@ -494,7 +515,9 @@ class CategoryHomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AllAvailablePathologyScreen(userData: userData),
+                        builder:
+                            (context) =>
+                                AllAvailablePathologyScreen(userData: userData),
                       ),
                     );
                   },
@@ -508,7 +531,9 @@ class CategoryHomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AllAvailableOPDScreen(userData: userData),
+                        builder:
+                            (context) =>
+                                AllAvailableOPDScreen(userData: userData),
                       ),
                     );
                   },

@@ -94,9 +94,6 @@ class ApiService {
     }
   }
 
-
-
-
   // PATIENT FEEDBACK
   Future<Map<String, dynamic>> sendPatientFeedback({
     required String currentlyLoggedinPartnerId,
@@ -152,6 +149,38 @@ class ApiService {
     }
   }
 
+  // USER LOGIN WITH OTP
+  // SEND OTP
+  Future<Map<String, dynamic>> sendOTP(String email) async {
+    try {
+      final response = await _dio.post(
+        '/api/send-otp',
+        data: {'user_email': email},
+      );
+      return {
+        'success': response.data['status'],
+        'message': response.data['message'],
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Error sending OTP: $e'};
+    }
+  }
 
-  
+  // VERIFY OTP
+  Future<Map<String, dynamic>> verifyOTP(String email, String otp) async {
+    try {
+      final response = await _dio.post(
+        '/api/verify-otp',
+        data: {'user_email': email, 'otp': otp},
+      );
+
+      return {
+        'success': response.data['status'],
+        'message': response.data['message'],
+        'data': response.data['data'],
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Error verifying OTP: $e'};
+    }
+  }
 }
