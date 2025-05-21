@@ -28,8 +28,8 @@ class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
   final TextEditingController _feedbackController = TextEditingController();
 
   bool _inquiryOPD = false;
-  bool _inquiryPath = false;
-  bool _inquiryDoctor = false;
+  final bool _inquiryPath = false;
+  final bool _inquiryDoctor = false;
 
   int _rating = 0;
 

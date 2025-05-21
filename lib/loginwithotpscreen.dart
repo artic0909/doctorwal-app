@@ -4,7 +4,7 @@ import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/main.dart'; // CategoryHomeScreen
 
 class LoginWithScreen extends StatefulWidget {
-  const LoginWithScreen({Key? key}) : super(key: key);
+  const LoginWithScreen({super.key});
 
   @override
   State<LoginWithScreen> createState() => _LoginWithScreenState();
@@ -44,7 +44,7 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
     final result = await apiService.sendOTP(email);
     print("sendOTP result: $result");
 
-    if (result != null && result['success'] == true) {
+    if (result['success'] == true) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result['message'])));
@@ -64,7 +64,7 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
     );
     print("verifyOTP result: $result");
 
-    if (result != null && result['success'] == true) {
+    if (result['success'] == true) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result['message'])));

@@ -31,9 +31,9 @@ class _PathologyPatientInquiryScreenState
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
 
-  bool _inquiryOPD = false;
+  final bool _inquiryOPD = false;
   bool _inquiryPath = false;
-  bool _inquiryDoctor = false;
+  final bool _inquiryDoctor = false;
 
   @override
   void initState() {

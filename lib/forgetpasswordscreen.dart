@@ -4,7 +4,7 @@ import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/main.dart';
 
 class ForgetPasswordScreen extends StatefulWidget {
-  const ForgetPasswordScreen({Key? key}) : super(key: key);
+  const ForgetPasswordScreen({super.key});
 
   @override
   State<ForgetPasswordScreen> createState() => _ForgetPasswordScreenState();
@@ -44,7 +44,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
     final result = await apiService.sendOTP(email);
     print("sendOTP result: $result");
 
-    if (result != null && result['success'] == true) {
+    if (result['success'] == true) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result['message'])));
@@ -64,7 +64,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
     );
     print("verifyOTP result: $result");
 
-    if (result != null && result['success'] == true) {
+    if (result['success'] == true) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result['message'])));

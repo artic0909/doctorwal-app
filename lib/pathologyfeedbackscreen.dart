@@ -27,9 +27,9 @@ class _PathologyFeedbackScreenState extends State<PathologyFeedbackScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _feedbackController = TextEditingController();
 
-  bool _inquiryOPD = false;
+  final bool _inquiryOPD = false;
   bool _inquiryPath = false;
-  bool _inquiryDoctor = false;
+  final bool _inquiryDoctor = false;
 
   int _rating = 0;
 
