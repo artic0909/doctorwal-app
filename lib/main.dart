@@ -56,7 +56,10 @@ class _LoginScreenState extends State<LoginScreen> {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'user_email': email, 'user_password': password}),
+        body: jsonEncode({
+          'user_identifier': email, // ✅ Use correct key
+          'user_password': password,
+        }),
       );
 
       setState(() {
@@ -66,7 +69,6 @@ class _LoginScreenState extends State<LoginScreen> {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['status'] == true) {
-        // ✅ Login success
         return data['data'];
       } else if (response.statusCode == 401) {
         _showErrorDialog(data['message'] ?? 'Invalid credentials');
@@ -135,19 +137,26 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
-                        labelText: 'Email',
+                        labelText: 'Email or Phone',
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Email is required';
+                          return 'Email or Phone is required';
                         }
+
                         final emailRegex = RegExp(
                           r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}$',
                         );
-                        if (!emailRegex.hasMatch(value)) {
-                          return 'Enter a valid email';
+                        final phoneRegex = RegExp(
+                          r'^\d{10}$',
+                        ); // Accepts 10-digit numbers
+
+                        if (!emailRegex.hasMatch(value) &&
+                            !phoneRegex.hasMatch(value)) {
+                          return 'Enter a valid email or 10-digit phone number';
                         }
+
                         return null;
                       },
                     ),
