@@ -31,7 +31,7 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
           child: AppBar(
             title: Text(
               capitalizeWords(doctor.partnerDoctorName ?? "Dr. Doctor Name"),
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -78,9 +78,9 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.person, color: Colors.blue, size: 24),
-                SizedBox(width: 10),
-                Text(
+                const Icon(Icons.person, color: Colors.blue, size: 24),
+                const SizedBox(width: 10),
+                const Text(
                   "Designation:",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -88,11 +88,11 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(width: 5),
+                const SizedBox(width: 5),
                 Expanded(
                   child: Text(
                     doctor.partnerDoctorDesignation ?? "Not Defined",
-                    style: TextStyle(fontSize: 15, color: Colors.black54),
+                    style: const TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
               ],
@@ -100,13 +100,13 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.medical_information,
                   color: Colors.redAccent,
                   size: 24,
                 ),
-                SizedBox(width: 10),
-                Text(
+                const SizedBox(width: 10),
+                const Text(
                   "Specialization:",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -114,11 +114,11 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(width: 5),
+                const SizedBox(width: 5),
                 Expanded(
                   child: Text(
                     doctor.partnerDoctorSpecialist ?? "Not Defined",
-                    style: TextStyle(fontSize: 15, color: Colors.black54),
+                    style: const TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
               ],
@@ -126,13 +126,13 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.currency_rupee_rounded,
                   color: Colors.green,
                   size: 24,
                 ),
-                SizedBox(width: 10),
-                Text(
+                const SizedBox(width: 10),
+                const Text(
                   "Fees:",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -140,11 +140,11 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(width: 5),
+                const SizedBox(width: 5),
                 Expanded(
                   child: Text(
                     doctor.partnerDoctorFees ?? "Not Defined",
-                    style: TextStyle(fontSize: 15, color: Colors.black54),
+                    style: const TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),
               ],

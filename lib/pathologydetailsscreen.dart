@@ -169,9 +169,9 @@ class PathologyDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Jio Ji Bharka',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.blue,
               fontSize: 16,
@@ -181,7 +181,7 @@ class PathologyDetailsScreen extends StatelessWidget {
 
           Text(
             uppercaseWords(pathology.clinicName),
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
               color: Colors.red,

@@ -26,7 +26,7 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
 
   Future<void> fetchClinics() async {
     final url = Uri.parse(
-      "http://10.0.2.2:8000/api/all-opd-contacts",
+      "http://doctorwala.info/api/all-opd-contacts",
     ); // Updated endpoint
     try {
       final response = await http.get(url);

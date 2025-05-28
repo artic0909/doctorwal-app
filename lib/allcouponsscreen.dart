@@ -23,7 +23,7 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
   Future<void> _fetchCoupons() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/all-coupons'),
+        Uri.parse('https://doctorwala.info/api/all-coupons'),
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

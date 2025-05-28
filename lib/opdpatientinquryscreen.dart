@@ -256,7 +256,7 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
               : 'Doctor'; // First selected one
 
       final url = Uri.parse(
-        'http://10.0.2.2:8000/api/patient-inquiry',
+        'https://doctorwala.info/api/patient-inquiry',
       ); // replace with your actual API endpoint
 
       final body = {

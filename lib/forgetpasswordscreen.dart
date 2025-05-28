@@ -110,7 +110,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
       // Redirect to Home screen
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -4,7 +4,7 @@ class ApiService {
   final Dio _dio;
 
   ApiService() : _dio = Dio() {
-    _dio.options.baseUrl = 'http://10.0.2.2:8000';
+    _dio.options.baseUrl = 'https://doctorwala.info';
     _dio.options.headers = {'Accept': 'application/json'};
   }
 

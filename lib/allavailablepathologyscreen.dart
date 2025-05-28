@@ -27,7 +27,7 @@ class _AllAvailablePathologyScreenState
   }
 
   Future<void> fetchClinics() async {
-    final url = Uri.parse("http://10.0.2.2:8000/api/all-pathology-contacts");
+    final url = Uri.parse("https://doctorwala.info/api/all-pathology-contacts");
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {

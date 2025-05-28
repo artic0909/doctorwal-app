@@ -170,7 +170,7 @@ class OPDDetailsScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             capitalizeWords(opd.clinicName),
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
               color: Colors.red,
@@ -305,14 +305,14 @@ class OPDDetailsScreen extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
 
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     doctor['doctor_specialist'] ?? "Specialist: Not Defined",
                     style: const TextStyle(fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     "Fees: ₹${doctor['doctor_fees'] ?? "Not Defined"}",
                     style: const TextStyle(fontSize: 12),

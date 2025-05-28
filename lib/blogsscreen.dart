@@ -23,7 +23,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
 
   Future<List<Blog>> fetchBlogs() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8000/api/blogs'),
+      Uri.parse('https://doctorwala.info/api/blogs'),
     );
 
     if (response.statusCode == 200) {
@@ -155,7 +155,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
               fit: BoxFit.cover,
               errorBuilder:
                   (context, error, stackTrace) =>
-                      Image(image: AssetImage('assets/images/logo.png')),
+                      const Image(image: AssetImage('assets/images/logo.png')),
             ),
           ),
           Padding(

@@ -277,7 +277,7 @@ class _PathologyFeedbackScreenState extends State<PathologyFeedbackScreen> {
               ? 'Path'
               : 'Doctor';
 
-      final url = Uri.parse('http://10.0.2.2:8000/api/patient-feedback');
+      final url = Uri.parse('https://doctorwala.info/api/patient-feedback');
 
       final body = {
         "currently_loggedin_partner_id": _partnerIdController.text,

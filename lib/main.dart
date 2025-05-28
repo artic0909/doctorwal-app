@@ -24,9 +24,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const SplashScreen(),
+      home: SplashScreen(),
     );
   }
 }
@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   Future<Map<String, dynamic>?> loginUser(String email, String password) async {
-    final url = Uri.parse('http://10.0.2.2:8000/api/dw-user-login');
+    final url = Uri.parse('https://doctorwala.info/api/dw-user-login');
 
     try {
       setState(() {
@@ -198,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ForgetPasswordScreen(),
+                              builder: (context) => const ForgetPasswordScreen(),
                             ),
                           );
                         },
@@ -214,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => LoginWithScreen(),
+                            builder: (context) => const LoginWithScreen(),
                           ),
                         );
                       },
@@ -337,8 +337,8 @@ class CategoryHomeScreen extends StatelessWidget {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.category),
-              title: Text('Category'),
+              leading: const Icon(Icons.category),
+              title: const Text('Category'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -350,8 +350,8 @@ class CategoryHomeScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.card_giftcard),
-              title: Text('All Coupons'),
+              leading: const Icon(Icons.card_giftcard),
+              title: const Text('All Coupons'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -362,8 +362,8 @@ class CategoryHomeScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.info_outline),
-              title: Text('About'),
+              leading: const Icon(Icons.info_outline),
+              title: const Text('About'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -372,8 +372,8 @@ class CategoryHomeScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.article),
-              title: Text('Blog'),
+              leading: const Icon(Icons.article),
+              title: const Text('Blog'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -382,8 +382,8 @@ class CategoryHomeScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.lock),
-              title: Text('Privacy'),
+              leading: const Icon(Icons.lock),
+              title: const Text('Privacy'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -394,8 +394,8 @@ class CategoryHomeScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.headset_mic),
-              title: Text('Contact'),
+              leading: const Icon(Icons.headset_mic),
+              title: const Text('Contact'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -407,8 +407,8 @@ class CategoryHomeScreen extends StatelessWidget {
             ),
 
             ListTile(
-              leading: Icon(Icons.edit),
-              title: Text('Edit Profile'),
+              leading: const Icon(Icons.edit),
+              title: const Text('Edit Profile'),
               onTap: () async {
                 final result = await Navigator.push(
                   context,
@@ -430,8 +430,8 @@ class CategoryHomeScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.logout),
-              title: Text('Logout'),
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
               onTap: () {
                 Navigator.pushReplacement(
                   context,
@@ -460,7 +460,7 @@ class CategoryHomeScreen extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               color: Colors.blue[900],
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
@@ -474,7 +474,7 @@ class CategoryHomeScreen extends StatelessWidget {
                 ),
                 Text(
                   '${userData['name'][0].toUpperCase()}${userData['name'].substring(1)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -556,7 +556,7 @@ class CategoryHomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AllDoctorsScreen(),
+                        builder: (context) => const AllDoctorsScreen(),
                       ),
                     );
                   },

@@ -31,7 +31,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isLoading = true);
 
-    final url = Uri.parse('http://10.0.2.2:8000/api/dw-user-register');
+    final url = Uri.parse('https://doctorwala.info/api/dw-user-register');
 
     try {
       final response = await http.post(

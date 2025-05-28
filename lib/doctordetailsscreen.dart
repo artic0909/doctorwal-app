@@ -32,7 +32,7 @@ class DoctorDetailsScreen extends StatelessWidget {
           child: AppBar(
             title: Text(
               capitalizeWords(doctor.partnerDoctorName ?? "Dr. Doctor Name"),
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -55,7 +55,7 @@ class DoctorDetailsScreen extends StatelessWidget {
                 image:
                     doctor.banner != null
                         ? NetworkImage(doctor.banner!)
-                        : AssetImage("assets/images/logo.png"),
+                        : const AssetImage("assets/images/logo.png"),
                 width: double.infinity,
                 height: 180,
                 fit: BoxFit.cover,
@@ -91,7 +91,7 @@ class DoctorDetailsScreen extends StatelessWidget {
         children: [
           Text(
             capitalizeWords(doctor.partnerDoctorName ?? "Dr. Doctor Name"),
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
               color: Colors.red,
@@ -100,7 +100,7 @@ class DoctorDetailsScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             doctor.partnerDoctorSpecialist ?? "Not Defined",
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
               color: Color.fromARGB(255, 92, 91, 91),
