@@ -7,7 +7,7 @@ import 'pathologydetailsscreen.dart';
 
 class AllAvailablePathologyScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
-const AllAvailablePathologyScreen({super.key, required this.userData});
+  const AllAvailablePathologyScreen({super.key, required this.userData});
 
   @override
   State<AllAvailablePathologyScreen> createState() =>
@@ -56,7 +56,23 @@ class _AllAvailablePathologyScreenState
           final address = clinic.clinicAddress.toLowerCase();
           final query = _searchQuery.toLowerCase();
 
-          return name.contains(query) || address.contains(query);
+          // Check test match
+          final testMatch = clinic.tests.any((test) {
+            final testName = (test['test_name'] ?? '').toString().toLowerCase();
+            return testName.contains(query);
+          });
+
+          // Check service match
+          final serviceMatch = clinic.tests.any((service) {
+            final serviceName =
+                (service['test_type'] ?? '').toString().toLowerCase();
+            return serviceName.contains(query);
+          });
+
+          return name.contains(query) ||
+              address.contains(query) ||
+              testMatch ||
+              serviceMatch;
         }).toList();
 
     return Scaffold(

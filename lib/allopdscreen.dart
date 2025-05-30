@@ -56,7 +56,15 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
           final address = clinic.clinicAddress.toLowerCase();
           final query = _searchQuery.toLowerCase();
 
-          return name.contains(query) || address.contains(query);
+          // Check doctor details
+          final doctorMatch = clinic.doctors.any((doctor) {
+            final doctorName = (doctor['doctor_name'] ?? '').toString().toLowerCase();
+            final specialization =
+                (doctor['doctor_specialist'] ?? '').toString().toLowerCase();
+            return doctorName.contains(query) || specialization.contains(query);
+          });
+
+          return name.contains(query) || address.contains(query) || doctorMatch;
         }).toList();
 
     return Scaffold(

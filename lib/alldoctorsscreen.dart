@@ -56,9 +56,10 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
         _doctors.where((doctor) {
           final name = doctor.partnerDoctorName?.toLowerCase() ?? '';
           final address = doctor.partnerDoctorAddress?.toLowerCase() ?? '';
+          final specialist = doctor.partnerDoctorSpecialist?.toLowerCase() ?? '';
           final query = _searchQuery.toLowerCase();
 
-          return name.contains(query) || address.contains(query);
+          return name.contains(query) || address.contains(query) || specialist.contains(query);
         }).toList();
 
     return Scaffold(
