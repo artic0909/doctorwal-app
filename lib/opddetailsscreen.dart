@@ -1,6 +1,5 @@
 import 'package:demoapp/Models/all_available_opd_model.dart';
 import 'package:demoapp/opdfeedbackscreen.dart';
-import 'package:demoapp/opdpatientinquryscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'opddoctordetailsscreen.dart';
@@ -191,17 +190,9 @@ class OPDDetailsScreen extends StatelessWidget {
             runSpacing: 8,
             children: [
               _actionButton("Send Inquiry", Colors.red, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => OPDPatientInquiryScreen(
-                          opd: opd,
-                          userData: userData,
-                        ),
-                  ),
-                );
+                launchUrl(Uri.parse("tel:${opd.clinicMobileNumber}"));
               }),
+
               _actionButton("See Location", Colors.green, () async {
                 final url = opd.clinicGoogleMapLink;
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {

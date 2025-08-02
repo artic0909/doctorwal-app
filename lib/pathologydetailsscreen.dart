@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:demoapp/pathologyfeedbackscreen.dart';
-import 'package:demoapp/pathologypatientinquiryscreen.dart';
 import 'package:demoapp/pathologytestsdetailsscreen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -199,17 +198,9 @@ class PathologyDetailsScreen extends StatelessWidget {
             runSpacing: 8,
             children: [
               _actionButton("Send Inquiry", Colors.red, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => PathologyPatientInquiryScreen(
-                          pathology: pathology,
-                          userData: userData,
-                        ),
-                  ),
-                );
+                launchUrl(Uri.parse("tel:${pathology.clinicMobileNumber}"));
               }),
+
               _actionButton("See Location", Colors.green, () async {
                 final url = pathology.clinicGoogleMapLink;
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {

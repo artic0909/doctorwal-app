@@ -1,7 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:demoapp/Services/apiservice.dart';
-import 'package:demoapp/main.dart'; // CategoryHomeScreen
+import 'package:http/http.dart' as http;
+import 'package:demoapp/main.dart'; // Update if your LoginScreen is elsewhere
 
 class LoginWithScreen extends StatefulWidget {
   const LoginWithScreen({super.key});
@@ -15,7 +16,6 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
   final otpController = TextEditingController();
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  final ApiService apiService = ApiService();
 
   bool isOTPSent = false;
   bool isOTPVerified = false;
@@ -37,14 +37,19 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
     });
   }
 
-  void sendCode() async {
+  Future<void> sendCode() async {
     final email = emailController.text.trim();
     if (email.isEmpty) return;
 
-    final result = await apiService.sendOTP(email);
-    print("sendOTP result: $result");
+    final response = await http.post(
+      Uri.parse('https://doctorwala.info/api/send-otp'),
+      headers: {'Accept': 'application/json'},
+      body: {'user_email': email},
+    );
 
-    if (result['success'] == true) {
+    final result = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && result['status'] == true) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result['message'])));
@@ -52,33 +57,36 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
       startCountdown();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? "Something went wrong.")),
+        SnackBar(content: Text(result['message'] ?? 'Something went wrong.')),
       );
     }
   }
 
-  void verifyCode() async {
-    final result = await apiService.verifyOTP(
-      emailController.text.trim(),
-      otpController.text.trim(),
+  Future<void> verifyCode() async {
+    final response = await http.post(
+      Uri.parse('https://doctorwala.info/api/verify-otp'),
+      headers: {'Accept': 'application/json'},
+      body: {
+        'user_email': emailController.text.trim(),
+        'otp': otpController.text.trim(),
+      },
     );
-    print("verifyOTP result: $result");
 
-    if (result['success'] == true) {
+    final result = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && result['status'] == true) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result['message'])));
-      setState(() => isOTPVerified = true); // Show password fields
+      setState(() => isOTPVerified = true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? "OTP verification failed."),
-        ),
+        SnackBar(content: Text(result['message'] ?? 'OTP verification failed')),
       );
     }
   }
 
-  void updatePassword() async {
+  Future<void> updatePassword() async {
     final newPassword = newPasswordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
     final email = emailController.text.trim();
@@ -97,24 +105,32 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
       return;
     }
 
-    final response = await apiService.updatePassword({
-      'user_email': email,
-      'user_password': newPassword,
-    });
+    final response = await http.post(
+      Uri.parse('https://doctorwala.info/api/update-password-during-otp'),
+      headers: {'Accept': 'application/json'},
+      body: {
+        'user_email': email,
+        'user_password': newPassword,
+        'user_password_confirmation': confirmPassword,
+      },
+    );
 
-    if (response.statusCode == 200) {
+    final result = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && result['status'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password updated successfully")),
+        SnackBar(content: Text(result['message'] ?? "Password updated")),
       );
 
-      // Redirect to Home screen
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to update password")),
+        SnackBar(
+          content: Text(result['message'] ?? "Failed to update password"),
+        ),
       );
     }
   }
@@ -154,161 +170,188 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: ListView(
-          children: [
-            const Text(
-              'Login with OTP',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Enter your registered email to receive OTP.',
-              style: TextStyle(fontSize: 15),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Email Address',
-                border: OutlineInputBorder(),
+      body: Stack(
+        children: [
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: ShaderMask(
+              shaderCallback: (Rect bounds) {
+                return const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.white],
+                ).createShader(bounds);
+              },
+              blendMode: BlendMode.dstIn,
+              child: Image.asset(
+                'assets/images/bg5.jpg',
+                height: 450,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const SizedBox(),
               ),
             ),
-            const SizedBox(height: 20),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: ListView(
+              children: [
+                const Text(
+                  'Login with OTP',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Enter your registered email to receive OTP.',
+                  style: TextStyle(fontSize: 15),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Email Address',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
 
-            if (isOTPSent && !isOTPVerified) ...[
-              TextField(
-                controller: otpController,
-                keyboardType: TextInputType.number,
-                maxLength: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Enter OTP',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Expires in: ${remainingSeconds ~/ 60}:${(remainingSeconds % 60).toString().padLeft(2, '0')}',
-                style: const TextStyle(color: Colors.red),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: verifyCode,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                if (isOTPSent && !isOTPVerified) ...[
+                  TextField(
+                    controller: otpController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
+                    decoration: const InputDecoration(
+                      labelText: 'Enter OTP',
+                      border: OutlineInputBorder(),
                     ),
                   ),
-                  child: const Text(
-                    'VERIFY OTP',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+                  const SizedBox(height: 10),
+                  Text(
+                    'Expires in: ${remainingSeconds ~/ 60}:${(remainingSeconds % 60).toString().padLeft(2, '0')}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: verifyCode,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'VERIFY OTP',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
+                ],
 
-            if (isOTPVerified) ...[
-              const SizedBox(height: 20),
-              TextField(
-                controller: newPasswordController,
-                obscureText: !passwordVisible,
-                decoration: InputDecoration(
-                  labelText: 'New Password',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      passwordVisible ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() => passwordVisible = !passwordVisible);
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: confirmPasswordController,
-                obscureText: !confirmPasswordVisible,
-                decoration: InputDecoration(
-                  labelText: 'Confirm Password',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      confirmPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(
-                        () => confirmPasswordVisible = !confirmPasswordVisible,
-                      );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: updatePassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                if (isOTPVerified) ...[
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: newPasswordController,
+                    obscureText: !passwordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'New Password',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() => passwordVisible = !passwordVisible);
+                        },
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    'UPDATE PASSWORD',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: confirmPasswordController,
+                    obscureText: !confirmPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Confirm Password',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          confirmPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(
+                            () =>
+                                confirmPasswordVisible =
+                                    !confirmPasswordVisible,
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: updatePassword,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'UPDATE PASSWORD',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
 
-            if (!isOTPSent) ...[
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: sendCode,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                if (!isOTPSent) ...[
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: sendCode,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'SEND CODE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    'SEND CODE',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+                ],
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

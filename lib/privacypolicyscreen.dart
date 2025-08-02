@@ -34,11 +34,6 @@ class PrivacyPolicyScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Effective Date: April 29, 2025',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 20),
-            const Text(
               'Introduction',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
@@ -109,7 +104,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             const SizedBox(height: 30),
             Center(
               child: Text(
-                '© 2025 DoctorWala. All rights reserved.',
+                '© 2025 DoctorWala.info. All rights reserved.',
                 style: TextStyle(color: Colors.grey[600], fontSize: 13),
               ),
             ),

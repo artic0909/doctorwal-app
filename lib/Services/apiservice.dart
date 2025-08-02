@@ -8,26 +8,7 @@ class ApiService {
     _dio.options.headers = {'Accept': 'application/json'};
   }
 
-  // LOGIN (Non-authenticated, based on response only)
-  Future<Map<String, dynamic>?> getProfile(String email) async {
-    try {
-      final response = await _dio.post(
-        '/api/get-profile',
-        data: {'user_email': email},
-      );
-
-      if (response.statusCode == 200 && response.data['status'] == true) {
-        return response.data['data'];
-      } else {
-        return null;
-      }
-    } catch (e) {
-      print('Error fetching profile: $e');
-      return null;
-    }
-  }
-
-  // UPDATE PROFILE
+  //update profile
   Future<Response> updateProfile(Map<String, String> data) {
     return _dio.put('/api/update-profile', data: data);
   }
@@ -35,6 +16,11 @@ class ApiService {
   // UPDATE PASSWORD
   Future<Response> updatePassword(Map<String, String> data) {
     return _dio.put('/api/update-password', data: data);
+  }
+
+  // UPDATE PIN
+  Future<Response> updatePin(Map<String, String> data) {
+    return _dio.put('/api/update-pin', data: data);
   }
 
   // SEND PATIENT INQUIRY

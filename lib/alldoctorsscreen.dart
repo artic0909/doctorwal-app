@@ -27,7 +27,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
     try {
       final response = await http.get(
         Uri.parse(
-          'https://doctorwala.info/api/all-doctors-contacts',
+          'https://doctorwala.info/api/api/all-doctors-contacts',
         ), // Replace with actual endpoint
       );
 
@@ -192,14 +192,14 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                                                         error,
                                                         stackTrace,
                                                       ) => Image.asset(
-                                                        'assets/images/logo.png', // Fallback to logo if image fails
+                                                        'assets/images/empty-min.jpg', // Fallback to logo if image fails
                                                         height: 100,
                                                         width: double.infinity,
                                                         fit: BoxFit.cover,
                                                       ),
                                                 )
                                                 : Image.asset(
-                                                  'assets/images/logo.png', // Fallback image if no banner
+                                                  'assets/images/empty-min.jpg', // Fallback image if no banner
                                                   height: 100,
                                                   width: double.infinity,
                                                   fit: BoxFit.cover,

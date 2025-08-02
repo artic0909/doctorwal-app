@@ -112,51 +112,7 @@ class _PathologyFeedbackScreenState extends State<PathologyFeedbackScreen> {
                 keyboardType: TextInputType.emailAddress,
                 readOnly: true,
               ),
-              // const SizedBox(height: 20),
-
-              // const Align(
-              //   alignment: Alignment.centerLeft,
-              //   child: Text(
-              //     "Feedback Type:",
-              //     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              //   ),
-              // ),
-              // const SizedBox(height: 8),
-              // Wrap(
-              //   spacing: 10,
-              //   children: [
-              //     FilterChip(
-              //       label: const Text("OPD"),
-              //       selected: _inquiryOPD,
-              //       onSelected:
-              //           (val) => setState(() {
-              //             _inquiryOPD = val;
-              //             _inquiryPath = false;
-              //             _inquiryDoctor = false;
-              //           }),
-              //     ),
-              //     FilterChip(
-              //       label: const Text("Path"),
-              //       selected: _inquiryPath,
-              //       onSelected:
-              //           (val) => setState(() {
-              //             _inquiryPath = val;
-              //             _inquiryOPD = false;
-              //             _inquiryDoctor = false;
-              //           }),
-              //     ),
-              //     FilterChip(
-              //       label: const Text("Doctor"),
-              //       selected: _inquiryDoctor,
-              //       onSelected:
-              //           (val) => setState(() {
-              //             _inquiryDoctor = val;
-              //             _inquiryOPD = false;
-              //             _inquiryPath = false;
-              //           }),
-              //     ),
-              //   ],
-              // ),
+              
 
               const SizedBox(height: 20),
               const Align(

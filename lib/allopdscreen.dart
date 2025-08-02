@@ -26,7 +26,7 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
 
   Future<void> fetchClinics() async {
     final url = Uri.parse(
-      "http://doctorwala.info/api/all-opd-contacts",
+      "http://doctorwala.info/api/api/all-opd-contacts",
     ); // Updated endpoint
     try {
       final response = await http.get(url);
@@ -197,14 +197,14 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
                                                         error,
                                                         stackTrace,
                                                       ) => Image.asset(
-                                                        'assets/images/logo.png',
+                                                        'assets/images/empty-min.jpg',
                                                         height: 100,
                                                         width: double.infinity,
                                                         fit: BoxFit.cover,
                                                       ),
                                                 )
                                                 : Image.asset(
-                                                  'assets/images/logo.png',
+                                                  'assets/images/empty-min.jpg',
                                                   height: 100,
                                                   width: double.infinity,
                                                   fit: BoxFit.cover,

@@ -101,7 +101,7 @@ class ContactScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: _launchEmail,
                     child: const Text(
-                      'info@doctorwala.info',
+                      'info.doctorwala@gmail.com',
                       style: TextStyle(
                         // decoration: TextDecoration.underline,
                         color: Colors.blue,

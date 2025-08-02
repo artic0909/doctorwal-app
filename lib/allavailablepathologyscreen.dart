@@ -1,13 +1,14 @@
 import 'dart:convert';
+import 'package:demoapp/pathologydetailsscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'Models/all_available_path_model.dart';
-import 'pathologydetailsscreen.dart';
 
 class AllAvailablePathologyScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
   const AllAvailablePathologyScreen({super.key, required this.userData});
+
 
   @override
   State<AllAvailablePathologyScreen> createState() =>
@@ -27,7 +28,7 @@ class _AllAvailablePathologyScreenState
   }
 
   Future<void> fetchClinics() async {
-    final url = Uri.parse("https://doctorwala.info/api/all-pathology-contacts");
+    final url = Uri.parse("https://doctorwala.info/api/api/all-pathology-contacts");
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -205,14 +206,14 @@ class _AllAvailablePathologyScreenState
                                                         error,
                                                         stackTrace,
                                                       ) => Image.asset(
-                                                        'assets/images/logo.png',
+                                                        'assets/images/empty-min.jpg',
                                                         height: 100,
                                                         width: double.infinity,
                                                         fit: BoxFit.cover,
                                                       ),
                                                 )
                                                 : Image.asset(
-                                                  'assets/images/logo.png',
+                                                  'assets/images/empty-min.jpg',
                                                   height: 100,
                                                   width: double.infinity,
                                                   fit: BoxFit.cover,
