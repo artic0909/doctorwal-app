@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'opddoctordetailsscreen.dart';
 
-class OPDDetailsScreen extends StatelessWidget {
+class OPDDetailsScreen extends StatefulWidget {
   final AllAvailableOPDModel opd;
-
   final Map<String, dynamic> userData;
 
   const OPDDetailsScreen({
@@ -14,6 +13,47 @@ class OPDDetailsScreen extends StatelessWidget {
     required this.opd,
     required this.userData,
   });
+
+  @override
+  State<OPDDetailsScreen> createState() => _OPDDetailsScreenState();
+}
+
+class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
+  List<dynamic> filteredDoctors = [];
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    filteredDoctors = List.from(widget.opd.doctors);
+  }
+
+  void _filterDoctors(String query) {
+    query = query.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        filteredDoctors = List.from(widget.opd.doctors);
+      } else {
+        filteredDoctors =
+            widget.opd.doctors.where((doctor) {
+              final name =
+                  (doctor['doctor_name'] ?? '').toString().toLowerCase();
+              final specialist =
+                  (doctor['doctor_specialist'] ?? '').toString().toLowerCase();
+              final more =
+                  (doctor['doctor_more'] ?? '').toString().toLowerCase();
+              return name.contains(query) ||
+                  specialist.contains(query) ||
+                  more.contains(query);
+            }).toList();
+      }
+    });
+  }
+
+  void _resetSearch() {
+    searchController.clear();
+    _filterDoctors('');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,15 +89,15 @@ class OPDDetailsScreen extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child:
-                  opd.bannerImage.isNotEmpty
+                  widget.opd.bannerImage.isNotEmpty
                       ? Image.network(
-                        opd.bannerImage,
+                        widget.opd.bannerImage,
                         width: double.infinity,
                         height: 180,
                         fit: BoxFit.cover,
                       )
                       : Image.asset(
-                        'assets/images/logo.png',
+                        'assets/images/empty-min.jpg',
                         width: double.infinity,
                         height: 180,
                         fit: BoxFit.cover,
@@ -66,6 +106,46 @@ class OPDDetailsScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _infoSection(context),
             const SizedBox(height: 20),
+
+            /// Search Bar — Added here!
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.search, color: Colors.black45),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: _filterDoctors,
+                      decoration: const InputDecoration(
+                        hintText: "Search for its doctors, specialists",
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  if (searchController.text.isNotEmpty)
+                    GestureDetector(
+                      onTap: _resetSearch,
+                      child: const Icon(Icons.close, color: Colors.grey),
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 10),
             const Text(
               "OPD DETAILS",
               style: TextStyle(
@@ -75,7 +155,8 @@ class OPDDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            opd.doctors.isEmpty
+
+            filteredDoctors.isEmpty
                 ? const Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
@@ -88,7 +169,7 @@ class OPDDetailsScreen extends StatelessWidget {
                 : GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: opd.doctors.length,
+                  itemCount: filteredDoctors.length,
                   padding: EdgeInsets.zero,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -98,11 +179,10 @@ class OPDDetailsScreen extends StatelessWidget {
                   ),
                   itemBuilder:
                       (context, index) =>
-                          _doctorCard(context, opd.doctors[index]),
+                          _doctorCard(context, filteredDoctors[index]),
                 ),
-
             const SizedBox(height: 30),
-            opd.services.isEmpty
+            widget.opd.services.isEmpty
                 ? const Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
@@ -124,7 +204,7 @@ class OPDDetailsScreen extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children:
-                  opd.services.expand<Widget>((service) {
+                  widget.opd.services.expand<Widget>((service) {
                     final List<dynamic> list = service['service_lists'] ?? [];
                     return list.map<Widget>(
                       (item) => _bulletItem(item.toString()),
@@ -142,10 +222,12 @@ class OPDDetailsScreen extends StatelessWidget {
     String capitalizeWords(String input) {
       return input
           .split(' ')
-          .map((word) {
-            if (word.isEmpty) return word;
-            return word[0].toUpperCase() + word.substring(1).toLowerCase();
-          })
+          .map(
+            (word) =>
+                word.isNotEmpty
+                    ? word[0].toUpperCase() + word.substring(1).toLowerCase()
+                    : word,
+          )
           .join(' ');
     }
 
@@ -168,7 +250,7 @@ class OPDDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            capitalizeWords(opd.clinicName),
+            capitalizeWords(widget.opd.clinicName),
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -176,13 +258,16 @@ class OPDDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _infoRow(Icons.location_on, opd.clinicAddress),
-          _infoRow(Icons.location_city, 'Landmark: ${opd.clinicLandmark}'),
-          _infoRow(Icons.phone, opd.clinicMobileNumber),
-          _infoRow(Icons.email, opd.clinicEmail),
+          _infoRow(Icons.location_on, widget.opd.clinicAddress),
+          _infoRow(
+            Icons.location_city,
+            'Landmark: ${widget.opd.clinicLandmark}',
+          ),
+          _infoRow(Icons.phone, widget.opd.clinicMobileNumber),
+          _infoRow(Icons.email, widget.opd.clinicEmail),
           _infoRow(
             Icons.person,
-            'Contact: ${capitalizeWords(opd.contactPersonName)}',
+            'Contact: ${capitalizeWords(widget.opd.contactPersonName)}',
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -190,11 +275,10 @@ class OPDDetailsScreen extends StatelessWidget {
             runSpacing: 8,
             children: [
               _actionButton("Send Inquiry", Colors.red, () {
-                launchUrl(Uri.parse("tel:${opd.clinicMobileNumber}"));
+                launchUrl(Uri.parse("tel:${widget.opd.clinicMobileNumber}"));
               }),
-
               _actionButton("See Location", Colors.green, () async {
-                final url = opd.clinicGoogleMapLink;
+                final url = widget.opd.clinicGoogleMapLink;
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
                   await launchUrl(
                     Uri.parse(url),
@@ -211,8 +295,10 @@ class OPDDetailsScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder:
-                        (context) =>
-                            OPDFeedbackScreen(opd: opd, userData: userData),
+                        (context) => OPDFeedbackScreen(
+                          opd: widget.opd,
+                          userData: widget.userData,
+                        ),
                   ),
                 );
               }),
@@ -262,10 +348,12 @@ class OPDDetailsScreen extends StatelessWidget {
     String capitalizeWords(String input) {
       return input
           .split(' ')
-          .map((word) {
-            if (word.isEmpty) return word;
-            return word[0].toUpperCase() + word.substring(1).toLowerCase();
-          })
+          .map(
+            (word) =>
+                word.isNotEmpty
+                    ? word[0].toUpperCase() + word.substring(1).toLowerCase()
+                    : word,
+          )
           .join(' ');
     }
 
@@ -295,7 +383,6 @@ class OPDDetailsScreen extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-
                   const SizedBox(height: 4),
                   Text(
                     doctor['doctor_specialist'] ?? "Specialist: Not Defined",
@@ -320,8 +407,10 @@ class OPDDetailsScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder:
-                          (context) =>
-                              ODPDoctorDetailScreen(opd: opd, doctor: doctor),
+                          (context) => ODPDoctorDetailScreen(
+                            opd: widget.opd,
+                            doctor: doctor,
+                          ),
                     ),
                   );
                 },
