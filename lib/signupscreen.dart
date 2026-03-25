@@ -114,17 +114,9 @@ class _SignupScreenState extends State<SignupScreen> {
           Navigator.of(context).pop(); // close dialog
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            MaterialPageRoute(builder: (_) => const LoginScreen(showSuccessMessage: true)),
           );
         }
-
-        // Clear form
-        nameController.clear();
-        phoneController.clear();
-        cityController.clear();
-        emailController.clear();
-        passwordController.clear();
-        confirmPasswordController.clear();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -155,215 +147,319 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF7FB),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: const BackButton(color: Colors.black),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Center(child: Image.asset('assets/images/logo.png', height: 100)),
-              const SizedBox(height: 20),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Create Account",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      body: Stack(
+        children: [
+          // 1. Realistic Medical Environmental Background
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/bg1.jpg'),
+                  fit: BoxFit.cover,
+                  opacity: 0.15,
                 ),
+                color: Color(0xFFF0F4F8),
               ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Start your journey with us",
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              buildTextField(
-                controller: nameController,
-                label: "Name",
-                validator: (value) {
-                  if (value!.isEmpty) return "Name is required";
-                  return null;
-                },
-              ),
-
-              buildTextField(
-                controller: phoneController,
-                label: "Phone Number",
-                keyboardType: TextInputType.phone,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: (value) {
-                  if (value!.isEmpty) return "Phone is required";
-                  if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
-                    return "Enter valid 10-digit number";
-                  }
-                  return null;
-                },
-              ),
-
-              buildTextField(
-                controller: cityController,
-                label: "City",
-                validator: (value) {
-                  if (value!.isEmpty) return "City is required";
-                  return null;
-                },
-              ),
-
-              buildTextField(
-                controller: emailController,
-                label: "Email",
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value!.isEmpty) return "Email is required";
-                  if (!RegExp(
-                    r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}$',
-                  ).hasMatch(value)) {
-                    return "Enter a valid email";
-                  }
-                  return null;
-                },
-              ),
-
-              buildPasswordField(
-                controller: passwordController,
-                label: "Password",
-                obscure: _obscurePassword,
-                toggle:
-                    () => setState(() => _obscurePassword = !_obscurePassword),
-                validator: (value) {
-                  if (value!.isEmpty) return "Password is required";
-                  if (value.length < 8) return "Min. 8 characters required";
-                  return null;
-                },
-              ),
-
-              buildPasswordField(
-                controller: confirmPasswordController,
-                label: "Confirm Password",
-                obscure: _obscureConfirmPassword,
-                toggle:
-                    () => setState(
-                      () => _obscureConfirmPassword = !_obscureConfirmPassword,
-                    ),
-                validator: (value) {
-                  if (value!.isEmpty) return "Confirm your password";
-                  if (value != passwordController.text) {
-                    return "Passwords do not match";
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : registerUser,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child:
-                      _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                            "SIGN UP",
+            ),
+          ),
+          
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  // 2. Ecosystem Branding Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(13),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: Image.asset('assets/images/logo.png', height: 35),
+                      ),
+                      const SizedBox(width: 12),
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "DOCTORWALA",
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFFE53935),
+                              letterSpacing: 1.2,
                             ),
                           ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Already have an account? "),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(
-                        color: Colors.deepOrange,
-                        fontWeight: FontWeight.w600,
+                          Text(
+                            "Create Medical Card",
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1565C0),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                    ],
                   ),
+                  const SizedBox(height: 25),
+                  
+                  // 3. Unique Ecosystem Form Container
+                  Stack(
+                    alignment: Alignment.topCenter,
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Form Card Body
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 85),
+                        padding: const EdgeInsets.fromLTRB(25, 85, 25, 25),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF1565C0).withAlpha(20),
+                              blurRadius: 40,
+                              offset: const Offset(0, 20),
+                            ),
+                          ],
+                        ),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              buildElegantInput(
+                                controller: nameController,
+                                label: "Legal Full Name",
+                                icon: Icons.person_add_alt_1_rounded,
+                                validator: (value) => value!.isEmpty ? "Required" : null,
+                              ),
+                              const SizedBox(height: 12),
+                              buildElegantInput(
+                                controller: phoneController,
+                                label: "Mobile Contact",
+                                icon: Icons.phone_iphone_rounded,
+                                keyboardType: TextInputType.phone,
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                validator: (value) => (value!.length != 10) ? "10 digits required" : null,
+                              ),
+                              const SizedBox(height: 12),
+                              buildElegantInput(
+                                controller: cityController,
+                                label: "Primary City",
+                                icon: Icons.map_rounded,
+                                validator: (value) => value!.isEmpty ? "Required" : null,
+                              ),
+                              const SizedBox(height: 12),
+                              buildElegantInput(
+                                controller: emailController,
+                                label: "Email Address",
+                                icon: Icons.alternate_email_rounded,
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (value) => !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}$').hasMatch(value!) ? "Invalid email" : null,
+                              ),
+                              const SizedBox(height: 12),
+                              buildElegantInput(
+                                controller: passwordController,
+                                label: "Create Access Key",
+                                icon: Icons.password_rounded,
+                                obscure: _obscurePassword,
+                                toggle: () => setState(() => _obscurePassword = !_obscurePassword),
+                                validator: (value) => value!.length < 8 ? "Min 8 chars" : null,
+                              ),
+                              const SizedBox(height: 12),
+                              buildElegantInput(
+                                controller: confirmPasswordController,
+                                label: "Verify Access Key",
+                                icon: Icons.verified_user_rounded,
+                                obscure: _obscureConfirmPassword,
+                                toggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                                validator: (value) => value != passwordController.text ? "Mismatch" : null,
+                              ),
+                              const SizedBox(height: 25),
+                              _isLoading
+                                  ? const CircularProgressIndicator(color: Color(0xFF1565C0))
+                                  : ElevatedButton(
+                                      onPressed: registerUser,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF1565C0),
+                                        minimumSize: const Size(double.infinity, 60),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                        ),
+                                        elevation: 8,
+                                        shadowColor: const Color(0xFF1565C0).withAlpha(128),
+                                      ),
+                                      child: const Text(
+                                        "CREATE ECOSYSTEM ACCOUNT",
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                    ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      // Royal Blue Medical Card Element (Header)
+                      Positioned(
+                        top: 0,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.78,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF1A73E8), Color(0xFF0D47A1)],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(51),
+                                blurRadius: 15,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Image.asset('assets/images/logo.png', height: 25, color: Colors.white),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    "SECURE REGISTRATION CARD",
+                                    style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                  ),
+                                  const Spacer(),
+                                  const Icon(Icons.security_rounded, color: Colors.white70, size: 14),
+                                ],
+                              ),
+                              const Spacer(),
+                              const Text(
+                                "YOUR MEDICAL CARD",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: 4,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              const Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text("CARD HOLDER", style: TextStyle(color: Colors.white70, fontSize: 8)),
+                                      Text("NEW MEMBER", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text("VERIFIED BY", style: TextStyle(color: Colors.white70, fontSize: 8)),
+                                      Text("DOCTORWALA", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+                  
+                  // Bottom Support
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Already have access? ",
+                        style: TextStyle(color: Colors.blueGrey[400], fontSize: 15),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        ),
+                        child: const Text(
+                          "Login Now",
+                          style: TextStyle(
+                            color: Color(0xFFE53935),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
                 ],
               ),
-
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget buildTextField({
+  Widget buildElegantInput({
     required TextEditingController controller,
     required String label,
+    required IconData icon,
+    bool obscure = false,
+    VoidCallback? toggle,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        inputFormatters: inputFormatters,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
-        validator: validator,
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F4F8).withAlpha(128),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.blueGrey.withAlpha(51), width: 1.5),
       ),
-    );
-  }
-
-  Widget buildPasswordField({
-    required TextEditingController controller,
-    required String label,
-    required bool obscure,
-    required VoidCallback toggle,
-    String? Function(String?)? validator,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
       child: TextFormField(
         controller: controller,
         obscureText: obscure,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        style: const TextStyle(color: Color(0xFF263238), fontWeight: FontWeight.w600, fontSize: 15),
         decoration: InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: IconButton(
-            icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
-            onPressed: toggle,
-          ),
+          labelStyle: TextStyle(color: Colors.blueGrey[400], fontSize: 13, fontWeight: FontWeight.w500),
+          prefixIcon: Icon(icon, color: const Color(0xFF1565C0), size: 18),
+          suffixIcon: toggle != null
+              ? IconButton(
+                  icon: Icon(obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded, color: Colors.blueGrey[200], size: 18),
+                  onPressed: toggle,
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
         validator: validator,
       ),
