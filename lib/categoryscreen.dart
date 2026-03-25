@@ -3,12 +3,9 @@ import 'package:demoapp/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'aboutscreen.dart';
-import 'allavailablepathologyscreen.dart';
-import 'allcouponsscreen.dart';
 import 'alldoctorsscreen.dart';
-import 'blogsscreen.dart';
+import 'allavailablepathologyscreen.dart';
 import 'contactscreen.dart';
-import 'privacypolicyscreen.dart';
 import 'profileeditscreen.dart';
 import 'package:http/http.dart' as http;
 
@@ -118,125 +115,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Colors.white),
-              child: Row(
-                children: [
-                  Image.asset('assets/images/logo.png', height: 40),
-                  const SizedBox(width: 10),
-                  RichText(
-                    text: const TextSpan(
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: 'Doctor ',
-                          style: TextStyle(color: Color(0xFF006400)),
-                        ),
-                        TextSpan(
-                          text: 'Wala',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: const Text('Category'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.card_giftcard),
-              title: const Text('All Coupons'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AllCouponsScreen(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('About'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AboutScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.article),
-              title: const Text('Blog'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const BlogsScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.lock),
-              title: const Text('Privacy'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PrivacyPolicyScreen(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.headset_mic),
-              title: const Text('Contact'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ContactScreen(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Edit Profile'),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) =>
-                            ProfileEditScreen(userData: widget.userData),
-                  ),
-                );
-
-                await loadUserData();
-                setState(() {});
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: logout,
-            ),
-          ],
-        ),
-      ),
+      drawer: _buildPremiumDrawer(context, currentName, dispMemberId, currentProfileImg),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -271,6 +150,25 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               ],
             ),
             const Spacer(),
+            // --- Notification Bell ---
+            Stack(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.notifications_none_rounded, color: Colors.blueGrey[600], size: 26),
+                  onPressed: () {},
+                ),
+                Positioned(
+                  right: 12,
+                  top: 12,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(color: Color(0xFFE53935), shape: BoxShape.circle),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 5),
             Hero(
               tag: 'profile',
               child: GestureDetector(
@@ -286,7 +184,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                   child: CircleAvatar(
                     radius: 20,
                     backgroundColor: Colors.blueGrey[50],
-                    backgroundImage: currentProfileImg.isNotEmpty ? NetworkImage(currentProfileImg) : null,
+                    backgroundImage: currentProfileImg.isNotEmpty ? NetworkImage(_getImageUrl(currentProfileImg)) : null,
                     child: currentProfileImg.isEmpty ? const Icon(Icons.person_rounded, size: 20, color: Color(0xFF1565C0)) : null,
                   ),
                 ),
@@ -546,5 +444,182 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildPremiumDrawer(BuildContext context, String name, String memberId, String profileImg) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      child: Column(
+        children: [
+          // Premium Immersive Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 30),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
+              ),
+              borderRadius: BorderRadius.only(bottomRight: Radius.circular(50)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: CircleAvatar(
+                        radius: 35,
+                        backgroundColor: Colors.white,
+                        backgroundImage: profileImg.isNotEmpty ? NetworkImage(_getImageUrl(profileImg)) : null,
+                        child: profileImg.isEmpty ? const Icon(Icons.person, size: 35, color: Color(0xFF1565C0)) : null,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 28),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  name,
+                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(51),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    memberId,
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Menu Items
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              children: [
+                _drawerItem(Icons.home_rounded, "Home", () => Navigator.pop(context), isSelected: true),
+                _drawerItem(Icons.notifications_rounded, "Notifications", () {}),
+                _drawerItem(Icons.event_available_rounded, "Appointments", () {}),
+                
+                const Divider(indent: 20, endIndent: 20),
+                _drawerSectionTitle("Health Management"),
+                _drawerItem(Icons.monitor_heart_rounded, "Add health parameters", () {}),
+                _drawerItem(Icons.note_add_rounded, "Add Medical Records", () {}),
+                _drawerItem(Icons.assignment_rounded, "Reports", () {}),
+                _drawerItem(Icons.medication_rounded, "Prescriptions", () {}),
+
+                const Divider(indent: 20, endIndent: 20),
+                _drawerSectionTitle("Account & Support"),
+                _drawerItem(Icons.person_rounded, "My Profile", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(userData: widget.userData)));
+                }),
+                _drawerItem(Icons.support_agent_rounded, "24/7 Support", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactScreen()));
+                }),
+                _drawerItem(Icons.info_rounded, "About", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutScreen()));
+                }),
+                _drawerItem(Icons.policy_rounded, "Privacy & Policy", () {}),
+
+                const SizedBox(height: 20),
+                _drawerItem(Icons.logout_rounded, "Logout", () => logout(), color: const Color(0xFFE53935)),
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+          
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              "Version 2.1.2",
+              style: TextStyle(color: Colors.blueGrey[200], fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _drawerSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2),
+      ),
+    );
+  }
+
+  Widget _drawerItem(IconData icon, String title, VoidCallback onTap, {Color? color, bool isSelected = false}) {
+    final Color brandColor = const Color(0xFF1565C0);
+    final Color iconColor = color ?? (isSelected ? brandColor : const Color(0xFF546E7A));
+    final Color textColor = isSelected ? brandColor : const Color(0xFF263238);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isSelected ? brandColor.withAlpha(20) : Colors.blueGrey[50]?.withAlpha(128),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: textColor,
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+          ),
+        ),
+        onTap: onTap,
+        dense: true,
+        visualDensity: VisualDensity.compact,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        selected: isSelected,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return "";
+    if (path.startsWith('http')) return path;
+    
+    // Base URL must always point to the domain root
+    const String domain = "https://www.doctorwala.info/";
+    
+    // Normalize path: remove leading slash
+    String cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    
+    // Check if path already includes 'storage/'
+    if (!cleanPath.startsWith('storage/')) {
+      cleanPath = 'storage/' + cleanPath;
+    }
+    
+    return domain + cleanPath;
   }
 }
