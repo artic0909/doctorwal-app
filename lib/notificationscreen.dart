@@ -91,13 +91,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+    Widget build(BuildContext context) {
     int unreadCount = _notifications.where((n) => n.readStatus == 'unread').length;
+    int readCount = _notifications.where((n) => n.readStatus == 'read').length;
     int totalCount = _notifications.length;
 
     List<NotificationModel> filteredList = _notifications.where((n) {
       bool matchesTab = (_tabIndex == 0) ? n.readStatus == 'unread' : n.readStatus == 'read';
-      bool matchesSearch = n.doctorName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      bool matchesSearch = n.partnerClinicName.toLowerCase().contains(_searchQuery.toLowerCase()) || 
+          n.doctorName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           n.doctorSpecialist.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesTab && matchesSearch;
     }).toList();
@@ -107,7 +109,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       body: Column(
         children: [
           _buildHeader(unreadCount, totalCount),
-          _buildTabs(unreadCount),
+          _buildTabs(unreadCount, readCount),
           _buildSearchBar(),
           Expanded(
             child: _isLoading
@@ -176,7 +178,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
-  Widget _buildTabs(int unread) {
+  Widget _buildTabs(int unread, int read) {
     return Transform.translate(
       offset: const Offset(0, -20),
       child: Padding(
@@ -185,7 +187,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           children: [
             _tabItem("UNREAD", unread, 0),
             const SizedBox(width: 15),
-            _tabItem("READ", 0, 1),
+            _tabItem("READ", read, 1),
           ],
         ),
       ),
@@ -200,7 +202,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.white.withAlpha(128),
+            color: isSelected ? Colors.white : Colors.white.withAlpha(210), // Increased opacity for visibility
             borderRadius: BorderRadius.circular(15),
             boxShadow: isSelected ? [BoxShadow(color: Colors.black.withAlpha(12), blurRadius: 15, offset: const Offset(0, 8))] : [],
           ),
@@ -209,7 +211,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             children: [
               Text(
                 label,
-                style: TextStyle(color: isSelected ? const Color(0xFF0D47A1) : Colors.blueGrey[300], fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600, fontSize: 12, letterSpacing: 1),
+                style: TextStyle(color: isSelected ? const Color(0xFF0D47A1) : const Color(0xFF0D47A1).withAlpha(100), fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700, fontSize: 12, letterSpacing: 1),
               ),
               if (count > 0) ...[
                 const SizedBox(width: 8),
@@ -355,27 +357,27 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
 
   Widget _managePermissionButton(NotificationModel notification) {
-    bool isAccepted = notification.reqStatus == 'accepted';
+    bool isOn = notification.accessStatus == 'on';
     return InkWell(
       onTap: () {
-        final String nextAction = isAccepted ? 'permission-off' : 'permission-on';
+        final String nextAction = isOn ? 'permission-off' : 'permission-on';
         _handleAction(notification.id, nextAction);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.blueGrey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.blueGrey[100]!),
+          color: isOn ? const Color(0xFFC62828).withAlpha(15) : const Color(0xFF2E7D32).withAlpha(15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: isOn ? const Color(0xFFC62828).withAlpha(50) : const Color(0xFF2E7D32).withAlpha(50)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(isAccepted ? Icons.security_update_warning_rounded : Icons.verified_user_rounded, size: 16, color: isAccepted ? const Color(0xFFC62828) : const Color(0xFF2E7D32)),
+            Icon(isOn ? Icons.security_update_warning_rounded : Icons.verified_user_rounded, size: 14, color: isOn ? const Color(0xFFC62828) : const Color(0xFF2E7D32)),
             const SizedBox(width: 8),
             Text(
-              isAccepted ? "Revoke Medical Access" : "Restore Medical Access",
-              style: TextStyle(color: isAccepted ? const Color(0xFFC62828) : const Color(0xFF2E7D32), fontWeight: FontWeight.w800, fontSize: 12),
+              isOn ? "Turn Off Access" : "Turn On Access",
+              style: TextStyle(color: isOn ? const Color(0xFFC62828) : const Color(0xFF2E7D32), fontWeight: FontWeight.w800, fontSize: 11),
             ),
           ],
         ),
