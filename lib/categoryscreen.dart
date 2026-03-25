@@ -24,6 +24,9 @@ class CategoryHomeScreen extends StatefulWidget {
 class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   String name = '';
   String email = '';
+  String memberId = '';
+  String medicalCardNo = '';
+  String profileImg = '';
 
   @override
   void initState() {
@@ -34,8 +37,24 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      name = prefs.getString('name') ?? 'User';
-      email = prefs.getString('email') ?? '';
+      name = prefs.getString('name') ?? widget.userData['name'] ?? widget.userData['user_name'] ?? 'User';
+      email = prefs.getString('email') ?? widget.userData['email'] ?? widget.userData['user_email'] ?? '';
+      
+      // Aggressive key checking for memberId
+      memberId = prefs.getString('member_id') ?? '';
+      if (memberId.trim().isEmpty) memberId = prefs.getString('memberid') ?? '';
+      if (memberId.trim().isEmpty) memberId = widget.userData['member_id']?.toString() ?? '';
+      if (memberId.trim().isEmpty) memberId = widget.userData['memberid']?.toString() ?? '';
+      if (memberId.trim().isEmpty) memberId = 'DW-2026-CARD';
+
+      // Aggressive key checking for medicalCardNo
+      medicalCardNo = prefs.getString('medical_card_no') ?? '';
+      if (medicalCardNo.trim().isEmpty) medicalCardNo = prefs.getString('medicalcardno') ?? '';
+      if (medicalCardNo.trim().isEmpty) medicalCardNo = widget.userData['medical_card_no']?.toString() ?? '';
+      if (medicalCardNo.trim().isEmpty) medicalCardNo = widget.userData['medicalcardno']?.toString() ?? '';
+      if (medicalCardNo.trim().isEmpty) medicalCardNo = 'DW26 0000 00';
+
+      profileImg = prefs.getString('image') ?? widget.userData['image']?.toString() ?? '';
     });
   }
 
@@ -44,7 +63,6 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     final token = prefs.getString('token');
 
     if (token == null) {
-      // No token saved, just go to login
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -52,27 +70,54 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       return;
     }
 
-    final response = await http.post(
-      Uri.parse('https://doctorwala.info/api/logout'),
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('https://doctorwala.info/api/logout'),
+        headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+      );
 
-    if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
+        await prefs.clear();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Logout failed: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      // If error (e.g. 401), just clear and go back
       await prefs.clear();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Logout failed: ${response.body}')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Use local state if it's available, otherwise fallback to widget data
+    final String currentName = name.isNotEmpty && name != 'User' ? name : (widget.userData['name'] ?? widget.userData['user_name'] ?? 'Guest');
+    
+    // Member ID Fallback logic
+    String dispMemberId = memberId;
+    if (dispMemberId.trim().isEmpty || dispMemberId == 'DW-0000-000' || dispMemberId == 'DW-2026-CARD') {
+      dispMemberId = (widget.userData['member_id'] ?? widget.userData['memberid'] ?? 'DW-2026-CARD').toString();
+    }
+
+    // Card No Fallback logic
+    String dispCardNo = medicalCardNo;
+    if (dispCardNo.trim().isEmpty || dispCardNo == 'DW00 0000 00' || dispCardNo == 'DW01 0001 001' || dispCardNo == 'DW26 0000 00') {
+      dispCardNo = (widget.userData['medical_card_no'] ?? widget.userData['medicalcardno'] ?? 'DW26 0000 00').toString();
+    }
+
+    final String currentProfileImg = profileImg.isNotEmpty ? profileImg : (widget.userData['image']?.toString() ?? '');
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFF),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -193,161 +238,312 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         ),
       ),
       appBar: AppBar(
-        backgroundColor: Colors.blue[900],
+        elevation: 0,
+        backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
-        title: Builder(
-          builder:
-              (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-        ),
-      ),
-      body: Stack(
-        children: [
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: ShaderMask(
-              shaderCallback: (Rect bounds) {
-                return const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.white],
-                ).createShader(bounds);
-              },
-              blendMode: BlendMode.dstIn,
-              child: Image.asset(
-                'assets/images/bg2.jpeg',
-                fit: BoxFit.cover,
-                height: 450,
+        title: Row(
+          children: [
+            Builder(
+              builder: (context) => GestureDetector(
+                onTap: () => Scaffold.of(context).openDrawer(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1565C0).withAlpha(12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.menu_rounded, color: Color(0xFF1565C0), size: 24),
+                ),
               ),
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.blue[900],
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(25),
-                    bottomRight: Radius.circular(25),
+            const SizedBox(width: 15),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Hello,",
+                  style: TextStyle(color: Colors.blueGrey[400], fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  currentName,
+                  style: const TextStyle(color: Color(0xFF263238), fontSize: 16, fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Hero(
+              tag: 'profile',
+              child: GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfileEditScreen(userData: widget.userData)),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFF1565C0).withAlpha(38), width: 2),
+                  ),
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.blueGrey[50],
+                    backgroundImage: currentProfileImg.isNotEmpty ? NetworkImage(currentProfileImg) : null,
+                    child: currentProfileImg.isEmpty ? const Icon(Icons.person_rounded, size: 20, color: Color(0xFF1565C0)) : null,
                   ),
                 ),
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    const Text(
-                      "Hello ",
-                      style: TextStyle(color: Colors.white, fontSize: 20),
-                    ),
-                    Text(
-                      name.isNotEmpty
-                          ? '${name[0].toUpperCase()}${name.substring(1)}'
-                          : '',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => ProfileEditScreen(
-                                  userData: widget.userData,
-                                ),
-                          ),
-                        );
-
-                        await loadUserData();
-                        setState(() {});
-                      },
-
-                      child: CircleAvatar(
-                        backgroundColor: Colors.white,
-                        radius: 25,
-                        child: Icon(Icons.person, color: Colors.blue[900]),
-                      ),
-                    ),
-                  ],
-                ),
               ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(16.0),
-                  children: [
-                    _buildCard(
-                      icon: Icons.biotech,
-                      label: 'Available Pathology',
-                      ontap:
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) =>
-                                       AllAvailablePathologyScreen(userData: widget.userData),
-                            ),
+            ),
+          ],
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // 1. Premium Search & Location Bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 55,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(8),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
                           ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildCard(
-                      icon: Icons.assignment,
-                      label: 'Available OPD',
-                      ontap: () =>
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => AllAvailableOPDScreen(userData: widget.userData),
+                        ],
+                      ),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: "Search medical services...",
+                          hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 14),
+                          prefixIcon: const Icon(Icons.location_on_rounded, color: Color(0xFFE53935), size: 20),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    _buildCard(
-                      icon: Icons.medical_services,
-                      label: 'Available Doctors',
-                      ontap:
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AllDoctorsScreen(),
-                            ),
-                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    height: 55,
+                    width: 55,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1565C0),
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1565C0).withAlpha(76),
+                          blurRadius: 12,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 100),
-                  ],
-                ),
+                    child: const Icon(Icons.search_rounded, color: Colors.white, size: 24),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+
+            // 2. Dynamic Virtual Medical Card
+            Container(
+              width: double.infinity,
+              height: 200,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+                ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1565C0).withAlpha(102),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  // Subtle Pattern
+                  Positioned(
+                    right: -20,
+                    top: -20,
+                    child: Icon(Icons.health_and_safety_rounded, size: 150, color: Colors.white.withAlpha(25)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(25),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Image.asset('assets/images/logo.png', height: 30, color: Colors.white),
+                            const SizedBox(width: 10),
+                            const Text(
+                              "DOCTORWALA MEDICAL CARD",
+                              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.nfc_rounded, color: Colors.white70, size: 20),
+                          ],
+                        ),
+                        const Spacer(),
+                        Text(
+                          dispCardNo,
+                          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w400, letterSpacing: 4),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text("CARD HOLDER", style: TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.bold)),
+                                Text(currentName.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text("MEMBER ID", style: TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.bold)),
+                                Text(dispMemberId, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // 3. Category List Heading
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 25),
+              child: Row(
+                children: [
+                  Text(
+                    "Medical Ecosystem",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
+                  ),
+                  Spacer(),
+                  Text(
+                    "View All",
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFE53935)),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // 4. One-by-One Categories
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  _newCategoryCard(
+                    title: "Specialist Doctors",
+                    subtitle: "Connect with top experts in 50+ specialties",
+                    icon: Icons.personal_injury_rounded,
+                    color: const Color(0xFF1565C0),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AllDoctorsScreen())),
+                  ),
+                  _newCategoryCard(
+                    title: "Advanced OPD",
+                    subtitle: "Book clinical appointments instantly",
+                    icon: Icons.assignment_rounded,
+                    color: const Color(0xFFE53935),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllAvailableOPDScreen(userData: widget.userData))),
+                  ),
+                  _newCategoryCard(
+                    title: "Pathology Labs",
+                    subtitle: "Certified diagnostic testing at home",
+                    icon: Icons.biotech_rounded,
+                    color: const Color(0xFF00C853),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllAvailablePathologyScreen(userData: widget.userData))),
+                  ),
+                  _newCategoryCard(
+                    title: "24/7 Support",
+                    subtitle: "Immediate medical assistance & help",
+                    icon: Icons.support_agent_rounded,
+                    color: const Color(0xFFFFAB00),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactScreen())),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildCard({
+  Widget _newCategoryCard({
+    required String title,
+    required String subtitle,
     required IconData icon,
-    required String label,
-    required VoidCallback ontap,
+    required Color color,
+    required VoidCallback onTap,
   }) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: ListTile(
-        leading: Icon(icon, size: 40, color: Colors.blue[900]),
-        title: Text(
-          label,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(5),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
-        onTap: ontap,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withAlpha(25),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF263238)),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 12, color: Colors.blueGrey[300], fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, color: Colors.blueGrey[100], size: 16),
+          ],
+        ),
       ),
     );
   }

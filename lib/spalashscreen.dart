@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:demoapp/main.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:demoapp/categoryscreen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -44,11 +46,31 @@ class _SplashScreenState extends State<SplashScreen>
     _logoController.forward();
     _fadeController.forward();
 
-    Timer(const Duration(milliseconds: 3500), () {
+    Timer(const Duration(milliseconds: 3500), () async {
       if (mounted) {
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('token');
+        
+        Widget nextScreen;
+        if (token != null && token.isNotEmpty) {
+          final userData = {
+            'token': token,
+            'name': prefs.getString('name') ?? '',
+            'email': prefs.getString('email') ?? '',
+            'mobile': prefs.getString('mobile') ?? '',
+            'city': prefs.getString('city') ?? '',
+            'member_id': prefs.getString('member_id') ?? '',
+            'medical_card_no': prefs.getString('medical_card_no') ?? '',
+            'image': prefs.getString('image') ?? '',
+          };
+          nextScreen = CategoryHomeScreen(userData: userData);
+        } else {
+          nextScreen = const LoginScreen();
+        }
+
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+            pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
             },

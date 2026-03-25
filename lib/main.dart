@@ -101,12 +101,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final data = jsonDecode(response.body);
       if (response.statusCode == 200 && data.containsKey('token')) {
+        final userData = data['user'] ?? {};
         return {
           'token': data['token'],
-          'name': data['user']['name'],
-          'email': data['user']['email'],
-          'mobile': data['user']['mobile'] ?? '',
-          'city': data['user']['city'] ?? '',
+          'name': userData['name'] ?? userData['user_name'] ?? data['name'] ?? data['user_name'] ?? 'User',
+          'email': userData['email'] ?? userData['user_email'] ?? data['email'] ?? data['user_email'] ?? '',
+          'mobile': userData['mobile'] ?? userData['user_mobile'] ?? data['mobile'] ?? data['user_mobile'] ?? '',
+          'city': userData['city'] ?? userData['user_city'] ?? data['city'] ?? data['user_city'] ?? '',
+          'member_id': userData['member_id'] ?? userData['memberid'] ?? data['member_id'] ?? data['memberid'] ?? '',
+          'medical_card_no': userData['medical_card_no'] ?? userData['medicalcardno'] ?? data['medical_card_no'] ?? data['medicalcardno'] ?? '',
+          'image': userData['image'] ?? userData['user_image'] ?? data['image'] ?? data['user_image'] ?? '',
         };
       } else {
         _showErrorDialog(data['message'] ?? 'Login failed');
@@ -193,6 +197,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           await prefs.setString(
                             'city',
                             _loggedUserData!['city'],
+                          );
+                          await prefs.setString(
+                            'member_id',
+                            _loggedUserData!['member_id'],
+                          );
+                          await prefs.setString(
+                            'medical_card_no',
+                            _loggedUserData!['medical_card_no'],
+                          );
+                          await prefs.setString(
+                            'image',
+                            _loggedUserData!['image'],
                           );
 
                           Future.delayed(const Duration(seconds: 1), () {

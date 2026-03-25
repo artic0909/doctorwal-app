@@ -66,13 +66,25 @@ class _SignupScreenState extends State<SignupScreen> {
         await prefs.setString('email', user['email'] ?? '');
         await prefs.setString('mobile', user['mobile'] ?? '');
         await prefs.setString('city', user['city'] ?? '');
+        await prefs.setString(
+          'member_id',
+          (user['member_id'] ?? user['memberid'] ?? '').toString(),
+        );
+        await prefs.setString(
+          'medical_card_no', 
+          (user['medical_card_no'] ?? user['medicalcardno'] ?? '').toString()
+        );
+        await prefs.setString('image', (user['image'] ?? user['user_image'] ?? '').toString());
 
         final Map<String, dynamic> userData = {
           'token': token,
-          'name': user['name'],
-          'email': user['email'],
-          'mobile': user['mobile'] ?? '',
-          'city': user['city'] ?? '',
+          'name': user['name'] ?? user['user_name'] ?? '',
+          'email': user['email'] ?? user['user_email'] ?? '',
+          'mobile': user['mobile'] ?? user['user_mobile'] ?? '',
+          'city': user['city'] ?? user['user_city'] ?? '',
+          'member_id': user['member_id'] ?? user['memberid'] ?? '',
+          'medical_card_no': user['medical_card_no'] ?? user['medicalcardno'] ?? '',
+          'image': user['image'] ?? user['user_image'] ?? '',
         };
 
         if (!mounted) return;
