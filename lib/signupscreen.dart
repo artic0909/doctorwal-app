@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:ui';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:demoapp/categoryscreen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -51,7 +53,30 @@ class _SignupScreenState extends State<SignupScreen> {
 
       final jsonResponse = json.decode(response.body);
 
-      if (response.statusCode == 200 && jsonResponse['status'] == true) {
+
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          jsonResponse['status'] == true) {
+        // Auto-Login: Save user session data
+        final token = jsonResponse['token'];
+        final user = jsonResponse['user'];
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        await prefs.setString('name', user['name'] ?? '');
+        await prefs.setString('email', user['email'] ?? '');
+        await prefs.setString('mobile', user['mobile'] ?? '');
+        await prefs.setString('city', user['city'] ?? '');
+
+        final Map<String, dynamic> userData = {
+          'token': token,
+          'name': user['name'],
+          'email': user['email'],
+          'mobile': user['mobile'] ?? '',
+          'city': user['city'] ?? '',
+        };
+
+        if (!mounted) return;
+
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -100,6 +125,11 @@ class _SignupScreenState extends State<SignupScreen> {
                               ],
                             ),
                           ),
+                          const SizedBox(height: 5),
+                          const Text(
+                            "Welcome to the Ecosystem",
+                            style: TextStyle(color: Colors.white70, fontSize: 13),
+                          ),
                         ],
                       ),
                     ),
@@ -114,7 +144,9 @@ class _SignupScreenState extends State<SignupScreen> {
           Navigator.of(context).pop(); // close dialog
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const LoginScreen(showSuccessMessage: true)),
+            MaterialPageRoute(
+              builder: (_) => CategoryHomeScreen(userData: userData),
+            ),
           );
         }
       } else {

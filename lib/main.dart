@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:demoapp/categoryscreen.dart';
 import 'package:demoapp/forgetpasswordscreen.dart';
-import 'package:demoapp/loginwithotpscreen.dart';
 import 'package:demoapp/signupscreen.dart';
 import 'package:demoapp/spalashscreen.dart';
 import 'package:flutter/material.dart';
