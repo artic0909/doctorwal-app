@@ -455,7 +455,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           // Premium Immersive Header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 30),
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 20),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -472,39 +472,38 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
                       child: CircleAvatar(
-                        radius: 35,
+                        radius: 30,
                         backgroundColor: Colors.white,
                         backgroundImage: profileImg.isNotEmpty ? NetworkImage(_getImageUrl(profileImg)) : null,
-                        child: profileImg.isEmpty ? const Icon(Icons.person, size: 35, color: Color(0xFF1565C0)) : null,
+                        child: profileImg.isEmpty ? const Icon(Icons.person, size: 30, color: Color(0xFF1565C0)) : null,
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 28),
+                    Row(
+                      children: [
+                        _logoutIconButton(),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 26),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 15),
                 Text(
                   name,
-                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(51),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                  decoration: BoxDecoration(color: Colors.white.withAlpha(51), borderRadius: BorderRadius.circular(20)),
                   child: Text(
                     memberId,
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -529,6 +528,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 _drawerItem(Icons.note_add_rounded, "Add Medical Records", () {}),
                 _drawerItem(Icons.assignment_rounded, "Reports", () {}),
                 _drawerItem(Icons.medication_rounded, "Prescriptions", () {}),
+                _drawerItem(Icons.analytics_rounded, "Health Parameters", () {}),
 
                 const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("Account & Support"),
@@ -546,8 +546,6 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 }),
                 _drawerItem(Icons.policy_rounded, "Privacy & Policy", () {}),
 
-                const SizedBox(height: 20),
-                _drawerItem(Icons.logout_rounded, "Logout", () => logout(), color: const Color(0xFFE53935)),
                 const SizedBox(height: 30),
               ],
             ),
@@ -625,5 +623,17 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     }
     
     return domain + cleanPath;
+  }
+
+  Widget _logoutIconButton() {
+    return Container(
+      margin: const EdgeInsets.only(right: 5),
+      decoration: BoxDecoration(color: Colors.white.withAlpha(40), shape: BoxShape.circle),
+      child: IconButton(
+        onPressed: () => logout(),
+        icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
+        tooltip: "Logout",
+      ),
+    );
   }
 }
