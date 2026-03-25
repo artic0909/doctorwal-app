@@ -6,6 +6,7 @@ import 'aboutscreen.dart';
 import 'alldoctorsscreen.dart';
 import 'allavailablepathologyscreen.dart';
 import 'contactscreen.dart';
+import 'notificationscreen.dart';
 import 'profileeditscreen.dart';
 import 'package:http/http.dart' as http;
 
@@ -155,7 +156,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               children: [
                 IconButton(
                   icon: Icon(Icons.notifications_none_rounded, color: Colors.blueGrey[600], size: 26),
-                  onPressed: () {},
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationScreen())),
                 ),
                 Positioned(
                   right: 12,
@@ -516,8 +517,11 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               padding: const EdgeInsets.symmetric(vertical: 10),
               children: [
                 _drawerItem(Icons.home_rounded, "Home", () => Navigator.pop(context), isSelected: true),
-                _drawerItem(Icons.notifications_rounded, "Notifications", () {}),
-                _drawerItem(Icons.event_available_rounded, "Appointments", () {}),
+                _drawerItem(Icons.notifications_active_rounded, "Notifications", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationScreen()));
+                }),
+                _drawerItem(Icons.calendar_month_rounded, "Appointments", () {}),
                 
                 const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("Health Management"),
