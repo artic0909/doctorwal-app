@@ -27,7 +27,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    filteredTests = List.from(widget.pathology.tests);
+    filteredTests = List.from(widget.pathology.tests ?? []);
     searchController.addListener(_onSearchChanged);
   }
 
@@ -35,14 +35,16 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
       final query = searchController.text.toLowerCase().trim();
+      final allTests = widget.pathology.tests ?? [];
       if (query.isEmpty) {
         setState(() {
-          filteredTests = List.from(widget.pathology.tests);
+          filteredTests = List.from(allTests);
         });
       } else {
         setState(() {
           filteredTests =
-              widget.pathology.tests.where((test) {
+              allTests.where((test) {
+                if (test == null) return false;
                 final name = (test['test_name'] ?? '').toString().toLowerCase();
                 final type = (test['test_type'] ?? '').toString().toLowerCase();
                 return name.contains(query) || type.contains(query);
@@ -64,129 +66,122 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
-      body: Column(
-        children: [
-          // 1. Premium Image-Inspired Header
-          _buildImageStyleHeader(context),
+      body: CustomScrollView(
+        slivers: [
+          // 1. Scrolling Premium Header
+          SliverToBoxAdapter(
+            child: _buildImageStyleHeader(context),
+          ),
 
-          // 2. Search Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 10, offset: const Offset(0, 4))],
-              ),
-              child: TextField(
-                controller: searchController,
-                decoration: InputDecoration(
-                  hintText: "Filter diagnostics by name or type...",
-                  hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 13),
-                  border: InputBorder.none,
-                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF2E7D32), size: 18),
-                ),
-              ),
-            ),
+          // 2. Robust Sticky Search Bar
+          SliverAppBar(
+            pinned: true,
+            floating: false,
+            backgroundColor: const Color(0xFFF8FAFF),
+            elevation: 0,
+            toolbarHeight: 80,
+            automaticallyImplyLeading: false,
+            titleSpacing: 0,
+            title: _buildSearchBar(),
           ),
 
           // 3. Test Listing Section
-          Expanded(
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2E7D32).withAlpha(15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.biotech_rounded, color: Color(0xFF2E7D32), size: 18),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          "Available Diagnostics",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
-                        ),
-                        const Spacer(),
-                        Text(
-                          "${filteredTests.length} Tests",
-                          style: TextStyle(color: Colors.blueGrey[300], fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
-                      ],
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2E7D32).withAlpha(15),
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    child: const Icon(Icons.biotech_rounded, color: Color(0xFF2E7D32), size: 18),
                   ),
-                ),
-
-                if (filteredTests.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 40),
-                        child: Text("No matching tests found", style: TextStyle(color: Colors.blueGrey[200], fontSize: 13)),
-                      ),
-                    ),
-                  )
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildTestCard(filteredTests[index]),
-                        childCount: filteredTests.length,
-                      ),
-                    ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    "Available Diagnostics",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
                   ),
-
-                // 4. Services Section
-                if (widget.pathology.services.isNotEmpty) ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFC62828).withAlpha(15),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.volunteer_activism_rounded, color: Color(0xFFC62828), size: 18),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            "Premium Services",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final service = widget.pathology.services[index];
-                          final list = service['service_lists'] as List? ?? [];
-                          return Column(
-                            children: list.map((item) => _buildServiceItem(item.toString())).toList(),
-                          );
-                        },
-                        childCount: widget.pathology.services.length,
-                      ),
-                    ),
+                  const Spacer(),
+                  Text(
+                    "${filteredTests.length} Tests",
+                    style: TextStyle(color: Colors.blueGrey[300], fontSize: 11, fontWeight: FontWeight.bold),
                   ),
                 ],
-                const SliverToBoxAdapter(child: SizedBox(height: 30)),
-              ],
+              ),
             ),
           ),
+
+          if (filteredTests.isEmpty)
+            SliverToBoxAdapter(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Text("No matching tests found", style: TextStyle(color: Colors.blueGrey[200], fontSize: 13)),
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    if (index >= filteredTests.length) return null;
+                    final test = filteredTests[index];
+                    if (test == null) return const SizedBox.shrink();
+                    return _buildTestCard(test);
+                  },
+                  childCount: filteredTests.length,
+                ),
+              ),
+            ),
+
+          // 4. Services Section
+          if (widget.pathology.services != null && widget.pathology.services.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC62828).withAlpha(15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.volunteer_activism_rounded, color: Color(0xFFC62828), size: 18),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      "Premium Services",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    if (index >= widget.pathology.services.length) return null;
+                    final service = widget.pathology.services[index];
+                    if (service == null) return const SizedBox.shrink();
+                    final list = service['service_lists'] as List? ?? [];
+                    return Column(
+                      children: list.map((item) => _buildServiceItem(item?.toString() ?? "")).toList(),
+                    );
+                  },
+                  childCount: widget.pathology.services.length,
+                ),
+              ),
+            ),
+          ],
+          const SliverToBoxAdapter(child: SizedBox(height: 30)),
         ],
       ),
     );
@@ -196,7 +191,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
     final p = widget.pathology;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 20),
+      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 25),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
@@ -228,7 +223,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _capitalizeWords(p.clinicName),
+                      _capitalizeWords(p.clinicName ?? "Lab"),
                       style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                     ),
                     const SizedBox(height: 2),
@@ -242,16 +237,16 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _headerInfoRow(Icons.person_rounded, "Contact Manager", p.contactPersonName),
+          _headerInfoRow(Icons.person_rounded, "Contact Manager", p.contactPersonName ?? ""),
           const SizedBox(height: 12),
-          _headerInfoRow(Icons.location_on_rounded, "Lab Address", p.clinicAddress),
+          _headerInfoRow(Icons.location_on_rounded, "Lab Address", p.clinicAddress ?? ""),
           const SizedBox(height: 25),
           Row(
             children: [
-              Expanded(child: _headerActionBtn("CALL", Icons.phone_rounded, () => launchUrl(Uri.parse("tel:${p.clinicMobileNumber}")))),
+              Expanded(child: _headerActionBtn("CALL", Icons.phone_rounded, () => launchUrl(Uri.parse("tel:${p.clinicMobileNumber ?? ''}")))),
               const SizedBox(width: 10),
               Expanded(child: _headerActionBtn("MAP", Icons.near_me_rounded, () async {
-                final url = p.clinicGoogleMapLink;
+                final url = p.clinicGoogleMapLink ?? "";
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
                   await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                 }
@@ -310,8 +305,34 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
     );
   }
 
+  Widget _buildSearchBar() {
+    return Container(
+      color: const Color(0xFFF8FAFF),
+      padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+      child: Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: TextField(
+          controller: searchController,
+          decoration: InputDecoration(
+            hintText: "Filter diagnostics by name or type...",
+            hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 13),
+            border: InputBorder.none,
+            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF2E7D32), size: 18),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildTestCard(dynamic test) {
-    final price = test['test_price']?.toString() ?? '0';
+    final t = test as Map<String, dynamic>? ?? {};
+    final price = t['test_price']?.toString() ?? '0';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -321,7 +342,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
         border: Border.all(color: const Color(0xFF2E7D32).withAlpha(10)),
       ),
       child: InkWell(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => PathologyTestsDetailsScreen(test: test))),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => PathologyTestsDetailsScreen(test: t))),
         child: Row(
           children: [
             Container(
@@ -335,12 +356,12 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _capitalizeWords(test['test_name'] ?? 'N/A'),
+                    _capitalizeWords(t['test_name']?.toString() ?? 'N/A'),
                     style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF263238)),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Type: ${test['test_type'] ?? 'General'}",
+                    "Type: ${t['test_type']?.toString() ?? 'General'}",
                     style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -375,8 +396,8 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
     );
   }
 
-  String _capitalizeWords(String input) {
-    if (input.isEmpty) return "";
+  String _capitalizeWords(String? input) {
+    if (input == null || input.isEmpty) return "";
     return input.split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1).toLowerCase() : word).join(' ');
   }
 }
