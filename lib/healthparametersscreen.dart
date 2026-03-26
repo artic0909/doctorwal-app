@@ -77,7 +77,7 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
         backgroundColor: Colors.white,
         centerTitle: true,
         title: const Text(
-          "Health History",
+          "Health Parameter Records",
           style: TextStyle(color: Color(0xFF263238), fontSize: 18, fontWeight: FontWeight.w900),
         ),
         leading: IconButton(
@@ -138,79 +138,76 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
   Widget _buildVitalCard(dynamic vital, bool isLatest) {
     String dateStr = "";
     try {
-      DateTime dt = DateTime.parse(vital['created_at']);
-      dateStr = DateFormat('MMM dd, yyyy • hh:mm a').format(dt);
+      DateTime dt = DateTime.parse(vital['created_at']).toLocal();
+      dateStr = DateFormat('dd MMM yyyy • hh:mm a').format(dt);
     } catch (e) {
       dateStr = "Recent Entry";
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        border: isLatest ? Border.all(color: const Color(0xFF1565C0).withAlpha(51), width: 2) : null,
+        borderRadius: BorderRadius.circular(20),
+        border: isLatest ? Border.all(color: const Color(0xFF1565C0).withAlpha(51), width: 1.5) : null,
         boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 15, offset: const Offset(0, 5)),
+          BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(25),
-        child: Column(
-          children: [
-            if (isLatest)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 15),
-                decoration: const BoxDecoration(color: Color(0xFF1565C0)),
-                child: const Text(
-                  "MOST RECENT PARAMETERS",
-                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(dateStr, style: TextStyle(color: Colors.blueGrey[300], fontSize: 12, fontWeight: FontWeight.bold)),
-                      Row(
-                        children: [
-                          _buildActionBtn(Icons.edit_rounded, Colors.blue, () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => AddVitalScreen(vitalData: vital)),
-                            ).then((value) => value == true ? _fetchVitals() : null);
-                          }),
-                          const SizedBox(width: 10),
-                          _buildActionBtn(Icons.delete_outline_rounded, Colors.red, () => _deleteVital(vital['id'])),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        if (isLatest) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(color: const Color(0xFF1565C0), borderRadius: BorderRadius.circular(6)),
+                            child: const Text("LATEST", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                          ),
+                          const SizedBox(width: 8),
                         ],
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 30),
-                  Wrap(
-                    spacing: 15,
-                    runSpacing: 15,
-                    children: [
-                      _buildParamItem(Icons.favorite_rounded, "Pulse", "${vital['heart_rate'] ?? '--'} BPM"),
-                      _buildParamItem(Icons.speed_rounded, "BP", "${vital['blood_pressure'] ?? '--'}"),
-                      _buildParamItem(Icons.thermostat_rounded, "Temp", "${vital['temparature'] ?? '--'}°F"),
-                      _buildParamItem(Icons.bloodtype_outlined, "SpO2", "${vital['spo'] ?? '--'}%"),
-                      _buildParamItem(Icons.opacity_rounded, "Sugar", "${vital['blood_sugar'] ?? '--'}"),
-                      _buildParamItem(Icons.calculate_rounded, "BMI", "${vital['bmi'] ?? '--'}"),
-                      _buildParamItem(Icons.monitor_weight_rounded, "Weight", "${vital['weight'] ?? '--'} kg"),
-                    ],
-                  ),
-                ],
-              ),
+                        Text(dateStr, style: TextStyle(color: Colors.blueGrey[300], fontSize: 11, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        _buildActionBtn(Icons.edit_rounded, Colors.blue, () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AddVitalScreen(vitalData: vital)),
+                          ).then((value) => value == true ? _fetchVitals() : null);
+                        }),
+                        const SizedBox(width: 8),
+                        _buildActionBtn(Icons.delete_outline_rounded, Colors.red, () => _deleteVital(vital['id'])),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    _buildParamItem(Icons.favorite_rounded, "Pulse", "${vital['heart_rate'] ?? '--'}"),
+                    _buildParamItem(Icons.speed_rounded, "BP", "${vital['blood_pressure'] ?? '--'}"),
+                    _buildParamItem(Icons.thermostat_rounded, "Temp", "${vital['temparature'] ?? '--'}"),
+                    _buildParamItem(Icons.bloodtype_outlined, "SpO2", "${vital['spo'] ?? '--'}%"),
+                    _buildParamItem(Icons.opacity_rounded, "Sugar", "${vital['blood_sugar'] ?? '--'}"),
+                    _buildParamItem(Icons.calculate_rounded, "BMI", "${vital['bmi'] ?? '--'}"),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -227,18 +224,22 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
   }
 
   Widget _buildParamItem(IconData icon, String label, String value) {
-    return SizedBox(
-      width: (MediaQuery.of(context).size.width - 100) / 2,
+    return Container(
+      width: (MediaQuery.of(context).size.width - 70) / 3,
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: const Color(0xFF1565C0)),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.bold)),
-              Text(value, style: const TextStyle(color: Color(0xFF263238), fontSize: 13, fontWeight: FontWeight.w900)),
-            ],
+          Icon(icon, size: 12, color: const Color(0xFF1565C0)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(color: Colors.blueGrey[300], fontSize: 8, fontWeight: FontWeight.bold)),
+                Text(value, style: const TextStyle(color: Color(0xFF263238), fontSize: 11, fontWeight: FontWeight.w900), overflow: TextOverflow.ellipsis),
+              ],
+            ),
           ),
         ],
       ),

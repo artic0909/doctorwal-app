@@ -537,7 +537,6 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 _drawerItem(Icons.note_add_rounded, "Add Medical Records", () {}),
                 _drawerItem(Icons.assignment_rounded, "Reports", () {}),
                 _drawerItem(Icons.medication_rounded, "Prescriptions", () {}),
-                _drawerItem(Icons.analytics_rounded, "Health Parameters", () {}),
 
                 const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("Account & Support"),

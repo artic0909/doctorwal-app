@@ -391,7 +391,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     
     if (isDate) {
       try {
-        DateTime dt = DateTime.parse(text);
+        DateTime dt = DateTime.parse(text).toLocal();
         displayText = DateFormat('dd MMM yyyy, hh:mm a').format(dt);
       } catch (e) {
         displayText = text;

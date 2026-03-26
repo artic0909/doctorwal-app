@@ -283,7 +283,7 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isEdit ? "Refine Your Vitals" : "New Vitals Entry",
+          isEdit ? "Refine Your Parameters" : "New Parameters Entry",
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF1565C0)),
         ),
         const SizedBox(height: 8),
