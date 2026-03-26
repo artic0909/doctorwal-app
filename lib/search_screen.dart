@@ -47,37 +47,44 @@ class _SearchScreenState extends State<SearchScreen> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: const Color(0xFF1565C0),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.search_rounded, color: Colors.white, size: 24),
+                    child: const Icon(Icons.search_rounded, color: Colors.white, size: 20),
                   ),
-                  const SizedBox(width: 15),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          "Search Your Nearby Doctors",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
+                          "Search Nearby",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
                         ),
                         Text(
-                          "Doctor's name • Clinic's Name • Using Location",
-                          style: TextStyle(fontSize: 12, color: Colors.blueGrey[300], fontWeight: FontWeight.w500),
+                          "Doctors • Clinics • Tests",
+                          style: TextStyle(fontSize: 11, color: Colors.blueGrey[300], fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded, color: Colors.blueGrey),
-                    style: IconButton.styleFrom(backgroundColor: Colors.blueGrey[50]),
+                  SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close_rounded, color: Colors.blueGrey, size: 20),
+                      padding: EdgeInsets.zero,
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.blueGrey[50],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -194,28 +201,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 40),
-                    Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _keyHint("ESC", "to close"),
-                          const SizedBox(width: 15),
-                          _keyHint("ENTER", "to search"),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text("DOC", style: TextStyle(color: Color(0xFF00C853), fontWeight: FontWeight.bold)),
-                          const Text("TOR", style: TextStyle(color: Color(0xFF1565C0), fontWeight: FontWeight.bold)),
-                          Text("wala", style: TextStyle(color: Colors.red[600], fontWeight: FontWeight.w400)),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -223,20 +209,6 @@ class _SearchScreenState extends State<SearchScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _keyHint(String key, String action) {
-    return Row(
-      children: [
-        Text("Press ", style: TextStyle(color: Colors.blueGrey[200], fontSize: 10, fontWeight: FontWeight.w500)),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(color: const Color(0xFF1565C0).withAlpha(15), borderRadius: BorderRadius.circular(4)),
-          child: Text(key, style: const TextStyle(color: Color(0xFF1565C0), fontSize: 9, fontWeight: FontWeight.bold)),
-        ),
-        Text(" $action", style: TextStyle(color: Colors.blueGrey[200], fontSize: 10, fontWeight: FontWeight.w500)),
-      ],
     );
   }
 }

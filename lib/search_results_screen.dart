@@ -223,33 +223,68 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       padding: const EdgeInsets.all(20),
       children: [
         if (allDocs.isNotEmpty && (_currentCategory == 'all' || _currentCategory == 'doctor')) ...[
-          _sectionHeader(Icons.person_rounded, "Doctors Found"),
-          ...allDocs.map((d) => _doctorCard(d)),
+          _sectionHeader(Icons.person_rounded, "Doctors Found", const Color(0xFF673AB7)),
+          ...allDocs.map((d) => _uniformResultCard(
+            type: 'DOCTOR',
+            title: d['partner_doctor_name'] ?? "Unknown Doctor",
+            subtitle: d['partner_doctor_specialist'] ?? "Specialist",
+            color: const Color(0xFF673AB7),
+            icon: Icons.person_rounded,
+            infoLines: [
+              {"icon": Icons.work_rounded, "text": d['partner_doctor_designation'] ?? "Doctor"},
+              {"icon": Icons.location_on_rounded, "text": "${d['partner_doctor_city']}, ${d['partner_doctor_state']}"},
+            ],
+            mapLink: d['partner_doctor_google_map_link'],
+          )),
           const SizedBox(height: 20),
         ],
         if (allOpds.isNotEmpty && (_currentCategory == 'all' || _currentCategory == 'opd')) ...[
-          _sectionHeader(Icons.assignment_rounded, "OPD Clinics"),
-          ...allOpds.map((o) => _clinicCard(o, 'opd')),
+          _sectionHeader(Icons.assignment_rounded, "OPD Clinics", const Color(0xFF1565C0)),
+          ...allOpds.map((o) => _uniformResultCard(
+            type: 'OPD CLINIC',
+            title: o['clinic_name'] ?? "Unknown Clinic",
+            subtitle: o['clinic_address'] ?? "No Address",
+            color: const Color(0xFF1565C0),
+            icon: Icons.local_hospital_rounded,
+            infoLines: [
+              {"icon": Icons.phone_rounded, "text": o['clinic_mobile_number'] ?? ""},
+              {"icon": Icons.group_rounded, "text": "Multiple Specialists Available"},
+            ],
+            mapLink: o['clinic_google_map_link'],
+            extraItems: (o['doctors'] as List?)?.take(2).map((d) => "${d['doctor_name']} (${d['doctor_specialist']})").toList(),
+          )),
           const SizedBox(height: 20),
         ],
         if (allPaths.isNotEmpty && (_currentCategory == 'all' || _currentCategory == 'pathology')) ...[
-          _sectionHeader(Icons.biotech_rounded, "Pathology Labs"),
-          ...allPaths.map((p) => _clinicCard(p, 'pathology')),
+          _sectionHeader(Icons.biotech_rounded, "Pathology Labs", const Color(0xFF2E7D32)),
+          ...allPaths.map((p) => _uniformResultCard(
+            type: 'PATHOLOGY LAB',
+            title: p['clinic_name'] ?? "Unknown Lab",
+            subtitle: p['clinic_address'] ?? "No Address",
+            color: const Color(0xFF2E7D32),
+            icon: Icons.biotech_rounded,
+            infoLines: [
+              {"icon": Icons.phone_rounded, "text": p['clinic_mobile_number'] ?? ""},
+              {"icon": Icons.science_rounded, "text": "Diagnostics & Testing"},
+            ],
+            mapLink: p['clinic_google_map_link'],
+            extraItems: (p['tests'] as List?)?.take(3).map((t) => t['test_type'] as String).toList(),
+          )),
           const SizedBox(height: 20),
         ],
       ],
     );
   }
 
-  Widget _sectionHeader(IconData icon, String title) {
+  Widget _sectionHeader(IconData icon, String title, Color color) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15, top: 10),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: const Color(0xFF1565C0).withAlpha(15), borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, color: const Color(0xFF1565C0), size: 18),
+            decoration: BoxDecoration(color: color.withAlpha(15), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: color, size: 18),
           ),
           const SizedBox(width: 12),
           Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF263238))),
@@ -258,51 +293,97 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     );
   }
 
-  Widget _doctorCard(dynamic doc) {
+  Widget _uniformResultCard({
+    required String type,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required IconData icon,
+    required List<Map<String, dynamic>> infoLines,
+    String? mapLink,
+    List<String>? extraItems,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4))]),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: color.withAlpha(10), blurRadius: 15, offset: const Offset(0, 8)),
+        ],
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 60, height: 60,
-                decoration: BoxDecoration(color: Colors.blueGrey[50], borderRadius: BorderRadius.circular(15)),
-                child: const Icon(Icons.person_rounded, color: Color(0xFF1565C0), size: 30),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: color.withAlpha(25), borderRadius: BorderRadius.circular(8)),
+                child: Text(
+                  type,
+                  style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                ),
+              ),
+              const Spacer(),
+              Icon(Icons.verified_rounded, color: color.withAlpha(80), size: 16),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 55, height: 55,
+                decoration: BoxDecoration(color: color.withAlpha(12), borderRadius: BorderRadius.circular(12)),
+                child: Icon(icon, color: color, size: 28),
               ),
               const SizedBox(width: 15),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(doc['partner_doctor_name'] ?? "", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238))),
+                    Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238))),
                     const SizedBox(height: 4),
-                    Text(doc['partner_doctor_specialist'] ?? "", style: const TextStyle(color: Color(0xFF1565C0), fontSize: 12, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(Icons.location_on_rounded, size: 12, color: Colors.blueGrey[300]),
-                        const SizedBox(width: 4),
-                        Expanded(child: Text("${doc['partner_doctor_city']}, ${doc['partner_doctor_state']}", style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                      ],
-                    ),
+                    Text(subtitle, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 15),
+          ...infoLines.map((line) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(line['icon'] as IconData, size: 14, color: Colors.blueGrey[300]),
+                const SizedBox(width: 8),
+                Expanded(child: Text(line['text'] as String, style: TextStyle(fontSize: 11, color: Colors.blueGrey[400], fontWeight: FontWeight.w600))),
+              ],
+            ),
+          )),
+          if (extraItems != null && extraItems.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: extraItems.map((item) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: color.withAlpha(10), borderRadius: BorderRadius.circular(6), border: Border.all(color: color.withAlpha(20))),
+                child: Text(item, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
+              )).toList(),
+            ),
+          ],
+          const SizedBox(height: 15),
           const Divider(height: 1),
           const SizedBox(height: 15),
           Row(
             children: [
-               Expanded(child: _infoItem(Icons.work_rounded, doc['partner_doctor_designation'] ?? "Doctor")),
-               _continueBtn(() async {
-                 final url = doc['partner_doctor_google_map_link'];
-                 if (url != null && await canLaunchUrl(Uri.parse(url))) await launchUrl(Uri.parse(url));
-               }),
+              const Spacer(),
+              _continueBtn(color, () async {
+                if (mapLink != null && await canLaunchUrl(Uri.parse(mapLink))) await launchUrl(Uri.parse(mapLink));
+              }),
             ],
           ),
         ],
@@ -310,102 +391,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     );
   }
 
-  Widget _clinicCard(dynamic clinic, String type) {
-    final doctors = clinic['doctors'] as List?;
-    final tests = clinic['tests'] as List?;
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4))]),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-           Row(
-             children: [
-               Container(
-                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                 decoration: BoxDecoration(color: type == 'opd' ? Colors.blue[600] : Colors.green[600], borderRadius: BorderRadius.circular(6)),
-                 child: Text(type.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
-               ),
-               const Spacer(),
-               Icon(Icons.more_vert_rounded, color: Colors.blueGrey[200], size: 18),
-             ],
-           ),
-           const SizedBox(height: 10),
-           Text(clinic['clinic_name'] ?? "", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238))),
-           const SizedBox(height: 4),
-           Row(
-              children: [
-                Icon(Icons.location_on_rounded, size: 12, color: Colors.blueGrey[300]),
-                const SizedBox(width: 4),
-                Expanded(child: Text(clinic['clinic_address'] ?? "", style: TextStyle(color: Colors.blueGrey[300], fontSize: 11, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-              ],
-           ),
-           const SizedBox(height: 12),
-           if (doctors != null && doctors.isNotEmpty) ...[
-             const Text("Specialists:", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF263238))),
-             const SizedBox(height: 6),
-             ...doctors.take(3).map((d) => Padding(
-               padding: const EdgeInsets.only(bottom: 4),
-               child: Row(
-                 children: [
-                   const Icon(Icons.check_circle_rounded, size: 10, color: Color(0xFF1565C0)),
-                   const SizedBox(width: 8),
-                   Expanded(child: Text("${d['doctor_name']} (${d['doctor_specialist']})", style: const TextStyle(fontSize: 10, color: Colors.blueGrey, fontWeight: FontWeight.w500))),
-                 ],
-               ),
-             )),
-           ],
-           if (tests != null && tests.isNotEmpty) ...[
-             const Text("Available Tests:", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF263238))),
-             const SizedBox(height: 6),
-             Wrap(
-               spacing: 6,
-               runSpacing: 6,
-               children: tests.take(4).map((t) => Container(
-                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                 decoration: BoxDecoration(color: Colors.green.withAlpha(15), borderRadius: BorderRadius.circular(6)),
-                 child: Text(t['test_type'] ?? "", style: const TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.w800)),
-               )).toList(),
-             ),
-           ],
-           const SizedBox(height: 15),
-           const Divider(height: 1),
-           const SizedBox(height: 15),
-           Row(
-             children: [
-                Expanded(child: _infoItem(Icons.phone_rounded, clinic['clinic_mobile_number'] ?? "")),
-                _continueBtn(() async {
-                   final url = clinic['clinic_google_map_link'];
-                   if (url != null && await canLaunchUrl(Uri.parse(url))) await launchUrl(Uri.parse(url));
-                }),
-             ],
-           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoItem(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: Colors.blueGrey[300]),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, style: TextStyle(fontSize: 11, color: Colors.blueGrey[400], fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
-      ],
-    );
-  }
-
-  Widget _continueBtn(VoidCallback onTap) {
+  Widget _continueBtn(Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF1565C0),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [BoxShadow(color: const Color(0xFF1565C0).withAlpha(40), blurRadius: 8, offset: const Offset(0, 4))],
+          color: color,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: color.withAlpha(50), blurRadius: 8, offset: const Offset(0, 4))],
         ),
         child: const Row(
           children: [
