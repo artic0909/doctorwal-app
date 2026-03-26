@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:demoapp/bookingscreen.dart';
 
@@ -18,10 +19,24 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
     testName = test['test_name'] ?? 'N/A';
     testType = test['test_type'] ?? 'N/A';
     testPrice = test['test_price']?.toString() ?? '0';
-    testDayTime =
-        (test['test_day_time'] as List<dynamic>?)
-            ?.cast<Map<String, dynamic>>() ??
-        [];
+    
+    final rawDayTime = test['test_day_time'];
+    if (rawDayTime is List) {
+      testDayTime = rawDayTime.cast<Map<String, dynamic>>();
+    } else if (rawDayTime is String && rawDayTime.isNotEmpty) {
+      try {
+        final decoded = json.decode(rawDayTime);
+        if (decoded is List) {
+          testDayTime = decoded.cast<Map<String, dynamic>>();
+        } else {
+          testDayTime = [];
+        }
+      } catch (e) {
+        testDayTime = [];
+      }
+    } else {
+      testDayTime = [];
+    }
   }
 
   @override
