@@ -52,11 +52,6 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
     });
   }
 
-  void _clearSearch() {
-    searchController.clear();
-    _onSearchChanged();
-  }
-
   @override
   void dispose() {
     searchController.removeListener(_onSearchChanged);
@@ -67,261 +62,204 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pathology = widget.pathology;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFEFF9FF),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(65),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-          child: AppBar(
-            title: const Text(
-              'Pathology Details',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            backgroundColor: Colors.blue[900],
-            iconTheme: const IconThemeData(color: Colors.white),
-            elevation: 0,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Banner
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child:
-                  pathology.bannerImage.isNotEmpty
-                      ? Image.network(
-                        pathology.bannerImage,
-                        width: double.infinity,
-                        height: 180,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (_, __, ___) => Image.asset(
-                              'assets/images/empty-min.jpg',
-                              width: double.infinity,
-                              height: 180,
-                              fit: BoxFit.cover,
-                            ),
-                      )
-                      : Image.asset(
-                        'assets/images/empty-min.jpg',
-                        width: double.infinity,
-                        height: 180,
-                        fit: BoxFit.cover,
-                      ),
-            ),
-            const SizedBox(height: 12),
-            _infoSection(context),
+      backgroundColor: const Color(0xFFF8FAFF),
+      body: Column(
+        children: [
+          // 1. Premium Image-Inspired Header
+          _buildImageStyleHeader(context),
 
-            const SizedBox(height: 20),
-            // 🔍 Search Bar (styled exactly as before)
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+          // 2. Search Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 10, offset: const Offset(0, 4))],
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.search, color: Colors.black45),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: searchController,
-                      decoration: const InputDecoration(
-                        hintText: 'Search Tests or Types',
-                        border: InputBorder.none,
+              child: TextField(
+                controller: searchController,
+                decoration: InputDecoration(
+                  hintText: "Filter diagnostics by name or type...",
+                  hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 13),
+                  border: InputBorder.none,
+                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF2E7D32), size: 18),
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Test Listing Section
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E7D32).withAlpha(15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.biotech_rounded, color: Color(0xFF2E7D32), size: 18),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          "Available Diagnostics",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
+                        ),
+                        const Spacer(),
+                        Text(
+                          "${filteredTests.length} Tests",
+                          style: TextStyle(color: Colors.blueGrey[300], fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                if (filteredTests.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Text("No matching tests found", style: TextStyle(color: Colors.blueGrey[200], fontSize: 13)),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => _buildTestCard(filteredTests[index]),
+                        childCount: filteredTests.length,
                       ),
                     ),
                   ),
-                  if (searchController.text.isNotEmpty)
-                    GestureDetector(
-                      onTap: _clearSearch,
-                      child: const Icon(Icons.close, color: Colors.grey),
+
+                // 4. Services Section
+                if (widget.pathology.services.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC62828).withAlpha(15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.volunteer_activism_rounded, color: Color(0xFFC62828), size: 18),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            "Premium Services",
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
+                          ),
+                        ],
+                      ),
                     ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final service = widget.pathology.services[index];
+                          final list = service['service_lists'] as List? ?? [];
+                          return Column(
+                            children: list.map((item) => _buildServiceItem(item.toString())).toList(),
+                          );
+                        },
+                        childCount: widget.pathology.services.length,
+                      ),
+                    ),
+                  ),
                 ],
-              ),
+                const SliverToBoxAdapter(child: SizedBox(height: 30)),
+              ],
             ),
-
-            const Text(
-              "PATHOLOGY DETAILS",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // Tests grid
-            filteredTests.isNotEmpty
-                ? GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filteredTests.length,
-                  padding: EdgeInsets.zero,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisExtent: 230,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemBuilder:
-                      (context, idx) =>
-                          _doctorCard(context, filteredTests[idx], pathology),
-                )
-                : const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text(
-                      "No Tests Found",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ),
-                ),
-
-            const SizedBox(height: 30),
-            const Text(
-              "SERVICE LISTS",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            pathology.services.isNotEmpty
-                ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children:
-                      pathology.services.expand<Widget>((service) {
-                        final List<dynamic> list =
-                            service['service_lists'] ?? [];
-                        return list.map<Widget>(
-                          (item) => _bulletItem(item.toString()),
-                        );
-                      }).toList(),
-                )
-                : const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text(
-                      "No Services Found",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ),
-                ),
-
-            const SizedBox(height: 30),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  // Retain your original widgets below unchanged
-
-  Widget _infoSection(BuildContext context) {
-    String uppercaseWords(String input) {
-      return input
-          .split(' ')
-          .map(
-            (word) =>
-                word.isEmpty
-                    ? word
-                    : word[0].toUpperCase() + word.substring(1).toUpperCase(),
-          )
-          .join(' ');
-    }
-
+  Widget _buildImageStyleHeader(BuildContext context) {
     final p = widget.pathology;
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 20),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(35), bottomRight: Radius.circular(35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Jio Ji Bharka',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.blue,
-              fontSize: 16,
-            ),
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
-          const SizedBox(height: 4),
-          Text(
-            uppercaseWords(p.clinicName),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: Colors.red,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _infoRow(Icons.location_on, p.clinicAddress),
-          _infoRow(Icons.location_city, p.clinicLandmark),
-          _infoRow(Icons.phone, p.clinicMobileNumber),
-          _infoRow(Icons.email, p.clinicEmail),
-          _infoRow(Icons.person, 'Contact: ${p.contactPersonName}'),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          const SizedBox(height: 20),
+          Row(
             children: [
-              _actionButton("Send Inquiry", Colors.red, () {
-                launchUrl(Uri.parse("tel:${p.clinicMobileNumber}"));
-              }),
-              _actionButton("See Location", Colors.green, () async {
+              Container(
+                width: 55, height: 55,
+                decoration: BoxDecoration(color: Colors.white.withAlpha(40), borderRadius: BorderRadius.circular(15)),
+                child: const Icon(Icons.biotech_rounded, color: Colors.white, size: 30),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _capitalizeWords(p.clinicName),
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "Official Healthcare Partner",
+                      style: TextStyle(color: Colors.white.withAlpha(170), fontSize: 11, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _headerInfoRow(Icons.person_rounded, "Contact Manager", p.contactPersonName),
+          const SizedBox(height: 12),
+          _headerInfoRow(Icons.location_on_rounded, "Lab Address", p.clinicAddress),
+          const SizedBox(height: 25),
+          Row(
+            children: [
+              Expanded(child: _headerActionBtn("CALL", Icons.phone_rounded, () => launchUrl(Uri.parse("tel:${p.clinicMobileNumber}")))),
+              const SizedBox(width: 10),
+              Expanded(child: _headerActionBtn("MAP", Icons.near_me_rounded, () async {
                 final url = p.clinicGoogleMapLink;
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
-                  await launchUrl(
-                    Uri.parse(url),
-                    mode: LaunchMode.externalApplication,
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Unable to open map link.")),
-                  );
+                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                 }
-              }),
-              _actionButton("Feedback", Colors.teal, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => PathologyFeedbackScreen(
-                          pathology: p,
-                          userData: widget.userData,
-                        ),
-                  ),
-                );
-              }),
+              })),
+              const SizedBox(width: 10),
+              Expanded(child: _headerActionBtn("FEEDBACK", Icons.rate_review_rounded, () {
+                Navigator.push(context, MaterialPageRoute(builder: (c) => PathologyFeedbackScreen(pathology: p, userData: widget.userData)));
+              })),
             ],
           ),
         ],
@@ -329,119 +267,92 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
     );
   }
 
-  static Widget _infoRow(IconData icon, String text) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
-    child: Row(
+  Widget _headerInfoRow(IconData icon, String label, String val) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: Colors.black54),
-        const SizedBox(width: 6),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+        Icon(icon, color: Colors.white70, size: 16),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(color: Colors.white.withAlpha(150), fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+              const SizedBox(height: 2),
+              Text(
+                _capitalizeWords(val),
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
       ],
-    ),
-  );
+    );
+  }
 
-  static Widget _actionButton(
-    String label,
-    Color color,
-    VoidCallback onPressed,
-  ) => SizedBox(
-    height: 38,
-    child: ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 13, color: Colors.white),
-      ),
-    ),
-  );
-
-  static Widget _doctorCard(
-    BuildContext context,
-    dynamic test,
-    AllAvailablePathModel pathology,
-  ) {
-    String uppercaseWords(String input) {
-      return input
-          .split(' ')
-          .map(
-            (word) =>
-                word.isEmpty
-                    ? word
-                    : word[0].toUpperCase() + word.substring(1).toUpperCase(),
-          )
-          .join(' ');
-    }
-
-    return Card(
-      color: Colors.white,
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
+  Widget _headerActionBtn(String label, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(color: Colors.white.withAlpha(30), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withAlpha(40))),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.bloodtype, size: 40, color: Colors.red),
-            const SizedBox(height: 6),
-            Text(
-              uppercaseWords(test['test_name'] ?? 'N/A'),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            Icon(icon, color: Colors.white, size: 14),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTestCard(dynamic test) {
+    final price = test['test_price']?.toString() ?? '0';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF2E7D32).withAlpha(10)),
+      ),
+      child: InkWell(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => PathologyTestsDetailsScreen(test: test))),
+        child: Row(
+          children: [
+            Container(
+              width: 50, height: 50,
+              decoration: BoxDecoration(color: const Color(0xFF2E7D32).withAlpha(10), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.science_rounded, color: Color(0xFF2E7D32), size: 24),
             ),
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+            const SizedBox(width: 15),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Test Type: ${uppercaseWords(test['test_type'] ?? 'N/A')}",
-                    style: const TextStyle(fontSize: 12),
+                    _capitalizeWords(test['test_name'] ?? 'N/A'),
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF263238)),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Clinic: ${uppercaseWords(pathology.clinicName ?? '')}",
-                    style: const TextStyle(fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    "Type: ${test['test_type'] ?? 'General'}",
+                    style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => PathologyTestsDetailsScreen(test: test),
-                    ),
-                  );
-                },
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.blue[900],
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  "View Details",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text("₹$price", style: const TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.w900, fontSize: 15)),
+                const SizedBox(height: 4),
+                const Text("VIEW DETAILS", style: TextStyle(color: Color(0xFF1565C0), fontWeight: FontWeight.w900, fontSize: 8, letterSpacing: 0.5)),
+              ],
             ),
           ],
         ),
@@ -449,28 +360,23 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
     );
   }
 
-  static Widget _bulletItem(String label) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 6,
-          height: 6,
-          margin: const EdgeInsets.only(top: 6),
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.black,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
-          ),
-        ),
-      ],
-    ),
-  );
+  Widget _buildServiceItem(String label) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(color: const Color(0xFFC62828).withAlpha(5), borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle_rounded, color: Color(0xFFC62828), size: 15),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF263238)))),
+        ],
+      ),
+    );
+  }
+
+  String _capitalizeWords(String input) {
+    if (input.isEmpty) return "";
+    return input.split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1).toLowerCase() : word).join(' ');
+  }
 }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:demoapp/Services/apiservice.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:demoapp/opddetailsscreen.dart';
+import 'package:demoapp/pathologydetailsscreen.dart';
+import 'package:demoapp/doctordetailsscreen.dart';
 import 'package:demoapp/Models/all_available_opd_model.dart';
+import 'package:demoapp/Models/all_available_path_model.dart';
+import 'package:demoapp/Models/all_available_doctors_model.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
@@ -396,7 +399,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   }
 
   void _navigateToDetail(String type, Map<String, dynamic> rawData) {
-    if (type == 'OPD CLINIC' || type == 'PATHOLOGY LAB') {
+    if (type == 'OPD CLINIC') {
       final opdModel = AllAvailableOPDModel.fromSearchResult(rawData);
       Navigator.push(
         context,
@@ -407,18 +410,27 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           ),
         ),
       );
+    } else if (type == 'PATHOLOGY LAB') {
+      final pathModel = AllAvailablePathModel.fromSearchResult(rawData);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PathologyDetailsScreen(
+            pathology: pathModel,
+            userData: widget.userData,
+          ),
+        ),
+      );
     } else if (type == 'DOCTOR') {
-      // For doctors, the user said "connect with opd deatils screen".
-      // Since a doctor result only has a partner_id, we might need a way to fetch the full OPD.
-      // For now, if we can't fetch, we show a message or go to a doctor detail screen if we have it.
-      // But based on "dynamic its data", I'll try to show a minimal OPD screen if possible.
-      // However, usually, a doctor belongs to an OPD.
-      
-      // Let's launch the map link as a fallback or if we have a way to get clinic data.
-      final mapLink = rawData['partner_doctor_google_map_link'];
-      if (mapLink != null) {
-        launchUrl(Uri.parse(mapLink));
-      }
+      final doctorModel = AllAvailableDoctorsModel.fromSearchResult(rawData);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DoctorDetailsScreen(
+            doctor: doctorModel,
+          ),
+        ),
+      );
     }
   }
 

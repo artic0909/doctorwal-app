@@ -53,65 +53,80 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
-      body: CustomScrollView(
-        slivers: [
+      body: Column(
+        children: [
+          // 1. Premium Image-Inspired Header
+          _buildImageStyleHeader(context),
 
-          // 2. Comprehensive Clinic Header
-          SliverToBoxAdapter(
-            child: _buildClinicHeaderCard(context),
-          ),
-
-          // 3. Sticky Search Bar (Pinned)
-          SliverAppBar(
-            pinned: true,
-            floating: false,
-            backgroundColor: const Color(0xFFF8FAFF),
-            elevation: 0,
-            toolbarHeight: 80,
-            titleSpacing: 0,
-            automaticallyImplyLeading: false,
-            title: _buildStickySearchBar(),
-          ),
-
-          // 4. Doctor List
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
-            sliver: filteredDoctors.isEmpty 
-              ? const SliverToBoxAdapter(child: _EmptyDoctorsState())
-              : SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _buildUniformDoctorCard(context, filteredDoctors[index]),
-                    childCount: filteredDoctors.length,
-                  ),
+          // 2. Search Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 10, offset: const Offset(0, 4))],
+              ),
+              child: TextField(
+                controller: searchController,
+                onChanged: _filterDoctors,
+                decoration: InputDecoration(
+                  hintText: "Filter doctors by name or specialty...",
+                  hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 13),
+                  border: InputBorder.none,
+                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1565C0), size: 18),
+                  suffixIcon: searchController.text.isNotEmpty 
+                      ? IconButton(icon: const Icon(Icons.close_rounded, size: 16), onPressed: _resetSearch) 
+                      : null,
                 ),
+              ),
+            ),
           ),
 
-          // 5. Services Section
-          if (widget.opd.services.isNotEmpty)
-            SliverToBoxAdapter(
-              child: _buildServicesSection(),
+          // 3. Doctor List
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                  sliver: filteredDoctors.isEmpty 
+                    ? const SliverToBoxAdapter(child: _EmptyDoctorsState())
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _buildUniformDoctorCard(context, filteredDoctors[index]),
+                          childCount: filteredDoctors.length,
+                        ),
+                      ),
+                ),
+
+                // 4. Services Section
+                if (widget.opd.services.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _buildServicesSection(),
+                  ),
+                
+                const SliverToBoxAdapter(child: SizedBox(height: 40)),
+              ],
             ),
-          
-          const SliverToBoxAdapter(child: SizedBox(height: 50)),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildClinicHeaderCard(BuildContext context) {
+  Widget _buildImageStyleHeader(BuildContext context) {
+    final o = widget.opd;
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 20),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
-        boxShadow: [
-          BoxShadow(color: const Color(0xFF0D47A1).withAlpha(40), blurRadius: 20, offset: const Offset(0, 10)),
-        ],
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(35), bottomRight: Radius.circular(35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,27 +137,27 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 20),
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.white.withAlpha(30), borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.business_rounded, color: Colors.white, size: 22),
+                width: 55, height: 55,
+                decoration: BoxDecoration(color: Colors.white.withAlpha(40), borderRadius: BorderRadius.circular(15)),
+                child: const Icon(Icons.business_rounded, color: Colors.white, size: 30),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 15),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _capitalizeWords(widget.opd.clinicName),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1),
+                      _capitalizeWords(o.clinicName),
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       "Official Healthcare Partner",
-                      style: TextStyle(color: Colors.white.withAlpha(180), fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      style: TextStyle(color: Colors.white.withAlpha(170), fontSize: 11, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -150,35 +165,24 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _infoRow(
-            Icons.person_outline_rounded, 
-            "Contact Manager", 
-            _capitalizeWords((widget.opd.contactPersonName.isNotEmpty) ? widget.opd.contactPersonName : "Incharge Manager"), 
-            isDark: true
-          ),
-          const SizedBox(height: 10),
-          _infoRow(
-            Icons.location_on_outlined, 
-            "Clinic Address", 
-            "${widget.opd.clinicAddress}, ${widget.opd.clinicLandmark}", 
-            isDark: true
-          ),
-          const SizedBox(height: 20),
+          _headerInfoRow(Icons.person_rounded, "Contact Manager", (o.contactPersonName.isNotEmpty) ? o.contactPersonName : "Incharge Manager"),
+          const SizedBox(height: 12),
+          _headerInfoRow(Icons.location_on_rounded, "Clinic Address", "${o.clinicAddress}, ${o.clinicLandmark}"),
+          const SizedBox(height: 25),
           Row(
             children: [
-              _compactActionBtn(Icons.call_rounded, "CALL", Colors.white, () => launchUrl(Uri.parse("tel:${widget.opd.clinicMobileNumber}"))),
+              Expanded(child: _headerActionBtn("CALL", Icons.phone_rounded, () => launchUrl(Uri.parse("tel:${o.clinicMobileNumber}")))),
               const SizedBox(width: 10),
-              _compactActionBtn(Icons.directions_rounded, "MAP", Colors.white, () async {
-                final url = widget.opd.clinicGoogleMapLink;
+              Expanded(child: _headerActionBtn("MAP", Icons.near_me_rounded, () async {
+                final url = o.clinicGoogleMapLink;
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
                   await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                 }
-              }),
+              })),
               const SizedBox(width: 10),
-              _compactActionBtn(Icons.rate_review_rounded, "FEEDBACK", Colors.white, () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => OPDFeedbackScreen(opd: widget.opd, userData: widget.userData)),
-              )),
+              Expanded(child: _headerActionBtn("FEEDBACK", Icons.rate_review_rounded, () {
+                Navigator.push(context, MaterialPageRoute(builder: (c) => OPDFeedbackScreen(opd: o, userData: widget.userData)));
+              })),
             ],
           ),
         ],
@@ -186,23 +190,24 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value, {bool isDark = false}) {
-    final Color defaultColor = Colors.blueGrey[300] ?? Colors.grey;
-    final color = isDark ? Colors.white : defaultColor;
-    final valueColor = isDark ? Colors.white.withAlpha(220) : const Color(0xFF455A64);
-
+  Widget _headerInfoRow(IconData icon, String label, String val) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: color.withAlpha(150)),
+        Icon(icon, color: Colors.white70, size: 16),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(color: color.withAlpha(150), fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+              Text(label, style: TextStyle(color: Colors.white.withAlpha(150), fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
               const SizedBox(height: 2),
-              Text(value, style: TextStyle(color: valueColor, fontSize: 13, fontWeight: FontWeight.w600, height: 1.4)),
+              Text(
+                _capitalizeWords(val),
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -210,52 +215,19 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
     );
   }
 
-  Widget _compactActionBtn(IconData icon, String label, Color color, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(color: Colors.white.withAlpha(30), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withAlpha(20))),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Colors.white, size: 14),
-              const SizedBox(width: 6),
-              Text(label, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-
-  Widget _buildStickySearchBar() {
-    return Container(
-      color: const Color(0xFFF8FAFF),
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+  Widget _headerActionBtn(String label, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4)),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(color: Colors.white.withAlpha(30), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withAlpha(40))),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 14),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
           ],
-        ),
-        child: TextField(
-          controller: searchController,
-          onChanged: _filterDoctors,
-          decoration: InputDecoration(
-            hintText: "Filter doctors by name or specialty...",
-            hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 13),
-            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1565C0), size: 18),
-            suffixIcon: searchController.text.isNotEmpty 
-                ? IconButton(icon: const Icon(Icons.close_rounded, size: 16), onPressed: _resetSearch) 
-                : null,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(vertical: 14),
-          ),
         ),
       ),
     );
@@ -419,16 +391,12 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
     );
   }
 
-  String _capitalizeWords(String? input) {
-    if (input == null || input.isEmpty) return "";
+  String _capitalizeWords(String input) {
+    if (input.isEmpty) return "";
     return input.split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1).toLowerCase() : word).join(' ');
   }
 }
 
-
-// -----------------------------------------------------------------------------
-// EMPTY STATE WIDGET
-// -----------------------------------------------------------------------------
 class _EmptyDoctorsState extends StatelessWidget {
   const _EmptyDoctorsState();
 

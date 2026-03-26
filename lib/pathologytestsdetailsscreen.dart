@@ -15,9 +15,7 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
     clinicName = test['clinic_name'] ?? 'N/A';
     testName = test['test_name'] ?? 'N/A';
     testType = test['test_type'] ?? 'N/A';
-    // your JSON uses `test_price`
     testPrice = test['test_price']?.toString() ?? '0';
-    // JSON uses a list under `test_day_time`
     testDayTime =
         (test['test_day_time'] as List<dynamic>?)
             ?.cast<Map<String, dynamic>>() ??
@@ -27,217 +25,196 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F9FF),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(65),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-          child: AppBar(
-            title: const Text(
-              'Test Details',
-              style: TextStyle(
+      backgroundColor: const Color(0xFFF8FAFF),
+      body: CustomScrollView(
+        slivers: [
+          // 1. Premium Header
+          SliverToBoxAdapter(child: _buildHeader(context)),
+
+          // 2. Test Details Card
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
                 color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [BoxShadow(color: const Color(0xFF2E7D32).withAlpha(8), blurRadius: 20, offset: const Offset(0, 10))],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("DIAGNOSTIC TEST INFO", style: TextStyle(color: Color(0xFF2E7D32), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                  const SizedBox(height: 20),
+                  _infoRow(Icons.biotech_rounded, "Test Name", testName),
+                  _infoRow(Icons.category_rounded, "Test Type", testType),
+                  _infoRow(Icons.local_hospital_rounded, "Laboratory", clinicName),
+                  const Divider(height: 30),
+                  Row(
+                    children: [
+                      const Text("Estimated Price", style: TextStyle(color: Colors.blueGrey, fontSize: 13, fontWeight: FontWeight.w600)),
+                      const Spacer(),
+                      Text("₹$testPrice", style: const TextStyle(color: Color(0xFF2E7D32), fontSize: 22, fontWeight: FontWeight.w900)),
+                    ],
+                  ),
+                ],
               ),
             ),
-            backgroundColor: Colors.blue[900],
-            iconTheme: const IconThemeData(color: Colors.white),
-            elevation: 0,
           ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _clinicTestDetailsCard(),
-            const SizedBox(height: 20),
-            const Text(
-              'Availability',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.black87,
+
+          // 3. Availability Header
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: const Color(0xFF2E7D32).withAlpha(15), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.schedule_rounded, color: Color(0xFF2E7D32), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text("Test Schedule", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF263238))),
+                ],
               ),
             ),
-            const SizedBox(height: 10),
-            _availabilityTable(),
-          ],
-        ),
+          ),
+
+          // 4. Availability List
+          if (testDayTime.isEmpty)
+            SliverToBoxAdapter(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Text("No scheduling data available", style: TextStyle(color: Colors.blueGrey[200], fontSize: 14)),
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final item = testDayTime[index];
+                    final day = item['day'] ?? '-';
+                    final start = item['start_time'] ?? '-';
+                    final end = item['end_time'] ?? '-';
+
+                    String formatTime(String timeStr) {
+                      try {
+                        final time = DateFormat("HH:mm").parse(timeStr);
+                        return DateFormat("h:mm a").format(time);
+                      } catch (e) {
+                        return timeStr;
+                      }
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: const Color(0xFF2E7D32).withAlpha(10)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(color: const Color(0xFF2E7D32).withAlpha(10), shape: BoxShape.circle),
+                            child: const Icon(Icons.calendar_today_rounded, color: Color(0xFF2E7D32), size: 16),
+                          ),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(day, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF263238))),
+                                const SizedBox(height: 2),
+                                Text("Lab Operating Hours", style: TextStyle(color: Colors.blueGrey[300], fontSize: 11, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            "${formatTime(start)} - ${formatTime(end)}",
+                            style: const TextStyle(color: Color(0xFF2E7D32), fontSize: 13, fontWeight: FontWeight.w900),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  childCount: testDayTime.length,
+                ),
+              ),
+            ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 40)),
+        ],
       ),
     );
   }
 
-  Widget _clinicTestDetailsCard() {
-    String uppercaseWords(String input) {
-      return input
-          .split(' ')
-          .map((word) {
-            if (word.isEmpty) return word;
-            return word[0].toUpperCase() + word.substring(1).toUpperCase();
-          })
-          .join(' ');
-    }
-
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      shadowColor: Colors.grey.withAlpha(76),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 12),
-            // Test Name Row
-            Row(
-              children: [
-                const Icon(Icons.text_fields, color: Colors.purple, size: 24),
-                const SizedBox(width: 10),
-                const Text(
-                  "Test Name:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    uppercaseWords(testName),
-                    style: const TextStyle(fontSize: 15, color: Colors.black54),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Test Type Row
-            Row(
-              children: [
-                const Icon(Icons.science, color: Colors.redAccent, size: 24),
-                const SizedBox(width: 10),
-                const Text(
-                  "Test Type:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    uppercaseWords(testType),
-                    style: const TextStyle(fontSize: 15, color: Colors.black54),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 30),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            "Test Details",
+            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            "Complete information and lab scheduling",
+            style: TextStyle(color: Colors.white.withAlpha(180), fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _availabilityTable() {
-    if (testDayTime.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
-          child: Text(
-            "No Availability Data Found",
-            style: TextStyle(fontSize: 14, color: Colors.grey),
-          ),
-        ),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            width: constraints.maxWidth,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.shade300,
-                  blurRadius: 6,
-                  offset: const Offset(0, 4),
-                ),
+  Widget _infoRow(IconData icon, String label, String val) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: Colors.blueGrey[200]),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(color: Colors.blueGrey[300], fontSize: 11, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(_capitalizeWords(val), style: const TextStyle(color: Color(0xFF263238), fontSize: 14, fontWeight: FontWeight.w600)),
               ],
             ),
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(Colors.orange[100]),
-              columnSpacing: 20,
-              horizontalMargin: 16,
-              border: TableBorder.all(
-                color: const Color.fromARGB(255, 255, 255, 255),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              columns: const [
-                DataColumn(
-                  label: Text(
-                    '#',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'Day',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'Time',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'Price',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-              rows: List.generate(testDayTime.length, (index) {
-                final item = testDayTime[index];
-                final start = item['start_time'] ?? '';
-                final end = item['end_time'] ?? '';
-                String formatTime(String timeStr) {
-                  try {
-                    final time = DateFormat("HH:mm").parse(timeStr);
-                    return DateFormat("h:mm a").format(time);
-                  } catch (e) {
-                    return timeStr;
-                  }
-                }
-
-                final time = '${formatTime(start)} - ${formatTime(end)}';
-
-                return DataRow(
-                  cells: [
-                    DataCell(Text('${index + 1}')),
-                    DataCell(Text(item['day'] ?? '-')),
-                    DataCell(Text(time)),
-                    DataCell(Text('₹$testPrice')),
-                  ],
-                );
-              }),
-            ),
           ),
-        );
-      },
+        ],
+      ),
     );
+  }
+
+  String _capitalizeWords(String input) {
+    if (input.isEmpty) return "";
+    return input.split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1).toLowerCase() : word).join(' ');
   }
 }

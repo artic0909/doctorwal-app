@@ -68,4 +68,29 @@ class AllAvailablePathModel {
       aboutClinics: json['aboutClinics'] ?? [],
     );
   }
+
+  factory AllAvailablePathModel.fromSearchResult(Map<String, dynamic> json) {
+    return AllAvailablePathModel(
+      contactPersonName: json['clinic_contact_person_name'] ?? '',
+      clinicName: json['clinic_name'] ?? '',
+      clinicGstin: json['clinic_gstin'] ?? '',
+      clinicMobileNumber: json['clinic_mobile_number'] ?? '',
+      clinicEmail: json['clinic_email'] ?? '',
+      clinicLandmark: json['clinic_landmark'] ?? '',
+      clinicPincode: json['clinic_pincode'] ?? '',
+      clinicState: json['clinic_state'] ?? '',
+      clinicCity: json['clinic_city'] ?? '',
+      clinicGoogleMapLink: json['clinic_google_map_link'] ?? '',
+      clinicAddress: json['clinic_address'] ?? '',
+      bannerImage: (json['banner'] != null && json['banner'] is String)
+          ? json['banner'].toString().replaceFirst('127.0.0.1', '10.0.2.2')
+          : '',
+      currentlyLoggedInPartnerId:
+          json['currently_loggedin_partner_id']?.toString() ?? '',
+      tests: json['tests'] ?? [],
+      services: json['services'] ?? [],
+      images: json['images'] ?? [],
+      aboutClinics: json['about_clinics'] ?? [],
+    );
+  }
 }
