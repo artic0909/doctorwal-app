@@ -381,4 +381,21 @@ class ApiService {
       return {'status': false, 'message': 'Network error occurred'};
     }
   }
+
+  // --- GLOBAL SEARCH ---
+  Future<Map<String, dynamic>> getSearchResult(String query, {String category = 'all'}) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.get(
+        '/api/search',
+        queryParameters: {'query': query, 'category': category},
+      );
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
 }

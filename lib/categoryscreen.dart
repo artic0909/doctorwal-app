@@ -11,6 +11,7 @@ import 'package:demoapp/healthparametersscreen.dart';
 import 'package:demoapp/addvitalscreen.dart';
 import 'package:demoapp/medicalhistoryscreen.dart';
 import 'package:demoapp/addmedicalrecordscreen.dart';
+import 'package:demoapp/search_screen.dart';
 import 'package:http/http.dart' as http;
 
 class CategoryHomeScreen extends StatefulWidget {
@@ -200,54 +201,62 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 1. Premium Search & Location Bar
+            // 1. Premium Search Bar (Interactive)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
+              child: GestureDetector(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen())),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 55,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(8),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 15),
+                            const Icon(Icons.search_rounded, color: Color(0xFF1565C0), size: 22),
+                            const SizedBox(width: 12),
+                            Text(
+                              "Search doctor, clinic, test...",
+                              style: TextStyle(color: Colors.blueGrey[200], fontSize: 14, fontWeight: FontWeight.w500),
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.location_on_rounded, color: Color(0xFFE53935), size: 18),
+                            const SizedBox(width: 15),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
                       height: 55,
+                      width: 55,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0xFF1565C0),
                         borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha(8),
-                            blurRadius: 15,
+                            color: const Color(0xFF1565C0).withAlpha(76),
+                            blurRadius: 12,
                             offset: const Offset(0, 5),
                           ),
                         ],
                       ),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: "Search medical services...",
-                          hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 14),
-                          prefixIcon: const Icon(Icons.location_on_rounded, color: Color(0xFFE53935), size: 20),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                        ),
-                      ),
+                      child: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    height: 55,
-                    width: 55,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1565C0),
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF1565C0).withAlpha(76),
-                          blurRadius: 12,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.search_rounded, color: Colors.white, size: 24),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
