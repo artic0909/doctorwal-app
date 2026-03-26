@@ -21,6 +21,47 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
   List<dynamic> _prescriptions = [];
   bool _isLoading = true;
 
+  DateTime? _fromDate;
+  DateTime? _toDate;
+
+  Future<void> _selectDate(BuildContext context, bool isFrom) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isFrom) {
+          _fromDate = picked;
+        } else {
+          _toDate = picked;
+        }
+      });
+    }
+  }
+
+  void _clearFilter() {
+    setState(() {
+      _fromDate = null;
+      _toDate = null;
+    });
+  }
+
+  List<dynamic> _applyFilter(List<dynamic> items) {
+    if (_fromDate != null || _toDate != null) {
+      return items.where((v) {
+        DateTime dt = DateTime.parse(v['date_of_report']).toLocal();
+        bool afterFrom = _fromDate == null || dt.isAfter(_fromDate!) || DateUtils.isSameDay(dt, _fromDate!);
+        bool beforeTo = _toDate == null || dt.isBefore(_toDate!) || DateUtils.isSameDay(dt, _toDate!);
+        return afterFrom && beforeTo;
+      }).toList();
+    }
+    // Default: latest 10
+    return items.take(10).toList();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -112,15 +153,22 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
           ],
         ),
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
-        : TabBarView(
-            controller: _tabController,
-            children: [
-              _buildList(_reports, 'report'),
-              _buildList(_prescriptions, 'prescription'),
-            ],
+      body: Column(
+        children: [
+          _buildFilterBar(),
+          Expanded(
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildList(_applyFilter(_reports), 'report'),
+                    _buildList(_applyFilter(_prescriptions), 'prescription'),
+                  ],
+                ),
           ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.push(
           context,
@@ -147,14 +195,88 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
   }
 
   Widget _buildEmptyState(String type) {
+    bool isFiltered = _fromDate != null || _toDate != null;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(type == 'report' ? Icons.assignment_outlined : Icons.medication_outlined, size: 80, color: Colors.blueGrey[100]),
+          Icon(isFiltered ? Icons.filter_list_off_rounded : (type == 'report' ? Icons.assignment_outlined : Icons.medication_outlined), size: 80, color: Colors.blueGrey[100]),
           const SizedBox(height: 15),
-          Text("No ${type}s found", style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold)),
+          Text(
+            isFiltered ? "No records found for this range" : "No ${type}s found", 
+            style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold)
+          ),
+          if (isFiltered) ...[
+            const SizedBox(height: 16),
+            TextButton(onPressed: _clearFilter, child: const Text("Clear Filters", style: TextStyle(color: Color(0xFF1565C0)))),
+          ]
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 15),
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildDateButton(
+                  _fromDate == null ? "From Date" : DateFormat('dd/MM/yy').format(_fromDate!),
+                  Icons.calendar_today_rounded,
+                  () => _selectDate(context, true),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildDateButton(
+                  _toDate == null ? "To Date" : DateFormat('dd/MM/yy').format(_toDate!),
+                  Icons.event_available_rounded,
+                  () => _selectDate(context, false),
+                ),
+              ),
+              if (_fromDate != null || _toDate != null) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _clearFilter,
+                  icon: const Icon(Icons.close_rounded, color: Colors.redAccent),
+                  style: IconButton.styleFrom(backgroundColor: Colors.red[50]),
+                ),
+              ],
+            ],
+          ),
+          if (_fromDate == null && _toDate == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 4),
+              child: Text("Showing latest 10 records by default", style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateButton(String text, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFF),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF1565C0).withAlpha(30)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: const Color(0xFF1565C0)),
+            const SizedBox(width: 8),
+            Expanded(child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF263238)))),
+          ],
+        ),
       ),
     );
   }

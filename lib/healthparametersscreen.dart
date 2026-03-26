@@ -14,6 +14,8 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
   final ApiService _apiService = ApiService();
   List<dynamic> _vitals = [];
   bool _isLoading = true;
+  DateTime? _fromDate;
+  DateTime? _toDate;
 
   @override
   void initState() {
@@ -68,8 +70,50 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
     }
   }
 
+  Future<void> _selectDate(BuildContext context, bool isFrom) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isFrom) {
+          _fromDate = picked;
+        } else {
+          _toDate = picked;
+        }
+      });
+    }
+  }
+
+  void _clearFilter() {
+    setState(() {
+      _fromDate = null;
+      _toDate = null;
+    });
+  }
+
+  List<dynamic> get _filteredVitals {
+    List<dynamic> list = List.from(_vitals);
+    if (_fromDate != null || _toDate != null) {
+      return list.where((v) {
+        DateTime dt = DateTime.parse(v['created_at']).toLocal();
+        bool afterFrom = _fromDate == null || dt.isAfter(_fromDate!) || DateUtils.isSameDay(dt, _fromDate!);
+        bool beforeTo = _toDate == null || dt.isBefore(_toDate!) || DateUtils.isSameDay(dt, _toDate!);
+        return afterFrom && beforeTo;
+      }).toList();
+    }
+    // Default: latest 10
+    return list.take(10).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filteredVitals = _filteredVitals;
+    bool isFiltered = _fromDate != null || _toDate != null;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
       appBar: AppBar(
@@ -94,42 +138,123 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
           ),
         ],
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
-        : _vitals.isEmpty 
-          ? _buildEmptyState()
-          : RefreshIndicator(
-              onRefresh: _fetchVitals,
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                itemCount: _vitals.length,
-                itemBuilder: (context, index) {
-                  final vital = _vitals[index];
-                  bool isLatest = index == 0;
-                  return _buildVitalCard(vital, isLatest);
-                },
-              ),
-            ),
+      body: Column(
+        children: [
+          _buildFilterBar(),
+          Expanded(
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
+              : filteredVitals.isEmpty 
+                ? _buildEmptyState(isFiltered)
+                : RefreshIndicator(
+                    onRefresh: _fetchVitals,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      itemCount: filteredVitals.length,
+                      itemBuilder: (context, index) {
+                        final vital = filteredVitals[index];
+                        bool isLatest = index == 0 && !isFiltered;
+                        return _buildVitalCard(vital, isLatest);
+                      },
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildFilterBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 15),
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildDateButton(
+                  _fromDate == null ? "From Date" : DateFormat('dd/MM/yy').format(_fromDate!),
+                  Icons.calendar_today_rounded,
+                  () => _selectDate(context, true),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildDateButton(
+                  _toDate == null ? "To Date" : DateFormat('dd/MM/yy').format(_toDate!),
+                  Icons.event_available_rounded,
+                  () => _selectDate(context, false),
+                ),
+              ),
+              if (_fromDate != null || _toDate != null) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _clearFilter,
+                  icon: const Icon(Icons.close_rounded, color: Colors.redAccent),
+                  style: IconButton.styleFrom(backgroundColor: Colors.red[50]),
+                ),
+              ],
+            ],
+          ),
+          if (_fromDate == null && _toDate == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 4),
+              child: Text("Showing latest 10 records by default", style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateButton(String text, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFF),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF1565C0).withAlpha(30)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: const Color(0xFF1565C0)),
+            const SizedBox(width: 8),
+            Expanded(child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF263238)))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(bool isFiltered) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.monitor_heart_outlined, size: 80, color: Colors.blueGrey[100]),
+          Icon(isFiltered ? Icons.filter_list_off_rounded : Icons.monitor_heart_outlined, size: 80, color: Colors.blueGrey[100]),
           const SizedBox(height: 16),
-          const Text("No vitals recorded yet", style: TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AddVitalScreen()),
-            ).then((value) => value == true ? _fetchVitals() : null),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1565C0)),
-            child: const Text("Log Your First Vitals", style: TextStyle(color: Colors.white)),
+          Text(
+            isFiltered ? "No records found for this range" : "No vitals recorded yet",
+            style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold)
           ),
+          if (isFiltered) ...[
+            const SizedBox(height: 16),
+            TextButton(onPressed: _clearFilter, child: const Text("Clear Filters", style: TextStyle(color: Color(0xFF1565C0)))),
+          ] else ...[
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AddVitalScreen()),
+              ).then((value) => value == true ? _fetchVitals() : null),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1565C0)),
+              child: const Text("Log Your First Vitals", style: TextStyle(color: Colors.white)),
+            ),
+          ],
         ],
       ),
     );
