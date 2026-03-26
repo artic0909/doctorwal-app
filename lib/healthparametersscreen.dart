@@ -145,65 +145,79 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: isLatest ? Border.all(color: const Color(0xFF1565C0).withAlpha(51), width: 1.5) : null,
+        borderRadius: BorderRadius.circular(24),
+        border: isLatest ? Border.all(color: const Color(0xFF1565C0).withAlpha(30), width: 2) : null,
         boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: (isLatest ? const Color(0xFF1565C0) : Colors.black).withAlpha(isLatest ? 15 : 8),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
         ],
       ),
       child: Column(
         children: [
+          // Header Section
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(20, 15, 12, 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        if (isLatest) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(color: const Color(0xFF1565C0), borderRadius: BorderRadius.circular(6)),
-                            child: const Text("LATEST", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        Text(dateStr, style: TextStyle(color: Colors.blueGrey[300], fontSize: 11, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        _buildActionBtn(Icons.edit_rounded, Colors.blue, () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => AddVitalScreen(vitalData: vital)),
-                          ).then((value) => value == true ? _fetchVitals() : null);
-                        }),
-                        const SizedBox(width: 8),
-                        _buildActionBtn(Icons.delete_outline_rounded, Colors.red, () => _deleteVital(vital['id'])),
-                      ],
-                    ),
+                    if (isLatest) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFF0D47A1), Color(0xFF1976D2)]),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text("LATEST", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                    Text(dateStr, style: TextStyle(color: Colors.blueGrey[400], fontSize: 11, fontWeight: FontWeight.w700)),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
+                Row(
                   children: [
-                    _buildParamItem(Icons.favorite_rounded, "Pulse", "${vital['heart_rate'] ?? '--'}"),
-                    _buildParamItem(Icons.speed_rounded, "BP", "${vital['blood_pressure'] ?? '--'}"),
-                    _buildParamItem(Icons.thermostat_rounded, "Temp", "${vital['temparature'] ?? '--'}"),
-                    _buildParamItem(Icons.bloodtype_outlined, "SpO2", "${vital['spo'] ?? '--'}%"),
-                    _buildParamItem(Icons.opacity_rounded, "Sugar", "${vital['blood_sugar'] ?? '--'}"),
-                    _buildParamItem(Icons.calculate_rounded, "BMI", "${vital['bmi'] ?? '--'}"),
+                    _buildActionBtn(Icons.edit_note_rounded, Colors.blue, () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => AddVitalScreen(vitalData: vital)),
+                      ).then((value) => value == true ? _fetchVitals() : null);
+                    }),
+                    const SizedBox(width: 4),
+                    _buildActionBtn(Icons.delete_sweep_rounded, Colors.red, () => _deleteVital(vital['id'])),
                   ],
                 ),
+              ],
+            ),
+          ),
+          
+          // Data Grid
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 3,
+              childAspectRatio: 1.1,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              children: [
+                _buildParamItem(Icons.favorite_rounded, "Pulse", "${vital['heart_rate'] ?? '--'}", Colors.red),
+                _buildParamItem(Icons.speed_rounded, "BP", "${vital['blood_pressure'] ?? '--'}", Colors.blue),
+                _buildParamItem(Icons.thermostat_rounded, "Temp", "${vital['temparature'] ?? '--'}°", Colors.orange),
+                _buildParamItem(Icons.bloodtype_rounded, "SpO2", "${vital['spo'] ?? '--'}%", Colors.teal),
+                _buildParamItem(Icons.opacity_rounded, "Sugar", "${vital['blood_sugar'] ?? '--'}", Colors.deepPurple),
+                _buildParamItem(Icons.height_rounded, "Height", "${vital['height'] ?? '--'}cm", Colors.indigo),
+                _buildParamItem(Icons.monitor_weight_rounded, "Weight", "${vital['weight'] ?? '--'}kg", Colors.brown),
+                _buildParamItem(Icons.calculate_rounded, "BMI", "${vital['bmi'] ?? '--'}", Colors.green),
+                _buildParamItem(Icons.bloodtype_outlined, "Group", "${vital['blood_group'] ?? '--'}", Colors.pink),
               ],
             ),
           ),
@@ -213,31 +227,42 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
   }
 
   Widget _buildActionBtn(IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: color.withAlpha(20), shape: BoxShape.circle),
-        child: Icon(icon, color: color, size: 18),
-      ),
+    return IconButton(
+      onPressed: onTap,
+      icon: Icon(icon, color: color, size: 22),
+      constraints: const BoxConstraints(),
+      padding: const EdgeInsets.all(8),
     );
   }
 
-  Widget _buildParamItem(IconData icon, String label, String value) {
+  Widget _buildParamItem(IconData icon, String label, String value, Color themeColor) {
     return Container(
-      width: (MediaQuery.of(context).size.width - 70) / 3,
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      decoration: BoxDecoration(
+        color: themeColor.withAlpha(12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Stack(
         children: [
-          Icon(icon, size: 12, color: const Color(0xFF1565C0)),
-          const SizedBox(width: 6),
-          Expanded(
+          Positioned(
+            top: 6,
+            left: 6,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(color: themeColor.withAlpha(25), shape: BoxShape.circle),
+              child: Icon(icon, size: 12, color: themeColor),
+            ),
+          ),
+          Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(label, style: TextStyle(color: Colors.blueGrey[300], fontSize: 8, fontWeight: FontWeight.bold)),
-                Text(value, style: const TextStyle(color: Color(0xFF263238), fontSize: 11, fontWeight: FontWeight.w900), overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 4),
+                Text(label, style: TextStyle(color: Colors.blueGrey[600], fontSize: 9, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                const SizedBox(height: 1),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(value, style: const TextStyle(color: Color(0xFF263238), fontSize: 15, fontWeight: FontWeight.w900), textAlign: TextAlign.center),
+                ),
               ],
             ),
           ),

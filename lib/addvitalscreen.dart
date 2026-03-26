@@ -182,7 +182,7 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
                           controller: _tempController, 
                           label: "Temperature", 
                           icon: Icons.thermostat_rounded, 
-                          hint: "°F", 
+                          hint: "°C", 
                           keyboardType: TextInputType.number
                         )),
                         const SizedBox(width: 15),
