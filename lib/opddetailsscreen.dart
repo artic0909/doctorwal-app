@@ -1,5 +1,6 @@
 import 'package:demoapp/Models/all_available_opd_model.dart';
 import 'package:demoapp/opdfeedbackscreen.dart';
+import 'package:demoapp/bookingscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'opddoctordetailsscreen.dart';
@@ -338,7 +339,15 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ODPDoctorDetailScreen(opd: widget.opd, doctor: docs, userData: widget.userData),
+                        builder: (context) => BookingScreen(
+                          type: BookingType.opd,
+                          partnerId: widget.opd.currentlyLoggedInPartnerId.toString(),
+                          clinicName: widget.opd.clinicName,
+                          userData: widget.userData,
+                          itemId: docs['id']?.toString(),
+                          itemName: docs['doctor_name']?.toString(),
+                          itemPrice: docs['doctor_fees']?.toString(),
+                        ),
                       ),
                     );
                   },
@@ -349,7 +358,7 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
-                  child: const Text("BOOK NOW", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                  child: const Text("APPOINTMENT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
                 ),
               ),
             ],

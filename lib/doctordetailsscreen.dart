@@ -54,13 +54,13 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
                 child: _buildAvailabilityList(d.visitDayTime),
               ),
               
-              const SizedBox(height: 100), // Bottom spacing
+              const SizedBox(height: 120), // Bottom spacing
             ],
           ),
 
           // 4. Sticky Booking Button
           Positioned(
-            bottom: 20,
+            bottom: 40,
             left: 20,
             right: 20,
             child: _buildBookingButton(),

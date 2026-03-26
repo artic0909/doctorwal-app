@@ -52,7 +52,6 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 20),
                       _infoRow(Icons.biotech_rounded, "Test Name", testName),
                       _infoRow(Icons.category_rounded, "Test Type", testType),
-                      _infoRow(Icons.local_hospital_rounded, "Laboratory", clinicName),
                       const Divider(height: 30),
                       Row(
                         children: [
@@ -153,11 +152,11 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                   ),
                 ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              const SliverToBoxAdapter(child: SizedBox(height: 120)),
             ],
           ),
           Positioned(
-            bottom: 20, left: 20, right: 20,
+            bottom: 40, left: 20, right: 20,
             child: ElevatedButton(
               onPressed: () {
                 Navigator.push(
