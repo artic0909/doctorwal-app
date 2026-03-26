@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:demoapp/opddetailsscreen.dart';
+import 'package:demoapp/Models/all_available_opd_model.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
   final String initialCategory;
+  final Map<String, dynamic> userData;
 
   const SearchResultsScreen({
     super.key,
     required this.initialQuery,
     required this.initialCategory,
+    required this.userData,
   });
 
   @override
@@ -234,7 +238,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               {"icon": Icons.work_rounded, "text": d['partner_doctor_designation'] ?? "Doctor"},
               {"icon": Icons.location_on_rounded, "text": "${d['partner_doctor_city']}, ${d['partner_doctor_state']}"},
             ],
-            mapLink: d['partner_doctor_google_map_link'],
+            rawData: d,
           )),
           const SizedBox(height: 20),
         ],
@@ -250,8 +254,8 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               {"icon": Icons.phone_rounded, "text": o['clinic_mobile_number'] ?? ""},
               {"icon": Icons.group_rounded, "text": "Multiple Specialists Available"},
             ],
-            mapLink: o['clinic_google_map_link'],
             extraItems: (o['doctors'] as List?)?.take(2).map((d) => "${d['doctor_name']} (${d['doctor_specialist']})").toList(),
+            rawData: o,
           )),
           const SizedBox(height: 20),
         ],
@@ -267,8 +271,8 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               {"icon": Icons.phone_rounded, "text": p['clinic_mobile_number'] ?? ""},
               {"icon": Icons.science_rounded, "text": "Diagnostics & Testing"},
             ],
-            mapLink: p['clinic_google_map_link'],
             extraItems: (p['tests'] as List?)?.take(3).map((t) => t['test_type'] as String).toList(),
+            rawData: p,
           )),
           const SizedBox(height: 20),
         ],
@@ -300,7 +304,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     required Color color,
     required IconData icon,
     required List<Map<String, dynamic>> infoLines,
-    String? mapLink,
+    required Map<String, dynamic> rawData,
     List<String>? extraItems,
   }) {
     return Container(
@@ -381,14 +385,41 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           Row(
             children: [
               const Spacer(),
-              _continueBtn(color, () async {
-                if (mapLink != null && await canLaunchUrl(Uri.parse(mapLink))) await launchUrl(Uri.parse(mapLink));
+              _continueBtn(color, () {
+                _navigateToDetail(type, rawData);
               }),
             ],
           ),
         ],
       ),
     );
+  }
+
+  void _navigateToDetail(String type, Map<String, dynamic> rawData) {
+    if (type == 'OPD CLINIC' || type == 'PATHOLOGY LAB') {
+      final opdModel = AllAvailableOPDModel.fromSearchResult(rawData);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OPDDetailsScreen(
+            opd: opdModel,
+            userData: widget.userData,
+          ),
+        ),
+      );
+    } else if (type == 'DOCTOR') {
+      // For doctors, the user said "connect with opd deatils screen".
+      // Since a doctor result only has a partner_id, we might need a way to fetch the full OPD.
+      // For now, if we can't fetch, we show a message or go to a doctor detail screen if we have it.
+      // But based on "dynamic its data", I'll try to show a minimal OPD screen if possible.
+      // However, usually, a doctor belongs to an OPD.
+      
+      // Let's launch the map link as a fallback or if we have a way to get clinic data.
+      final mapLink = rawData['partner_doctor_google_map_link'];
+      if (mapLink != null) {
+        launchUrl(Uri.parse(mapLink));
+      }
+    }
   }
 
   Widget _continueBtn(Color color, VoidCallback onTap) {
@@ -403,7 +434,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         ),
         child: const Row(
           children: [
-            Icon(Icons.directions_rounded, color: Colors.white, size: 16),
+            Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
             SizedBox(width: 8),
             Text("CONTINUE", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
           ],

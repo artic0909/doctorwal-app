@@ -34,18 +34,12 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
       if (query.isEmpty) {
         filteredDoctors = List.from(widget.opd.doctors);
       } else {
-        filteredDoctors =
-            widget.opd.doctors.where((doctor) {
-              final name =
-                  (doctor['doctor_name'] ?? '').toString().toLowerCase();
-              final specialist =
-                  (doctor['doctor_specialist'] ?? '').toString().toLowerCase();
-              final more =
-                  (doctor['doctor_more'] ?? '').toString().toLowerCase();
-              return name.contains(query) ||
-                  specialist.contains(query) ||
-                  more.contains(query);
-            }).toList();
+        filteredDoctors = widget.opd.doctors.where((doctor) {
+          final name = (doctor['doctor_name'] ?? '').toString().toLowerCase();
+          final specialist = (doctor['doctor_specialist'] ?? '').toString().toLowerCase();
+          final more = (doctor['doctor_more'] ?? '').toString().toLowerCase();
+          return name.contains(query) || specialist.contains(query) || more.contains(query);
+        }).toList();
       }
     });
   }
@@ -58,250 +52,123 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEFF9FF),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(65),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-          child: AppBar(
-            title: const Text(
-              'OPD Details',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            backgroundColor: Colors.blue[900],
-            iconTheme: const IconThemeData(color: Colors.white),
+      backgroundColor: const Color(0xFFF8FAFF),
+      body: CustomScrollView(
+        slivers: [
+          // 1. Premium App Bar
+          SliverAppBar(
+            pinned: true,
             elevation: 0,
+            backgroundColor: Colors.white,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1565C0), size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: const Text(
+              "Clinic Details",
+              style: TextStyle(color: Color(0xFF263238), fontSize: 18, fontWeight: FontWeight.w900),
+            ),
+            centerTitle: true,
           ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child:
-                  widget.opd.bannerImage.isNotEmpty
-                      ? Image.network(
-                        widget.opd.bannerImage,
-                        width: double.infinity,
-                        height: 180,
-                        fit: BoxFit.cover,
-                      )
-                      : Image.asset(
-                        'assets/images/empty-min.jpg',
-                        width: double.infinity,
-                        height: 180,
-                        fit: BoxFit.cover,
-                      ),
-            ),
-            const SizedBox(height: 12),
-            _infoSection(context),
-            const SizedBox(height: 20),
 
-            /// Search Bar — Added here!
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.search, color: Colors.black45),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: _filterDoctors,
-                      decoration: const InputDecoration(
-                        hintText: "Search for its doctors, specialists",
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  if (searchController.text.isNotEmpty)
-                    GestureDetector(
-                      onTap: _resetSearch,
-                      child: const Icon(Icons.close, color: Colors.grey),
-                    ),
-                ],
-              ),
-            ),
+          // 2. Comprehensive Clinic Header
+          SliverToBoxAdapter(
+            child: _buildClinicHeaderCard(context),
+          ),
 
-            const SizedBox(height: 10),
-            const Text(
-              "OPD DETAILS",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                fontSize: 16,
-              ),
+          // 3. Sticky Search Bar
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _StickySearchDelegate(
+              child: _buildStickySearchBar(),
             ),
-            const SizedBox(height: 10),
+          ),
 
-            filteredDoctors.isEmpty
-                ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text(
-                      "No doctors are found",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ),
-                )
-                : GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filteredDoctors.length,
-                  padding: EdgeInsets.zero,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisExtent: 230,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemBuilder:
-                      (context, index) =>
-                          _doctorCard(context, filteredDoctors[index]),
-                ),
-            const SizedBox(height: 30),
-            widget.opd.services.isEmpty
-                ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text(
-                      "No services are found",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ),
-                )
-                : const Text(
-                  "SERVICE LISTS",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                    fontSize: 16,
+          // 4. Doctor List
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
+            sliver: filteredDoctors.isEmpty 
+              ? const SliverToBoxAdapter(child: _EmptyDoctorsState())
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _buildUniformDoctorCard(context, filteredDoctors[index]),
+                    childCount: filteredDoctors.length,
                   ),
                 ),
-            const SizedBox(height: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children:
-                  widget.opd.services.expand<Widget>((service) {
-                    final List<dynamic> list = service['service_lists'] ?? [];
-                    return list.map<Widget>(
-                      (item) => _bulletItem(item.toString()),
-                    );
-                  }).toList(),
+          ),
+
+          // 5. Services Section
+          if (widget.opd.services.isNotEmpty)
+            SliverToBoxAdapter(
+              child: _buildServicesSection(),
             ),
-            const SizedBox(height: 30),
-          ],
-        ),
+          
+          const SliverToBoxAdapter(child: SizedBox(height: 50)),
+        ],
       ),
     );
   }
 
-  Widget _infoSection(BuildContext context) {
-    String capitalizeWords(String input) {
-      return input
-          .split(' ')
-          .map(
-            (word) =>
-                word.isNotEmpty
-                    ? word[0].toUpperCase() + word.substring(1).toLowerCase()
-                    : word,
-          )
-          .join(' ');
-    }
-
+  Widget _buildClinicHeaderCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF1565C0).withAlpha(5), blurRadius: 15, offset: const Offset(0, 5)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Jio Ji Bharka',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.blue,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            capitalizeWords(widget.opd.clinicName),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: Colors.red,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _infoRow(Icons.location_on, widget.opd.clinicAddress),
-          _infoRow(
-            Icons.location_city,
-            'Landmark: ${widget.opd.clinicLandmark}',
-          ),
-          _infoRow(Icons.phone, widget.opd.clinicMobileNumber),
-          _infoRow(Icons.email, widget.opd.clinicEmail),
-          _infoRow(
-            Icons.person,
-            'Contact: ${capitalizeWords(widget.opd.contactPersonName)}',
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          Row(
             children: [
-              _actionButton("Send Inquiry", Colors.red, () {
-                launchUrl(Uri.parse("tel:${widget.opd.clinicMobileNumber}"));
-              }),
-              _actionButton("See Location", Colors.green, () async {
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFF1565C0).withAlpha(15), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.business_rounded, color: Color(0xFF1565C0), size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _capitalizeWords(widget.opd.clinicName),
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF263238), height: 1.1),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "Healthcare Partner",
+                      style: TextStyle(color: const Color(0xFF1565C0).withAlpha(150), fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          _infoRow(Icons.person_outline_rounded, "Contact", _capitalizeWords(widget.opd.contactPersonName.isNotEmpty ? widget.opd.contactPersonName : "Incharge Manager")),
+          const SizedBox(height: 8),
+          _infoRow(Icons.location_on_outlined, "Address", "${widget.opd.clinicAddress}, ${widget.opd.clinicLandmark} - ${widget.opd.clinicPincode}"),
+          const SizedBox(height: 15),
+          Row(
+            children: [
+              _compactActionBtn(Icons.call_rounded, "CALL", const Color(0xFF1565C0), () => launchUrl(Uri.parse("tel:${widget.opd.clinicMobileNumber}"))),
+              const SizedBox(width: 10),
+              _compactActionBtn(Icons.directions_rounded, "MAP", const Color(0xFF00C853), () async {
                 final url = widget.opd.clinicGoogleMapLink;
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
-                  await launchUrl(
-                    Uri.parse(url),
-                    mode: LaunchMode.externalApplication,
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Unable to open map link.")),
-                  );
+                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                 }
               }),
-              _actionButton("Feedback", Colors.teal, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => OPDFeedbackScreen(
-                          opd: widget.opd,
-                          userData: widget.userData,
-                        ),
-                  ),
-                );
-              }),
+              const SizedBox(width: 10),
+              _compactActionBtn(Icons.rate_review_rounded, "FEEDBACK", Colors.orange[800] ?? Colors.orange, () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => OPDFeedbackScreen(opd: widget.opd, userData: widget.userData)),
+              )),
             ],
           ),
         ],
@@ -309,157 +176,283 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
     );
   }
 
-  static Widget _infoRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: Colors.black54),
-          const SizedBox(width: 6),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
-        ],
-      ),
-    );
-  }
-
-  static Widget _actionButton(
-    String label,
-    Color color,
-    VoidCallback onPressed,
-  ) {
-    return SizedBox(
-      height: 38,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 13, color: Colors.white),
+  Widget _compactActionBtn(IconData icon, String label, Color color, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(color: color.withAlpha(15), borderRadius: BorderRadius.circular(10)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 14),
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _doctorCard(BuildContext context, dynamic doctor) {
-    String capitalizeWords(String input) {
-      return input
-          .split(' ')
-          .map(
-            (word) =>
-                word.isNotEmpty
-                    ? word[0].toUpperCase() + word.substring(1).toLowerCase()
-                    : word,
-          )
-          .join(' ');
-    }
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: Colors.blueGrey[300]),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(color: Colors.blueGrey[300], fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+              const SizedBox(height: 2),
+              Text(value, style: const TextStyle(color: Color(0xFF455A64), fontSize: 13, fontWeight: FontWeight.w600, height: 1.4)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-    return Card(
-      color: Colors.white,
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          children: [
-            const Icon(Icons.medical_services, size: 40, color: Colors.green),
-            const SizedBox(height: 6),
-            Text(
-              capitalizeWords(doctor['doctor_name'] ?? "Dr. Doctor Name"),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    doctor['doctor_more'] ?? "Not Defined",
-                    style: const TextStyle(fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    doctor['doctor_specialist'] ?? "Specialist: Not Defined",
-                    style: const TextStyle(fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Fees: ₹${doctor['doctor_fees'] ?? "Not Defined"}",
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => ODPDoctorDetailScreen(
-                            opd: widget.opd,
-                            doctor: doctor,
-                          ),
-                    ),
-                  );
-                },
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.blue[900],
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  "View Details",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+
+  Widget _buildStickySearchBar() {
+    return Container(
+      color: const Color(0xFFF8FAFF),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4)),
           ],
         ),
+        child: TextField(
+          controller: searchController,
+          onChanged: _filterDoctors,
+          decoration: InputDecoration(
+            hintText: "Filter doctors by name or specialty...",
+            hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 13),
+            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1565C0), size: 18),
+            suffixIcon: searchController.text.isNotEmpty 
+                ? IconButton(icon: const Icon(Icons.close_rounded, size: 16), onPressed: _resetSearch) 
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+        ),
       ),
     );
   }
 
-  static Widget _bulletItem(String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
+  Widget _buildUniformDoctorCard(BuildContext context, dynamic doctor) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF1565C0).withAlpha(8), blurRadius: 15, offset: const Offset(0, 8)),
+        ],
+        border: Border.all(color: const Color(0xFF1565C0).withAlpha(15), width: 1),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 6,
-            height: 6,
-            margin: const EdgeInsets.only(top: 6),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.black,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 50, height: 50,
+                decoration: BoxDecoration(color: const Color(0xFF1565C0).withAlpha(12), borderRadius: BorderRadius.circular(15)),
+                child: const Icon(Icons.person_rounded, color: Color(0xFF1565C0), size: 26),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _capitalizeWords(doctor['doctor_name'] ?? ""),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: const Color(0xFF00C853).withAlpha(15), borderRadius: BorderRadius.circular(8)),
+                          child: Text(
+                            "₹${doctor['doctor_fees'] ?? '0'}",
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF2E7D32)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      doctor['doctor_specialist'] ?? "Specialist",
+                      style: const TextStyle(color: Color(0xFF1565C0), fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
-            ),
+          const SizedBox(height: 16),
+          _miniTagRow(Icons.description_rounded, doctor['doctor_more'] ?? "N/A"),
+          const SizedBox(height: 8),
+          _miniTagRow(Icons.check_circle_rounded, "Verified Availability"),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ODPDoctorDetailScreen(opd: widget.opd, doctor: doctor),
+                      ),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: const BorderSide(color: Color(0xFF1565C0), width: 1.5),
+                  ),
+                  child: const Text("VIEW DETAILS", style: TextStyle(color: Color(0xFF1565C0), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ODPDoctorDetailScreen(opd: widget.opd, doctor: doctor),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1565C0),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: const Text("BOOK NOW", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _miniTagRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 13, color: Colors.blueGrey[300]),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 11, color: Colors.blueGrey[400], fontWeight: FontWeight.w600),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildServicesSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: Colors.blueGrey[50] ?? const Color(0xFFECEFF1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("AVAILABLE SERVICES", style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFE53935), fontSize: 14, letterSpacing: 0.5)),
+          const SizedBox(height: 15),
+          ...widget.opd.services.expand<Widget>((service) {
+            final List<dynamic> list = service['service_lists'] ?? [];
+            return list.map<Widget>((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, size: 18, color: Color(0xFF00C853)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(item.toString(), style: const TextStyle(fontSize: 13, color: Color(0xFF263238), fontWeight: FontWeight.w600))),
+                ],
+              ),
+            ));
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  String _capitalizeWords(String input) {
+    return input.split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1).toLowerCase() : word).join(' ');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// STICKY SEARCH DELEGATE
+// -----------------------------------------------------------------------------
+class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _StickySearchDelegate({required this.child});
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  double get maxExtent => 75;
+
+  @override
+  double get minExtent => 75;
+
+  @override
+  bool shouldRebuild(covariant _StickySearchDelegate oldDelegate) {
+    return oldDelegate.child != child;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// EMPTY STATE WIDGET
+// -----------------------------------------------------------------------------
+class _EmptyDoctorsState extends StatelessWidget {
+  const _EmptyDoctorsState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 60),
+        child: Column(
+          children: [
+            Icon(Icons.person_search_rounded, size: 80, color: Colors.blueGrey[100]),
+            const SizedBox(height: 15),
+            Text("No doctors match your filter", style: TextStyle(color: Colors.blueGrey[300], fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }

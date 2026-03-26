@@ -205,7 +205,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
               child: GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen())),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen(userData: widget.userData))),
                 child: Row(
                   children: [
                     Expanded(

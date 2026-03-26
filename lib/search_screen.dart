@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:demoapp/search_results_screen.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final Map<String, dynamic> userData;
+  const SearchScreen({super.key, required this.userData});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -33,6 +34,7 @@ class _SearchScreenState extends State<SearchScreen> {
         builder: (context) => SearchResultsScreen(
           initialQuery: query,
           initialCategory: _selectedCategory,
+          userData: widget.userData,
         ),
       ),
     );
