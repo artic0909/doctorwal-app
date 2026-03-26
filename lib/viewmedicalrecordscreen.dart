@@ -40,16 +40,60 @@ class _ViewMedicalRecordScreenState extends State<ViewMedicalRecordScreen> {
   }
 
   Future<void> _openFile(String url) async {
+    bool isImage = !url.toLowerCase().contains('.pdf');
+    if (isImage) {
+      _showFullScreenImage(url);
+      return;
+    }
+
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Could not open file"), backgroundColor: Colors.red),
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
         );
       }
     }
+  }
+
+  void _showFullScreenImage(String url) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.black,
+                child: InteractiveViewer(
+                  child: Image.network(url, fit: BoxFit.contain),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override

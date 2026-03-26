@@ -35,9 +35,16 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
       final prescriptionsRes = await _apiService.getMedicalHistory(type: 'prescription');
 
       if (mounted) {
+        // Sort descending by date
+        final List reportsList = reportsRes['data'] ?? [];
+        reportsList.sort((a, b) => (b['date_of_report'] ?? "").compareTo(a['date_of_report'] ?? ""));
+        
+        final List prescriptionsList = prescriptionsRes['data'] ?? [];
+        prescriptionsList.sort((a, b) => (b['date_of_report'] ?? "").compareTo(a['date_of_report'] ?? ""));
+
         setState(() {
-          _reports = reportsRes['data'] ?? [];
-          _prescriptions = prescriptionsRes['data'] ?? [];
+          _reports = reportsList;
+          _prescriptions = prescriptionsList;
           _isLoading = false;
         });
       }
