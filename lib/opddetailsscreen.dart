@@ -100,8 +100,8 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
 
   Widget _buildClinicHeaderCard(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10, bottom: 10),
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
