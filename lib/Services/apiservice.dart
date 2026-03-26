@@ -260,6 +260,70 @@ class ApiService {
     }
   }
 
+  // --- MEDICAL HISTORY ---
+
+  // GET ALL MEDICAL RECORDS (type: 'all', 'report', or 'prescription')
+  Future<Map<String, dynamic>> getMedicalHistory({String type = 'all', String? singleId}) async {
+    try {
+      await _setAuthHeader();
+      String endpoint = '/api/medical-history';
+      if (type == 'report') endpoint += '/reports';
+      else if (type == 'prescription') endpoint += '/prescriptions';
+      else if (singleId != null) endpoint += '/$singleId';
+
+      final response = await _dio.get(endpoint);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  // ADD NEW MEDICAL RECORD (with multi-image support)
+  Future<Map<String, dynamic>> addMedicalHistory(FormData formData) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post('/api/medical-history', data: formData);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  // EDIT MEDICAL RECORD (POST with _method=PUT simulation if needed, but backend says POST for edit)
+  Future<Map<String, dynamic>> editMedicalHistory(int id, FormData formData) async {
+    try {
+      await _setAuthHeader();
+      // Using POST as requested by the backend route for editing since it includes files
+      final response = await _dio.post('/api/medical-history/$id', data: formData);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  // DELETE MEDICAL RECORD
+  Future<Map<String, dynamic>> deleteMedicalHistory(int id) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.delete('/api/medical-history/$id');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
   // --- VITALS (HEALTH PARAMETERS) ---
 
   // GET ALL VITALS
@@ -318,4 +382,3 @@ class ApiService {
     }
   }
 }
-
