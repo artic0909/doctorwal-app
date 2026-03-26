@@ -8,6 +8,8 @@ import 'allavailablepathologyscreen.dart';
 import 'contactscreen.dart';
 import 'notificationscreen.dart';
 import 'profileeditscreen.dart';
+import 'package:demoapp/healthparametersscreen.dart';
+import 'package:demoapp/addvitalscreen.dart';
 import 'package:http/http.dart' as http;
 
 class CategoryHomeScreen extends StatefulWidget {
@@ -524,7 +526,14 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 
                 const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("Health Management"),
-                _drawerItem(Icons.monitor_heart_rounded, "Add health parameters", () {}),
+                _drawerItem(Icons.monitor_heart_rounded, "Health Parameters", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const HealthParametersScreen()));
+                }),
+                _drawerItem(Icons.add_moderator_rounded, "Add health parameters", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddVitalScreen()));
+                }),
                 _drawerItem(Icons.note_add_rounded, "Add Medical Records", () {}),
                 _drawerItem(Icons.assignment_rounded, "Reports", () {}),
                 _drawerItem(Icons.medication_rounded, "Prescriptions", () {}),

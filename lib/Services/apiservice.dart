@@ -259,5 +259,63 @@ class ApiService {
       return {'success': false, 'message': 'Error verifying OTP: $e'};
     }
   }
+
+  // --- VITALS (HEALTH PARAMETERS) ---
+
+  // GET ALL VITALS
+  Future<Map<String, dynamic>> getVitals() async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.get('/api/vitals');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  // ADD NEW VITALS
+  Future<Map<String, dynamic>> addVitals(Map<String, dynamic> data) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post('/api/vitals', data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  // EDIT EXISTING VITALS
+  Future<Map<String, dynamic>> editVitals(int id, Map<String, dynamic> data) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.put('/api/vitals/$id', data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  // DELETE VITALS
+  Future<Map<String, dynamic>> deleteVitals(int id) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.delete('/api/vitals/$id');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
 }
 
