@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:demoapp/opddetailsscreen.dart';
 import 'package:flutter/material.dart';
@@ -20,11 +21,30 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   bool _isLoadMoreLoading = false;
   int _currentPage = 1;
   int _lastPage = 1;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _fetchInitialClinics();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (_searchQuery != query) {
+        setState(() {
+          _searchQuery = query;
+        });
+        _fetchInitialClinics();
+      }
+    });
   }
 
   Future<void> _fetchInitialClinics() async {
@@ -38,20 +58,32 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   }
 
   Future<void> _fetchClinics(int page) async {
+    final queryParam = _searchQuery.isNotEmpty ? '&query=${Uri.encodeComponent(_searchQuery)}' : '';
     final url = Uri.parse(
-      "https://doctorwala.info/api/api/all-opd-contacts?page=$page",
+      "https://doctorwala.info/api/api/all-opd-contacts?page=$page$queryParam",
     );
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final List data = jsonData['data'] ?? [];
+        final bool isSearch = jsonData['is_search'] ?? false;
         
         setState(() {
           final newClinics = data.map((json) => AllAvailableOPDModel.fromJson(json)).toList();
-          _clinics.addAll(newClinics);
-          _currentPage = jsonData['current_page'] ?? 1;
-          _lastPage = jsonData['last_page'] ?? 1;
+          if (page == 1) {
+            _clinics = newClinics;
+          } else {
+            _clinics.addAll(newClinics);
+          }
+          
+          if (isSearch) {
+            _currentPage = 1;
+            _lastPage = 1;
+          } else {
+            _currentPage = jsonData['current_page'] ?? 1;
+            _lastPage = jsonData['last_page'] ?? 1;
+          }
         });
       }
     } catch (e) {
@@ -69,47 +101,50 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Client-side filtering on already-fetched clinics
-    final filteredClinics = _clinics.where((clinic) {
-      final name = clinic.clinicName.toLowerCase();
-      final address = clinic.clinicAddress.toLowerCase();
-      final query = _searchQuery.toLowerCase();
-
-      final doctorMatch = clinic.doctors.any((doctor) {
-        final doctorName = (doctor['doctor_name'] ?? '').toString().toLowerCase();
-        final specialization = (doctor['doctor_specialist'] ?? '').toString().toLowerCase();
-        return doctorName.contains(query) || specialization.contains(query);
-      });
-
-      return name.contains(query) || address.contains(query) || doctorMatch;
-    }).toList();
+    // Removed client-side filtering
+    final displayClinics = _clinics;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
       body: Column(
         children: [
-          // 1. Premium Header
           _buildHeader(),
-
-          // 2. Listing
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
                 : RefreshIndicator(
                     onRefresh: _fetchInitialClinics,
                     color: const Color(0xFF1565C0),
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-                      itemCount: filteredClinics.length + (_currentPage < _lastPage ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index < filteredClinics.length) {
-                          return _buildClinicCard(filteredClinics[index]);
-                        } else {
-                          return _buildLoadMoreBtn();
-                        }
-                      },
-                    ),
+                    child: displayClinics.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                          itemCount: displayClinics.length + (_currentPage < _lastPage ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index < displayClinics.length) {
+                              return _buildClinicCard(displayClinics[index]);
+                            } else {
+                              return _buildLoadMoreBtn();
+                            }
+                          },
+                        ),
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded, size: 80, color: Colors.blueGrey[100]),
+          const SizedBox(height: 16),
+          Text(
+            _searchQuery.isEmpty ? "No OPD clinics available" : "No results for \"$_searchQuery\"",
+            style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -142,9 +177,9 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
             style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5),
           ),
           const SizedBox(height: 5),
-          Text(
+          const Text(
             "Book clinical appointments instantly",
-            style: TextStyle(color: Colors.white.withAlpha(180), fontSize: 13, fontWeight: FontWeight.w500),
+            style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 20),
           Container(
@@ -154,9 +189,7 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
               boxShadow: [BoxShadow(color: Colors.black.withAlpha(40), blurRadius: 10, offset: const Offset(0, 4))],
             ),
             child: TextField(
-              onChanged: (value) => setState(() {
-                _searchQuery = value;
-              }),
+              onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: "Search for clinics or doctors...",
                 hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 14),

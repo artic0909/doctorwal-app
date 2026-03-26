@@ -398,4 +398,43 @@ class ApiService {
       return {'status': false, 'message': 'Network error occurred'};
     }
   }
+  // --- APPOINTMENT BOOKING ---
+  Future<Map<String, dynamic>> bookOPDAppointment(Map<String, dynamic> data) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post('/api/opd-appointment', data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  Future<Map<String, dynamic>> bookPathAppointment(Map<String, dynamic> data) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post('/api/path-appointment', data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  Future<Map<String, dynamic>> bookDocAppointment(Map<String, dynamic> data) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post('/api/doc-appointment', data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
 }

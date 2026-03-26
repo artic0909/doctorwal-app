@@ -428,6 +428,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         MaterialPageRoute(
           builder: (context) => DoctorDetailsScreen(
             doctor: doctorModel,
+            userData: widget.userData,
           ),
         ),
       );

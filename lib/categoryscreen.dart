@@ -386,7 +386,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     subtitle: "Connect with top experts in 50+ specialties",
                     icon: Icons.personal_injury_rounded,
                     color: const Color(0xFF1565C0),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AllDoctorsScreen())),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllDoctorsScreen(userData: widget.userData))),
                   ),
                   
                   _newCategoryCard(

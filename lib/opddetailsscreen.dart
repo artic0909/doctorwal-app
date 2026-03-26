@@ -25,18 +25,17 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    filteredDoctors = List.from(widget.opd.doctors ?? []);
+    filteredDoctors = List.from(widget.opd.doctors);
   }
 
   void _filterDoctors(String query) {
     query = query.toLowerCase();
     setState(() {
-      final allDoctors = widget.opd.doctors ?? [];
+      final allDoctors = widget.opd.doctors;
       if (query.isEmpty) {
         filteredDoctors = List.from(allDoctors);
       } else {
         filteredDoctors = allDoctors.where((doctor) {
-          if (doctor == null) return false;
           final name = (doctor['doctor_name'] ?? '').toString().toLowerCase();
           final specialist = (doctor['doctor_specialist'] ?? '').toString().toLowerCase();
           final more = (doctor['doctor_more'] ?? '').toString().toLowerCase();
@@ -84,7 +83,6 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
                     (context, index) {
                       if (index >= filteredDoctors.length) return null;
                       final doctor = filteredDoctors[index];
-                      if (doctor == null) return const SizedBox.shrink();
                       return _buildUniformDoctorCard(context, doctor);
                     },
                     childCount: filteredDoctors.length,
@@ -93,7 +91,7 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
           ),
 
           // 4. Services Section
-          if (widget.opd.services != null && widget.opd.services.isNotEmpty)
+          if (widget.opd.services.isNotEmpty)
             SliverToBoxAdapter(
               child: _buildServicesSection(),
             ),
@@ -140,7 +138,7 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _capitalizeWords(o.clinicName ?? "Clinic"),
+                      _capitalizeWords(o.clinicName),
                       style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                     ),
                     const SizedBox(height: 2),
@@ -154,16 +152,16 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _headerInfoRow(Icons.person_rounded, "Contact Manager", (o.contactPersonName != null && o.contactPersonName.isNotEmpty) ? o.contactPersonName : "Incharge Manager"),
+          _headerInfoRow(Icons.person_rounded, "Contact Manager", (o.contactPersonName.isNotEmpty) ? o.contactPersonName : "Incharge Manager"),
           const SizedBox(height: 12),
-          _headerInfoRow(Icons.location_on_rounded, "Clinic Address", "${o.clinicAddress ?? ''}, ${o.clinicLandmark ?? ''}"),
+          _headerInfoRow(Icons.location_on_rounded, "Clinic Address", "${o.clinicAddress}, ${o.clinicLandmark}"),
           const SizedBox(height: 25),
           Row(
             children: [
-              Expanded(child: _headerActionBtn("CALL", Icons.phone_rounded, () => launchUrl(Uri.parse("tel:${o.clinicMobileNumber ?? ''}")))),
+              Expanded(child: _headerActionBtn("CALL", Icons.phone_rounded, () => launchUrl(Uri.parse("tel:${o.clinicMobileNumber}")))),
               const SizedBox(width: 10),
               Expanded(child: _headerActionBtn("MAP", Icons.near_me_rounded, () async {
-                final url = o.clinicGoogleMapLink ?? "";
+                final url = o.clinicGoogleMapLink;
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
                   await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                 }
@@ -252,7 +250,7 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
   }
 
   Widget _buildUniformDoctorCard(BuildContext context, dynamic doctor) {
-    final docs = doctor as Map<String, dynamic>? ?? {};
+    final docs = doctor as Map<String, dynamic>;
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(16),
@@ -321,7 +319,7 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ODPDoctorDetailScreen(opd: widget.opd, doctor: docs),
+                        builder: (context) => ODPDoctorDetailScreen(opd: widget.opd, doctor: docs, userData: widget.userData),
                       ),
                     );
                   },
@@ -340,7 +338,7 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ODPDoctorDetailScreen(opd: widget.opd, doctor: docs),
+                        builder: (context) => ODPDoctorDetailScreen(opd: widget.opd, doctor: docs, userData: widget.userData),
                       ),
                     );
                   },

@@ -3,9 +3,11 @@ import 'package:demoapp/doctordetailsscreen.dart';
 import 'package:demoapp/Models/all_available_doctors_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async'; // Added for Timer
 
 class AllDoctorsScreen extends StatefulWidget {
-  const AllDoctorsScreen({super.key});
+  final Map<String, dynamic> userData;
+  const AllDoctorsScreen({super.key, required this.userData});
 
   @override
   State<AllDoctorsScreen> createState() => _AllDoctorsScreenState();
@@ -18,11 +20,30 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   bool _isLoadMoreLoading = false;
   int _currentPage = 1;
   int _lastPage = 1;
+  Timer? _debounce; // Added for debouncing
 
   @override
   void initState() {
     super.initState();
     _fetchInitialDoctors();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel(); // Cancel timer on dispose
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (_searchQuery != query) {
+        setState(() {
+          _searchQuery = query;
+        });
+        _fetchInitialDoctors();
+      }
+    });
   }
 
   Future<void> _fetchInitialDoctors() async {
@@ -37,20 +58,31 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
 
   Future<void> _fetchDoctors(int page) async {
     try {
+      final queryParam = _searchQuery.isNotEmpty ? '&query=${Uri.encodeComponent(_searchQuery)}' : '';
       final response = await http.get(
-        Uri.parse('https://doctorwala.info/api/api/all-doctors-contacts?page=$page'),
+        Uri.parse('https://doctorwala.info/api/api/all-doctors-contacts?page=$page$queryParam'),
       );
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        // Handle both paginated 'data' key and legacy 'allDoctorContacts' key
-        final List<dynamic> data = jsonData['data'] ?? jsonData['allDoctorContacts'] ?? [];
+        final List<dynamic> data = jsonData['data'] ?? [];
+        final bool isSearch = jsonData['is_search'] ?? false;
         
         setState(() {
           final newDoctors = data.map((json) => AllAvailableDoctorsModel.fromJson(json)).toList();
-          _doctors.addAll(newDoctors);
-          _currentPage = jsonData['current_page'] ?? 1;
-          _lastPage = jsonData['last_page'] ?? 1;
+          if (page == 1) {
+            _doctors = newDoctors;
+          } else {
+            _doctors.addAll(newDoctors);
+          }
+          
+          if (isSearch) {
+            _currentPage = 1;
+            _lastPage = 1;
+          } else {
+            _currentPage = jsonData['current_page'] ?? 1;
+            _lastPage = jsonData['last_page'] ?? 1;
+          }
         });
       }
     } catch (e) {
@@ -68,42 +100,50 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Client-side filtering on fetched results
-    final filteredDoctors = _doctors.where((doctor) {
-      final name = doctor.partnerDoctorName?.toLowerCase() ?? '';
-      final address = doctor.partnerDoctorAddress?.toLowerCase() ?? '';
-      final specialist = doctor.partnerDoctorSpecialist?.toLowerCase() ?? '';
-      final query = _searchQuery.toLowerCase();
-
-      return name.contains(query) || address.contains(query) || specialist.contains(query);
-    }).toList();
+    // Removed client-side filtering as we now use server-side search
+    final displayDoctors = _doctors;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
       body: Column(
         children: [
-          // 1. Premium Header
           _buildHeader(),
-
-          // 2. Listing
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
                 : RefreshIndicator(
                     onRefresh: _fetchInitialDoctors,
                     color: const Color(0xFF1565C0),
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-                      itemCount: filteredDoctors.length + (_currentPage < _lastPage ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index < filteredDoctors.length) {
-                          return _buildDoctorCard(filteredDoctors[index]);
-                        } else {
-                          return _buildLoadMoreBtn();
-                        }
-                      },
-                    ),
+                    child: displayDoctors.isEmpty 
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                          itemCount: displayDoctors.length + (_currentPage < _lastPage ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index < displayDoctors.length) {
+                              return _buildDoctorCard(displayDoctors[index]);
+                            } else {
+                              return _buildLoadMoreBtn();
+                            }
+                          },
+                        ),
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded, size: 80, color: Colors.blueGrey[100]),
+          const SizedBox(height: 16),
+          Text(
+            _searchQuery.isEmpty ? "No doctors available" : "No results for \"$_searchQuery\"",
+            style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -136,9 +176,9 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
             style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5),
           ),
           const SizedBox(height: 5),
-          Text(
+          const Text(
             "Connect with top experts in 50+ specialties",
-            style: TextStyle(color: Colors.white.withAlpha(180), fontSize: 13, fontWeight: FontWeight.w500),
+            style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 20),
           Container(
@@ -148,9 +188,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
               boxShadow: [BoxShadow(color: Colors.black.withAlpha(40), blurRadius: 10, offset: const Offset(0, 4))],
             ),
             child: TextField(
-              onChanged: (value) => setState(() {
-                _searchQuery = value;
-              }),
+              onChanged: _onSearchChanged, // Updated to use debounced handler
               decoration: InputDecoration(
                 hintText: "Search by name, specialty, or city...",
                 hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 14),
@@ -176,7 +214,12 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
         border: Border.all(color: const Color(0xFF6A1B9A).withAlpha(15), width: 1),
       ),
       child: InkWell(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DoctorDetailsScreen(doctor: doctor))),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DoctorDetailsScreen(doctor: doctor, userData: widget.userData),
+          ),
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

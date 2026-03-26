@@ -1,12 +1,14 @@
 import 'package:demoapp/Models/all_available_doctors_model.dart';
+import 'package:demoapp/bookingscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 
 class DoctorDetailsScreen extends StatefulWidget {
   final AllAvailableDoctorsModel doctor;
+  final Map<String, dynamic> userData; // Added userData
 
-  const DoctorDetailsScreen({super.key, required this.doctor});
+  const DoctorDetailsScreen({super.key, required this.doctor, required this.userData});
 
   @override
   State<DoctorDetailsScreen> createState() => _DoctorDetailsScreenState();
@@ -70,6 +72,8 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
 
   Widget _buildImageStyleHeader(BuildContext context) {
     final d = widget.doctor;
+    final String docName = d.partnerDoctorName ?? "Dr. Unknown";
+    
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 20),
@@ -104,12 +108,12 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _capitalizeWords(d.partnerDoctorName ?? "Dr. Unknown"),
+                      _capitalizeWords(docName),
                       style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _capitalizeWords(d.partnerDoctorSpecialist ?? "Specialist Specialist"),
+                      _capitalizeWords(d.partnerDoctorSpecialist ?? "Specialist"),
                       style: const TextStyle(color: Color(0xFFFFD700), fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.2),
                     ),
                   ],
@@ -273,7 +277,22 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BookingScreen(
+                  type: BookingType.doctor,
+                  partnerId: widget.doctor.currentlyLoggedinPartnerId.toString(),
+                  clinicName: widget.doctor.partnerDoctorName ?? "Specialist",
+                  userData: widget.userData,
+                  itemId: widget.doctor.id.toString(),
+                  itemName: widget.doctor.partnerDoctorName,
+                  itemPrice: widget.doctor.partnerDoctorFees,
+                ),
+              ),
+            );
+          },
           borderRadius: BorderRadius.circular(20),
           child: const Center(
             child: Text(

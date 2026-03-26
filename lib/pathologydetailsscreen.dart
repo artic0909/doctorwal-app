@@ -27,7 +27,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    filteredTests = List.from(widget.pathology.tests ?? []);
+    filteredTests = List.from(widget.pathology.tests);
     searchController.addListener(_onSearchChanged);
   }
 
@@ -35,7 +35,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
       final query = searchController.text.toLowerCase().trim();
-      final allTests = widget.pathology.tests ?? [];
+      final allTests = widget.pathology.tests;
       if (query.isEmpty) {
         setState(() {
           filteredTests = List.from(allTests);
@@ -44,7 +44,6 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
         setState(() {
           filteredTests =
               allTests.where((test) {
-                if (test == null) return false;
                 final name = (test['test_name'] ?? '').toString().toLowerCase();
                 final type = (test['test_type'] ?? '').toString().toLowerCase();
                 return name.contains(query) || type.contains(query);
@@ -131,7 +130,6 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
                   (context, index) {
                     if (index >= filteredTests.length) return null;
                     final test = filteredTests[index];
-                    if (test == null) return const SizedBox.shrink();
                     return _buildTestCard(test);
                   },
                   childCount: filteredTests.length,
@@ -140,7 +138,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
             ),
 
           // 4. Services Section
-          if (widget.pathology.services != null && widget.pathology.services.isNotEmpty) ...[
+          if (widget.pathology.services.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
@@ -170,7 +168,6 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
                   (context, index) {
                     if (index >= widget.pathology.services.length) return null;
                     final service = widget.pathology.services[index];
-                    if (service == null) return const SizedBox.shrink();
                     final list = service['service_lists'] as List? ?? [];
                     return Column(
                       children: list.map((item) => _buildServiceItem(item?.toString() ?? "")).toList(),
@@ -223,7 +220,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _capitalizeWords(p.clinicName ?? "Lab"),
+                      _capitalizeWords(p.clinicName),
                       style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                     ),
                     const SizedBox(height: 2),
@@ -237,16 +234,16 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _headerInfoRow(Icons.person_rounded, "Contact Manager", p.contactPersonName ?? ""),
+          _headerInfoRow(Icons.person_rounded, "Contact Manager", p.contactPersonName),
           const SizedBox(height: 12),
-          _headerInfoRow(Icons.location_on_rounded, "Lab Address", p.clinicAddress ?? ""),
+          _headerInfoRow(Icons.location_on_rounded, "Lab Address", p.clinicAddress),
           const SizedBox(height: 25),
           Row(
             children: [
-              Expanded(child: _headerActionBtn("CALL", Icons.phone_rounded, () => launchUrl(Uri.parse("tel:${p.clinicMobileNumber ?? ''}")))),
+              Expanded(child: _headerActionBtn("CALL", Icons.phone_rounded, () => launchUrl(Uri.parse("tel:${p.clinicMobileNumber}")))),
               const SizedBox(width: 10),
               Expanded(child: _headerActionBtn("MAP", Icons.near_me_rounded, () async {
-                final url = p.clinicGoogleMapLink ?? "";
+                final url = p.clinicGoogleMapLink;
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
                   await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                 }
@@ -331,7 +328,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
   }
 
   Widget _buildTestCard(dynamic test) {
-    final t = test as Map<String, dynamic>? ?? {};
+    final t = test as Map<String, dynamic>;
     final price = t['test_price']?.toString() ?? '0';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -342,7 +339,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
         border: Border.all(color: const Color(0xFF2E7D32).withAlpha(10)),
       ),
       child: InkWell(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => PathologyTestsDetailsScreen(test: t))),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => PathologyTestsDetailsScreen(test: t, userData: widget.userData))),
         child: Row(
           children: [
             Container(
@@ -372,7 +369,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
               children: [
                 Text("₹$price", style: const TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.w900, fontSize: 15)),
                 const SizedBox(height: 4),
-                const Text("VIEW DETAILS", style: TextStyle(color: Color(0xFF1565C0), fontWeight: FontWeight.w900, fontSize: 8, letterSpacing: 0.5)),
+                const Text("BOOK NOW", style: TextStyle(color: Color(0xFF1565C0), fontWeight: FontWeight.w900, fontSize: 8, letterSpacing: 0.5)),
               ],
             ),
           ],

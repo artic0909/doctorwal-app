@@ -1,3 +1,4 @@
+import 'package:demoapp/bookingscreen.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -5,14 +6,17 @@ import 'package:intl/intl.dart';
 class ODPDoctorDetailScreen extends StatelessWidget {
   final dynamic opd;
   final dynamic doctor;
+  final Map<String, dynamic> userData; // Added userData
 
   const ODPDoctorDetailScreen({
     super.key,
     required this.opd,
     required this.doctor,
+    required this.userData, // Added userData
   });
 
   String _capitalizeWords(String input) {
+    if (input.isEmpty) return "";
     return input.split(' ').map((word) {
       if (word.isEmpty) return word;
       return word[0].toUpperCase() + word.substring(1).toLowerCase();
@@ -42,7 +46,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 100), // Space for bottom button
+            padding: const EdgeInsets.only(bottom: 100),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -58,7 +62,20 @@ class ODPDoctorDetailScreen extends StatelessWidget {
             right: 20,
             child: ElevatedButton(
               onPressed: () {
-                // To be defined later as per user request
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookingScreen(
+                      type: BookingType.opd,
+                      partnerId: doctor['currently_loggedin_partner_id']?.toString() ?? opd.currentlyLoggedInPartnerId,
+                      clinicName: opd.clinicName ?? "Clinic",
+                      userData: userData,
+                      itemId: doctor['id']?.toString(),
+                      itemName: doctor['doctor_name'],
+                      itemPrice: doctor['doctor_fees']?.toString(),
+                    ),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1565C0),
@@ -73,7 +90,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.calendar_today_rounded, size: 20),
                   SizedBox(width: 12),
-                  Text("BOOK APPOINTMENT", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                  const Text("BOOK APPOINTMENT", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
                 ],
               ),
             ),
@@ -158,6 +175,8 @@ class ODPDoctorDetailScreen extends StatelessWidget {
       } catch (e) {
         debugPrint('Error decoding visit_day_time: $e');
       }
+    } else if (visitDayTimeRaw is List) {
+      visitDayTime = visitDayTimeRaw.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
     }
 
     return Padding(
