@@ -1,9 +1,11 @@
+import 'dart:io';
+import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/changepasswordscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -15,91 +17,190 @@ class ProfileEditScreen extends StatefulWidget {
 }
 
 class _ProfileEditScreenState extends State<ProfileEditScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final ApiService _apiService = ApiService();
+  
+  // Controllers
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _mobileController;
   late TextEditingController _cityController;
+  late TextEditingController _dobController;
+  late TextEditingController _addressController;
+  late TextEditingController _heightController;
+  late TextEditingController _weightController;
+  late TextEditingController _emergencyContactController;
+  late TextEditingController _allergiesController;
+  late TextEditingController _chronicConditionsController;
 
-  bool isLoading = false;
-  final String baseUrl = 'https://doctorwala.info';
+  String? _selectedGender;
+  String? _selectedBloodGroup;
+  File? _imageFile;
+  String? _networkImageUrl;
+  bool _isLoading = false;
+  bool _isFetching = true;
+
+  final List<String> _genders = ['Male', 'Female', 'Other'];
+  final List<String> _bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
   @override
   void initState() {
     super.initState();
+    _initControllers();
+    _fetchProfileData();
+  }
+
+  void _initControllers() {
     _nameController = TextEditingController();
     _emailController = TextEditingController();
     _mobileController = TextEditingController();
     _cityController = TextEditingController();
-    _loadProfileFromPrefs();
+    _dobController = TextEditingController();
+    _addressController = TextEditingController();
+    _heightController = TextEditingController();
+    _weightController = TextEditingController();
+    _emergencyContactController = TextEditingController();
+    _allergiesController = TextEditingController();
+    _chronicConditionsController = TextEditingController();
   }
 
-  Future<void> _loadProfileFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    _nameController.text = prefs.getString('name') ?? '';
-    _emailController.text = prefs.getString('email') ?? '';
-    _mobileController.text = prefs.getString('mobile') ?? '';
-    _cityController.text = prefs.getString('city') ?? '';
-  }
-
-  Future<void> _updateProfile() async {
-    setState(() => isLoading = true);
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
+  Future<void> _fetchProfileData() async {
+    setState(() => _isFetching = true);
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/update-profile'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: {
-          'user_name': _nameController.text,
-          'user_email': _emailController.text,
-          'user_mobile': _mobileController.text,
-          'user_city': _cityController.text,
-        },
-      );
-
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['status'] == true) {
-        await _fetchUpdatedProfile(token!);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully!')),
-        );
-        Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Update failed')),
-        );
+      final response = await _apiService.getProfile();
+      if (response['status'] == true) {
+        final user = response['user'];
+        setState(() {
+          _nameController.text = user['name']?.toString() ?? '';
+          _emailController.text = user['email']?.toString() ?? '';
+          _mobileController.text = user['mobile']?.toString() ?? '';
+          _cityController.text = user['city']?.toString() ?? '';
+          _dobController.text = user['dob']?.toString() ?? '';
+          _addressController.text = user['address']?.toString() ?? '';
+          _heightController.text = user['height']?.toString() ?? '';
+          _weightController.text = user['weight']?.toString() ?? '';
+          _emergencyContactController.text = user['emergency_contact']?.toString() ?? '';
+          _allergiesController.text = user['allergies']?.toString() ?? '';
+          _chronicConditionsController.text = user['chronic_conditions']?.toString() ?? '';
+          _selectedGender = user['gender'];
+          _selectedBloodGroup = user['blood_group'];
+          _networkImageUrl = user['image'];
+          
+          // Fallback if dropdown values don't match exactly
+          if (_selectedGender != null && !_genders.contains(_selectedGender)) _selectedGender = null;
+          if (_selectedBloodGroup != null && !_bloodGroups.contains(_selectedBloodGroup)) _selectedBloodGroup = null;
+        });
+        
+        // Update local prefs with latest core data
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('name', _nameController.text);
+        await prefs.setString('email', _emailController.text);
+        await prefs.setString('mobile', _mobileController.text);
+        await prefs.setString('city', _cityController.text);
+        if (_networkImageUrl != null) await prefs.setString('image', _networkImageUrl!);
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      debugPrint("Error fetching profile: $e");
     } finally {
-      setState(() => isLoading = false);
+      setState(() => _isFetching = false);
     }
   }
 
-  Future<void> _fetchUpdatedProfile(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    final response = await http.get(
-      Uri.parse('$baseUrl/api/user-profile'),
-      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (image != null) {
+      setState(() {
+        _imageFile = File(image.path);
+      });
+    }
+  }
+
+  Future<void> _selectDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 20)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF1565C0),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF263238),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+    if (picked != null) {
+      setState(() {
+        _dobController.text = DateFormat('yyyy-MM-dd').format(picked);
+      });
+    }
+  }
 
-    if (response.statusCode == 200) {
-      final user = jsonDecode(response.body)['user'];
-      _nameController.text = user['name'] ?? '';
-      _emailController.text = user['email'] ?? '';
-      _mobileController.text = user['mobile'] ?? '';
-      _cityController.text = user['city'] ?? '';
+  Future<void> _updateProfile() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      await prefs.setString('name', user['name'] ?? '');
-      await prefs.setString('email', user['email'] ?? '');
-      await prefs.setString('mobile', user['mobile'] ?? '');
-      await prefs.setString('city', user['city'] ?? '');
+    setState(() => _isLoading = true);
+    try {
+      final response = await _apiService.updateProfile(
+        name: _nameController.text,
+        email: _emailController.text,
+        mobile: _mobileController.text,
+        city: _cityController.text,
+        dob: _dobController.text,
+        gender: _selectedGender,
+        address: _addressController.text,
+        bloodGroup: _selectedBloodGroup,
+        height: _heightController.text,
+        weight: _weightController.text,
+        emergencyContact: _emergencyContactController.text,
+        allergies: _allergiesController.text,
+        chronicConditions: _chronicConditionsController.text,
+        imagePath: _imageFile?.path,
+      );
+
+      if (response['status'] == true) {
+        // Update local prefs
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('name', _nameController.text);
+        await prefs.setString('mobile', _mobileController.text);
+        await prefs.setString('city', _cityController.text);
+        if (response['image'] != null) {
+          await prefs.setString('image', response['image']);
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Profile updated successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true); // Return true to indicate success
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Update failed'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -109,129 +210,217 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     _emailController.dispose();
     _mobileController.dispose();
     _cityController.dispose();
+    _dobController.dispose();
+    _addressController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
+    _emergencyContactController.dispose();
+    _allergiesController.dispose();
+    _chronicConditionsController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(65),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-          child: AppBar(
-            title: const Text(
-              'Edit Profile',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+      backgroundColor: const Color(0xFFF8FAFF),
+      appBar: _buildAppBar(),
+      body: _isFetching 
+        ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
+        : Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      _buildProfileImage(),
+                      const SizedBox(height: 30),
+                      
+                      _buildSectionTitle("Personal Information", Icons.person_rounded),
+                      _buildCard([
+                        _buildTextField(
+                          controller: _nameController,
+                          label: "Full Name",
+                          icon: Icons.badge_outlined,
+                          validator: (v) => v!.isEmpty ? "Name is required" : null,
+                        ),
+                        _buildTextField(
+                          controller: _emailController,
+                          label: "Email Address",
+                          icon: Icons.email_outlined,
+                          readOnly: true,
+                        ),
+                        _buildTextField(
+                          controller: _mobileController,
+                          label: "Mobile Number",
+                          icon: Icons.phone_android_rounded,
+                          keyboardType: TextInputType.phone,
+                          validator: (v) => v!.isEmpty ? "Mobile is required" : null,
+                        ),
+                        _buildDropdownField(
+                          label: "Gender",
+                          icon: Icons.wc_rounded,
+                          value: _selectedGender,
+                          items: _genders,
+                          onChanged: (v) => setState(() => _selectedGender = v),
+                        ),
+                        _buildTextField(
+                          controller: _dobController,
+                          label: "Date of Birth",
+                          icon: Icons.calendar_today_rounded,
+                          readOnly: true,
+                          onTap: _selectDate,
+                        ),
+                        _buildTextField(
+                          controller: _cityController,
+                          label: "City",
+                          icon: Icons.location_city_rounded,
+                        ),
+                      ]),
+
+                      const SizedBox(height: 25),
+                      _buildSectionTitle("Contact Details", Icons.contact_emergency_rounded),
+                      _buildCard([
+                        _buildTextField(
+                          controller: _addressController,
+                          label: "Full Address",
+                          icon: Icons.home_work_outlined,
+                          maxLines: 2,
+                        ),
+                        _buildTextField(
+                          controller: _emergencyContactController,
+                          label: "Emergency Contact",
+                          icon: Icons.contact_phone_outlined,
+                          keyboardType: TextInputType.phone,
+                        ),
+                      ]),
+
+                      const SizedBox(height: 25),
+                      _buildSectionTitle("Medical Details", Icons.health_and_safety_rounded),
+                      _buildCard([
+                        _buildDropdownField(
+                          label: "Blood Group",
+                          icon: Icons.bloodtype_rounded,
+                          value: _selectedBloodGroup,
+                          items: _bloodGroups,
+                          onChanged: (v) => setState(() => _selectedBloodGroup = v),
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildTextField(
+                                controller: _heightController,
+                                label: "Height (cm)",
+                                icon: Icons.height_rounded,
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                            const SizedBox(width: 15),
+                            Expanded(
+                              child: _buildTextField(
+                                controller: _weightController,
+                                label: "Weight (kg)",
+                                icon: Icons.monitor_weight_rounded,
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                          ],
+                        ),
+                        _buildTextField(
+                          controller: _allergiesController,
+                          label: "Allergies",
+                          icon: Icons.warning_amber_rounded,
+                          maxLines: 2,
+                          hint: "List any drug or food allergies",
+                        ),
+                        _buildTextField(
+                          controller: _chronicConditionsController,
+                          label: "Chronic Conditions",
+                          icon: Icons.history_edu_rounded,
+                          maxLines: 2,
+                          hint: "Diabetes, Hypertension, etc.",
+                        ),
+                      ]),
+
+                      const SizedBox(height: 40),
+                      _buildUpdateButton(),
+                      
+                      const SizedBox(height: 20),
+                      _buildChangePasswordButton(),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            backgroundColor: Colors.blue[900],
-            iconTheme: const IconThemeData(color: Colors.white),
-            elevation: 0,
+              if (_isLoading)
+                Container(
+                  color: Colors.black26,
+                  child: const Center(child: CircularProgressIndicator(color: Colors.white)),
+                ),
+            ],
           ),
-        ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      elevation: 0,
+      backgroundColor: Colors.white,
+      centerTitle: true,
+      title: const Text(
+        "Edit Medical Profile",
+        style: TextStyle(color: Color(0xFF263238), fontSize: 18, fontWeight: FontWeight.w900),
       ),
-      body: Stack(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1565C0), size: 20),
+        onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildProfileImage() {
+    return Center(
+      child: Stack(
         children: [
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFF1565C0).withAlpha(51), width: 4),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1565C0).withAlpha(25),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: CircleAvatar(
+              radius: 65,
+              backgroundColor: Colors.white,
+              backgroundImage: _imageFile != null
+                  ? FileImage(_imageFile!)
+                  : (_networkImageUrl != null && _networkImageUrl!.isNotEmpty
+                      ? NetworkImage(_networkImageUrl!)
+                      : null) as ImageProvider?,
+              child: (_imageFile == null && (_networkImageUrl == null || _networkImageUrl!.isEmpty))
+                  ? const Icon(Icons.person_rounded, size: 60, color: Color(0xFFB0BEC5))
+                  : null,
+            ),
+          ),
           Positioned(
             bottom: 0,
-            left: 0,
             right: 0,
-            child: ShaderMask(
-              shaderCallback: (Rect bounds) {
-                return const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.white],
-                ).createShader(bounds);
-              },
-              blendMode: BlendMode.dstIn,
-              child: Image.asset(
-                'assets/images/bg1.jpg',
-                height: 400,
-                fit: BoxFit.cover,
+            child: GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1565C0),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ListView(
-              children: [
-                const Text(
-                  'Profile Information',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                _buildTextField('Name', _nameController),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  'Email',
-                  _emailController,
-                  type: TextInputType.emailAddress,
-                  readOnly: true,
-                ),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  'Mobile',
-                  _mobileController,
-                  type: TextInputType.number,
-                  formatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-                const SizedBox(height: 12),
-                _buildTextField('City', _cityController),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: isLoading ? null : _updateProfile,
-                  child:
-                      isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                            'Update',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                ),
-                const SizedBox(height: 20),
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => ChangePasswordScreen(
-                                email: widget.userData['email'],
-                              ),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'Change Password?',
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 63, 63, 63),
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 120),
-              ],
             ),
           ),
         ],
@@ -239,24 +428,156 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     );
   }
 
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller, {
-    TextInputType type = TextInputType.text,
-    List<TextInputFormatter>? formatters,
+  Widget _buildSectionTitle(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: const Color(0xFF1565C0)),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF546E7A),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCard(List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(8),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
     bool readOnly = false,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+    String? hint,
+    VoidCallback? onTap,
+    String? Function(String?)? validator,
   }) {
-    return TextField(
-      controller: controller,
-      readOnly: readOnly,
-      keyboardType: type,
-      inputFormatters: formatters,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 12,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextFormField(
+        controller: controller,
+        readOnly: readOnly,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        onTap: onTap,
+        validator: validator,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF263238)),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          labelStyle: TextStyle(color: Colors.blueGrey[300], fontSize: 13),
+          prefixIcon: Icon(icon, color: const Color(0xFF1565C0).withAlpha(153), size: 20),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFF),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required IconData icon,
+    required String? value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        items: items.map((String val) {
+          return DropdownMenuItem<String>(
+            value: val,
+            child: Text(val, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          );
+        }).toList(),
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.blueGrey[300], fontSize: 13),
+          prefixIcon: Icon(icon, color: const Color(0xFF1565C0).withAlpha(153), size: 20),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFF),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUpdateButton() {
+    return ElevatedButton(
+      onPressed: _updateProfile,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF1565C0),
+        minimumSize: const Size(double.infinity, 55),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: 5,
+        shadowColor: const Color(0xFF1565C0).withAlpha(102),
+      ),
+      child: const Text(
+        "UPDATE MEDICAL PROFILE",
+        style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 1),
+      ),
+    );
+  }
+
+  Widget _buildChangePasswordButton() {
+    return TextButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChangePasswordScreen(email: _emailController.text),
+          ),
+        );
+      },
+      child: RichText(
+        text: const TextSpan(
+          children: [
+            TextSpan(
+              text: "Need to update credentials? ",
+              style: TextStyle(color: Color(0xFF546E7A), fontSize: 14),
+            ),
+            TextSpan(
+              text: "Change Password",
+              style: TextStyle(color: Color(0xFFE53935), fontWeight: FontWeight.w900, fontSize: 14),
+            ),
+          ],
         ),
       ),
     );

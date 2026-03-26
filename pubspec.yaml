@@ -45,6 +45,7 @@ dependencies:
   animated_text_kit: ^4.2.2
   local_auth: ^2.1.7
   lottie: ^2.7.0
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:

@@ -176,7 +176,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ProfileEditScreen(userData: widget.userData)),
-                ),
+                ).then((_) => loadUserData()),
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
@@ -534,7 +534,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 _drawerSectionTitle("Account & Support"),
                 _drawerItem(Icons.person_rounded, "My Profile", () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(userData: widget.userData)));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(userData: widget.userData))).then((_) => loadUserData());
                 }),
                 _drawerItem(Icons.support_agent_rounded, "24/7 Support", () {
                   Navigator.pop(context);
@@ -612,12 +612,12 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     if (path.startsWith('http')) return path;
     
     // Base URL must always point to the domain root
-    const String domain = "https://www.doctorwala.info/";
+    const String domain = "https://doctorwala.info/";
     
     // Normalize path: remove leading slash
     String cleanPath = path.startsWith('/') ? path.substring(1) : path;
     
-    // Check if path already includes 'storage/'
+    // If it doesn't have storage/ prefix and it's not a full URL, add it
     if (!cleanPath.startsWith('storage/')) {
       cleanPath = 'storage/' + cleanPath;
     }
