@@ -59,14 +59,14 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
           SliverAppBar(
             pinned: true,
             elevation: 0,
-            backgroundColor: Colors.white,
+            backgroundColor: const Color(0xFF1565C0),
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1565C0), size: 20),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
               onPressed: () => Navigator.pop(context),
             ),
             title: const Text(
               "Clinic Details",
-              style: TextStyle(color: Color(0xFF263238), fontSize: 18, fontWeight: FontWeight.w900),
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
             ),
             centerTitle: true,
           ),
@@ -114,8 +114,9 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
       margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFF0F7FF), // Non-white background
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF1565C0).withAlpha(15), width: 1),
         boxShadow: [
           BoxShadow(color: const Color(0xFF1565C0).withAlpha(5), blurRadius: 15, offset: const Offset(0, 5)),
         ],

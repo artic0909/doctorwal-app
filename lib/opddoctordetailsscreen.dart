@@ -12,299 +12,204 @@ class ODPDoctorDetailScreen extends StatelessWidget {
     required this.doctor,
   });
 
+  String _capitalizeWords(String input) {
+    return input.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
-    String capitalizeWords(String input) {
-      return input
-          .split(' ')
-          .map((word) {
-            if (word.isEmpty) return word;
-            return word[0].toUpperCase() + word.substring(1).toLowerCase();
-          })
-          .join(' ');
-    }
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F9FF),
+      backgroundColor: const Color(0xFFF8FAFF),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(65),
         child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
+          borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
           child: AppBar(
             title: Text(
-              capitalizeWords(doctor['doctor_name'] ?? "Dr. Doctor Name"),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              _capitalizeWords(doctor['doctor_name'] ?? "Specialist Profile"),
+              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            backgroundColor: Colors.blue[900],
+            backgroundColor: const Color(0xFF1565C0),
             iconTheme: const IconThemeData(color: Colors.white),
             elevation: 0,
+            centerTitle: true,
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _doctorDetailsCard(),
-            const SizedBox(height: 20),
-            const Text(
-              'Availability',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.black87,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 100), // Space for bottom button
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDoctorHeader(),
+                _buildDetailsSection(),
+                _buildAvailabilitySection(),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: ElevatedButton(
+              onPressed: () {
+                // To be defined later as per user request
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1565C0),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                elevation: 8,
+                shadowColor: const Color(0xFF1565C0).withAlpha(100),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.calendar_today_rounded, size: 20),
+                  SizedBox(width: 12),
+                  Text("BOOK APPOINTMENT", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                ],
               ),
             ),
-            const SizedBox(height: 10),
-            _availabilityTable(doctor),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _doctorDetailsCard() {
-    String capitalizeWords(String input) {
-      return input
-          .split(' ')
-          .map((word) {
-            if (word.isEmpty) return word;
-            return word[0].toUpperCase() + word.substring(1).toLowerCase();
-          })
-          .join(' ');
-    }
-
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      shadowColor: Colors.grey.withAlpha(76),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.person, color: Colors.blue, size: 24),
-                const SizedBox(width: 10),
-                const Text(
-                  "Doctor Name:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    capitalizeWords(doctor['doctor_name'] ?? "Dr. Doctor Name"),
-                    style: const TextStyle(fontSize: 15, color: Colors.black54),
-                  ),
-                ),
-              ],
+  Widget _buildDoctorHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 15, offset: const Offset(0, 5))],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 90, height: 90,
+            decoration: BoxDecoration(color: const Color(0xFF1565C0).withAlpha(15), shape: BoxShape.circle),
+            child: const Icon(Icons.person_rounded, color: Color(0xFF1565C0), size: 50),
+          ),
+          const SizedBox(height: 15),
+          Text(
+            _capitalizeWords(doctor['doctor_name'] ?? ""),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            doctor['doctor_specialist'] ?? "Specialist",
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
+          ),
+          const SizedBox(height: 15),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(color: const Color(0xFF00C853).withAlpha(15), borderRadius: BorderRadius.circular(20)),
+            child: Text(
+              "Consultation Fee: ₹${doctor['doctor_fees'] ?? '0'}",
+              style: const TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.w900, fontSize: 13),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  Icons.medical_information,
-                  color: Colors.redAccent,
-                  size: 24,
-                ),
-                const SizedBox(width: 10),
-                const Text(
-                  "Specialization:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    doctor['doctor_specialist'] ?? "Not Defined",
-                    style: const TextStyle(fontSize: 15, color: Colors.black54),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  Icons.medical_services,
-                  color: Color.fromARGB(255, 199, 131, 255),
-                  size: 24,
-                ),
-                const SizedBox(width: 10),
-                const Text(
-                  "More Details:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    doctor['doctor_more'] ?? "Not Defined",
-                    style: const TextStyle(fontSize: 15, color: Colors.black54),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  Icons.currency_rupee_rounded,
-                  color: Colors.green,
-                  size: 24,
-                ),
-                const SizedBox(width: 10),
-                const Text(
-                  "Fees:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    doctor['doctor_fees'] ?? "Not Defined",
-                    style: const TextStyle(fontSize: 15, color: Colors.black54),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _availabilityTable(Map<String, dynamic> doctor) {
+  Widget _buildDetailsSection() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("PROFESSIONAL PROFILE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF90A4AE), letterSpacing: 1.0)),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.blueGrey[50]!)),
+            child: Text(
+              doctor['doctor_more'] ?? "No additional information provided.",
+              style: const TextStyle(fontSize: 14, color: Color(0xFF455A64), height: 1.6, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvailabilitySection() {
     final visitDayTimeRaw = doctor['visit_day_time'];
-
     List<Map<String, dynamic>> visitDayTime = [];
 
     if (visitDayTimeRaw is String && visitDayTimeRaw.isNotEmpty) {
       try {
         final decoded = jsonDecode(visitDayTimeRaw);
         if (decoded is List) {
-          visitDayTime =
-              decoded.map<Map<String, dynamic>>((e) {
-                if (e is Map<String, dynamic>) {
-                  return e;
-                } else if (e is Map) {
-                  return Map<String, dynamic>.from(e);
-                }
-                return <String, dynamic>{};
-              }).toList();
+          visitDayTime = decoded.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
         }
       } catch (e) {
-        print('Error decoding visit_day_time: $e');
+        debugPrint('Error decoding visit_day_time: $e');
       }
     }
 
-    if (visitDayTime.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
-          child: Text(
-            "No Availability Data Found",
-            style: TextStyle(fontSize: 14, color: Colors.grey),
-          ),
-        ),
-      );
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("OPD AVAILABILITY", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF90A4AE), letterSpacing: 1.0)),
+          const SizedBox(height: 12),
+          if (visitDayTime.isEmpty)
+            const Center(child: Padding(padding: EdgeInsets.all(20), child: Text("Not Available Currently", style: TextStyle(color: Colors.grey))))
+          else
+            ...visitDayTime.map((item) => _buildAvailabilityRow(item)).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvailabilityRow(Map<String, dynamic> item) {
+    final day = item['day'] ?? '-';
+    final start = item['start_time'] ?? '-';
+    final end = item['end_time'] ?? '-';
+
+    String formatTime(String timeStr) {
+      try {
+        final time = DateFormat("HH:mm").parse(timeStr);
+        return DateFormat("h:mm a").format(time);
+      } catch (e) {
+        return timeStr;
+      }
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            width: constraints.maxWidth,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.shade300,
-                  blurRadius: 6,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(Colors.orange[100]),
-              columnSpacing: 20,
-              horizontalMargin: 16,
-              border: TableBorder.all(
-                color: const Color.fromARGB(255, 255, 255, 255),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              columns: const [
-                DataColumn(
-                  label: Text(
-                    '#',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'Day',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'Time',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-              rows: List.generate(visitDayTime.length, (index) {
-                final item = visitDayTime[index];
-                final day = item['day'] ?? '-';
-                final start = item['start_time'] ?? '-';
-                final end = item['end_time'] ?? '-';
-                String formatTime(String timeStr) {
-                  try {
-                    final time = DateFormat("HH:mm").parse(timeStr);
-                    return DateFormat("h:mm a").format(time);
-                  } catch (e) {
-                    return timeStr;
-                  }
-                }
-
-                final time = '${formatTime(start)} - ${formatTime(end)}';
-
-                return DataRow(
-                  cells: [
-                    DataCell(Text('${index + 1}')),
-                    DataCell(Text(day)),
-                    DataCell(Text(time)),
-                  ],
-                );
-              }),
-            ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.blueGrey[50]!)),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: const Color(0xFF1565C0).withAlpha(10), borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.event_available_rounded, size: 18, color: Color(0xFF1565C0)),
           ),
-        );
-      },
+          const SizedBox(width: 15),
+          Text(day, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF263238))),
+          const Spacer(),
+          Text(
+            "${formatTime(start)} - ${formatTime(end)}",
+            style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF1565C0), fontSize: 13),
+          ),
+        ],
+      ),
     );
   }
 }
