@@ -547,7 +547,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 
                 const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("Health management"),
-                _drawerItem(Icons.analytics_rounded, "Health parameters", () {
+                _drawerItem(Icons.analytics_rounded, "Health Parameters", () {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const HealthParametersScreen()));
                 }),
@@ -566,15 +566,15 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
                 const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("Account & support"),
-                _drawerItem(Icons.person_rounded, "My profile", () {
+                _drawerItem(Icons.person_rounded, "My Profile", () {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(userData: widget.userData))).then((_) => loadUserData());
                 }),
-                _drawerItem(Icons.support_agent_rounded, "24/7 support", () {
+                _drawerItem(Icons.support_agent_rounded, "24/7 Support", () {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactScreen()));
                 }),
-                _drawerItem(Icons.policy_rounded, "Privacy & policy", () {}),
+                _drawerItem(Icons.policy_rounded, "Privacy & Policy", () {}),
 
                 const SizedBox(height: 30),
               ],
