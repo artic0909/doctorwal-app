@@ -15,44 +15,61 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   List<AllAvailableDoctorsModel> _doctors = [];
   String _searchQuery = '';
   bool _isLoading = true;
-  int _visibleCount = 5;
+  bool _isLoadMoreLoading = false;
+  int _currentPage = 1;
+  int _lastPage = 1;
 
   @override
   void initState() {
     super.initState();
-    fetchDoctors();
+    _fetchInitialDoctors();
   }
 
-  Future<void> fetchDoctors() async {
+  Future<void> _fetchInitialDoctors() async {
+    setState(() {
+      _isLoading = true;
+      _currentPage = 1;
+      _doctors = [];
+    });
+    await _fetchDoctors(1);
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _fetchDoctors(int page) async {
     try {
       final response = await http.get(
-        Uri.parse('https://doctorwala.info/api/api/all-doctors-contacts'),
+        Uri.parse('https://doctorwala.info/api/api/all-doctors-contacts?page=$page'),
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body)['allDoctorContacts'];
+        final jsonData = json.decode(response.body);
+        // Handle both paginated 'data' key and legacy 'allDoctorContacts' key
+        final List<dynamic> data = jsonData['data'] ?? jsonData['allDoctorContacts'] ?? [];
+        
         setState(() {
-          _doctors = data.map((json) => AllAvailableDoctorsModel.fromJson(json)).toList();
-          _isLoading = false;
+          final newDoctors = data.map((json) => AllAvailableDoctorsModel.fromJson(json)).toList();
+          _doctors.addAll(newDoctors);
+          _currentPage = jsonData['current_page'] ?? 1;
+          _lastPage = jsonData['last_page'] ?? 1;
         });
-      } else {
-        throw Exception('Failed to load doctors');
       }
     } catch (e) {
       debugPrint("Error fetching doctors: $e");
-      setState(() => _isLoading = false);
     }
   }
 
-  void _loadMore() {
-    setState(() {
-      _visibleCount += 10;
-    });
+  Future<void> _loadMore() async {
+    if (_currentPage >= _lastPage || _isLoadMoreLoading) return;
+
+    setState(() => _isLoadMoreLoading = true);
+    await _fetchDoctors(_currentPage + 1);
+    setState(() => _isLoadMoreLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final allFiltered = _doctors.where((doctor) {
+    // Client-side filtering on fetched results
+    final filteredDoctors = _doctors.where((doctor) {
       final name = doctor.partnerDoctorName?.toLowerCase() ?? '';
       final address = doctor.partnerDoctorAddress?.toLowerCase() ?? '';
       final specialist = doctor.partnerDoctorSpecialist?.toLowerCase() ?? '';
@@ -60,8 +77,6 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
 
       return name.contains(query) || address.contains(query) || specialist.contains(query);
     }).toList();
-
-    final displayedDoctors = allFiltered.take(_visibleCount).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
@@ -74,13 +89,20 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
-                : ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-                    children: [
-                      ...displayedDoctors.map((doctor) => _buildDoctorCard(doctor)),
-                      if (allFiltered.length > _visibleCount)
-                        _buildViewMoreBtn(),
-                    ],
+                : RefreshIndicator(
+                    onRefresh: _fetchInitialDoctors,
+                    color: const Color(0xFF1565C0),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                      itemCount: filteredDoctors.length + (_currentPage < _lastPage ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index < filteredDoctors.length) {
+                          return _buildDoctorCard(filteredDoctors[index]);
+                        } else {
+                          return _buildLoadMoreBtn();
+                        }
+                      },
+                    ),
                   ),
           ),
         ],
@@ -93,7 +115,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
       padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 20),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF6A1B9A), Color(0xFF4A148C)], // Branded Purple for Specialists
+          colors: [Color(0xFF6A1B9A), Color(0xFF4A148C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -128,7 +150,6 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
             child: TextField(
               onChanged: (value) => setState(() {
                 _searchQuery = value;
-                _visibleCount = 5; // Reset pagination on search
               }),
               decoration: InputDecoration(
                 hintText: "Search by name, specialty, or city...",
@@ -166,9 +187,10 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(13),
-                child: doctor.banner != null && doctor.banner!.isNotEmpty
-                    ? Image.network(doctor.banner!, width: 80, height: 80, fit: BoxFit.cover, errorBuilder: (c, e, s) => _placeholderImage())
-                    : _placeholderImage(),
+                child: Container(
+                  width: 80, height: 80, color: const Color(0xFF6A1B9A).withAlpha(10),
+                  child: const Icon(Icons.person_rounded, color: Color(0xFF6A1B9A), size: 40),
+                ),
               ),
             ),
             const SizedBox(width: 15),
@@ -210,30 +232,24 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
     );
   }
 
-  Widget _placeholderImage() {
-    return Container(
-      width: 80, height: 80,
-      decoration: BoxDecoration(color: const Color(0xFF6A1B9A).withAlpha(10), borderRadius: BorderRadius.circular(13)),
-      child: const Icon(Icons.person_rounded, color: Color(0xFF6A1B9A), size: 40),
-    );
-  }
-
-  Widget _buildViewMoreBtn() {
+  Widget _buildLoadMoreBtn() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Center(
-        child: TextButton(
-          onPressed: _loadMore,
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-            backgroundColor: const Color(0xFF6A1B9A).withAlpha(10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          child: const Text(
-            "VIEW MORE DOCTORS",
-            style: TextStyle(color: Color(0xFF6A1B9A), fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-          ),
-        ),
+        child: _isLoadMoreLoading
+            ? const CircularProgressIndicator(color: Color(0xFF6A1B9A))
+            : TextButton(
+                onPressed: _loadMore,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  backgroundColor: const Color(0xFF6A1B9A).withAlpha(10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text(
+                  "VIEW MORE DOCTORS",
+                  style: TextStyle(color: Color(0xFF6A1B9A), fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                ),
+              ),
       ),
     );
   }

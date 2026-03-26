@@ -19,16 +19,28 @@ class _AllAvailablePathologyScreenState
   List<AllAvailablePathModel> _clinics = [];
   String _searchQuery = '';
   bool _isLoading = true;
-  int _visibleCount = 5;
+  bool _isLoadMoreLoading = false;
+  int _currentPage = 1;
+  int _lastPage = 1;
 
   @override
   void initState() {
     super.initState();
-    fetchClinics();
+    _fetchInitialClinics();
   }
 
-  Future<void> fetchClinics() async {
-    final url = Uri.parse("https://doctorwala.info/api/api/all-pathology-contacts");
+  Future<void> _fetchInitialClinics() async {
+    setState(() {
+      _isLoading = true;
+      _currentPage = 1;
+      _clinics = [];
+    });
+    await _fetchClinics(1);
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _fetchClinics(int page) async {
+    final url = Uri.parse("https://doctorwala.info/api/api/all-pathology-contacts?page=$page");
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -36,28 +48,29 @@ class _AllAvailablePathologyScreenState
         final List data = jsonData['data'] ?? [];
 
         setState(() {
-          _clinics =
-              data.map((json) => AllAvailablePathModel.fromJson(json)).toList();
-          _isLoading = false;
+          final newClinics = data.map((json) => AllAvailablePathModel.fromJson(json)).toList();
+          _clinics.addAll(newClinics);
+          _currentPage = jsonData['current_page'] ?? 1;
+          _lastPage = jsonData['last_page'] ?? 1;
         });
       }
     } catch (e) {
       debugPrint("Error fetching pathology clinics: $e");
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
-  void _loadMore() {
-    setState(() {
-      _visibleCount += 10;
-    });
+  Future<void> _loadMore() async {
+    if (_currentPage >= _lastPage || _isLoadMoreLoading) return;
+
+    setState(() => _isLoadMoreLoading = true);
+    await _fetchClinics(_currentPage + 1);
+    setState(() => _isLoadMoreLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final allFiltered = _clinics.where((clinic) {
+    // Client-side filtering on already-fetched clinics
+    final filteredClinics = _clinics.where((clinic) {
       final name = clinic.clinicName.toLowerCase();
       final address = clinic.clinicAddress.toLowerCase();
       final query = _searchQuery.toLowerCase();
@@ -67,15 +80,8 @@ class _AllAvailablePathologyScreenState
         return testName.contains(query);
       });
 
-      final serviceMatch = clinic.tests.any((service) {
-        final serviceName = (service['test_type'] ?? '').toString().toLowerCase();
-        return serviceName.contains(query);
-      });
-
-      return name.contains(query) || address.contains(query) || testMatch || serviceMatch;
+      return name.contains(query) || address.contains(query) || testMatch;
     }).toList();
-
-    final displayedClinics = allFiltered.take(_visibleCount).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
@@ -87,14 +93,21 @@ class _AllAvailablePathologyScreenState
           // 2. Listing
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF00C853)))
-                : ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-                    children: [
-                      ...displayedClinics.map((clinic) => _buildPathologyCard(clinic)),
-                      if (allFiltered.length > _visibleCount)
-                        _buildViewMoreBtn(),
-                    ],
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF2E7D32)))
+                : RefreshIndicator(
+                    onRefresh: _fetchInitialClinics,
+                    color: const Color(0xFF2E7D32),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                      itemCount: filteredClinics.length + (_currentPage < _lastPage ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index < filteredClinics.length) {
+                          return _buildPathologyCard(filteredClinics[index]);
+                        } else {
+                          return _buildLoadMoreBtn();
+                        }
+                      },
+                    ),
                   ),
           ),
         ],
@@ -107,7 +120,7 @@ class _AllAvailablePathologyScreenState
       padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 20),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)], // Path brand green
+          colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -142,7 +155,6 @@ class _AllAvailablePathologyScreenState
             child: TextField(
               onChanged: (value) => setState(() {
                 _searchQuery = value;
-                _visibleCount = 5; // Reset pagination on search
               }),
               decoration: InputDecoration(
                 hintText: "Search for tests or labs...",
@@ -175,9 +187,10 @@ class _AllAvailablePathologyScreenState
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: clinic.bannerImage.isNotEmpty
-                  ? Image.network(clinic.bannerImage, width: 70, height: 70, fit: BoxFit.cover, errorBuilder: (c, e, s) => _placeholderImage())
-                  : _placeholderImage(),
+              child: Container(
+                width: 70, height: 70, color: const Color(0xFF2E7D32).withAlpha(10),
+                child: const Icon(Icons.biotech_rounded, color: Color(0xFF2E7D32), size: 30),
+              ),
             ),
             const SizedBox(width: 15),
             Expanded(
@@ -216,30 +229,24 @@ class _AllAvailablePathologyScreenState
     );
   }
 
-  Widget _placeholderImage() {
-    return Container(
-      width: 70, height: 70,
-      decoration: BoxDecoration(color: const Color(0xFF2E7D32).withAlpha(10), borderRadius: BorderRadius.circular(12)),
-      child: const Icon(Icons.biotech_rounded, color: Color(0xFF2E7D32), size: 30),
-    );
-  }
-
-  Widget _buildViewMoreBtn() {
+  Widget _buildLoadMoreBtn() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Center(
-        child: TextButton(
-          onPressed: _loadMore,
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-            backgroundColor: const Color(0xFF2E7D32).withAlpha(10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          child: const Text(
-            "VIEW MORE LABS",
-            style: TextStyle(color: Color(0xFF2E7D32), fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-          ),
-        ),
+        child: _isLoadMoreLoading
+            ? const CircularProgressIndicator(color: Color(0xFF2E7D32))
+            : TextButton(
+                onPressed: _loadMore,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  backgroundColor: const Color(0xFF2E7D32).withAlpha(10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text(
+                  "VIEW MORE LABS",
+                  style: TextStyle(color: Color(0xFF2E7D32), fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                ),
+              ),
       ),
     );
   }
