@@ -365,26 +365,30 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               child: Column(
                 children: [
                   _newCategoryCard(
-                    title: "Specialist Doctors",
-                    subtitle: "Connect with top experts in 50+ specialties",
-                    icon: Icons.personal_injury_rounded,
-                    color: const Color(0xFF1565C0),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AllDoctorsScreen())),
-                  ),
-                  _newCategoryCard(
-                    title: "Advanced OPD",
+                    title: "OPD Doctors & Clinics",
                     subtitle: "Book clinical appointments instantly",
                     icon: Icons.assignment_rounded,
                     color: const Color(0xFFE53935),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllAvailableOPDScreen(userData: widget.userData))),
                   ),
+
+                  
                   _newCategoryCard(
-                    title: "Pathology Labs",
+                    title: "Pathology Tests & Labs",
                     subtitle: "Certified diagnostic testing at home",
                     icon: Icons.biotech_rounded,
                     color: const Color(0xFF00C853),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllAvailablePathologyScreen(userData: widget.userData))),
                   ),
+
+                  _newCategoryCard(
+                    title: "Individual Specialist Doctors",
+                    subtitle: "Connect with top experts in 50+ specialties",
+                    icon: Icons.personal_injury_rounded,
+                    color: const Color(0xFF1565C0),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AllDoctorsScreen())),
+                  ),
+                  
                   _newCategoryCard(
                     title: "24/7 Support",
                     subtitle: "Immediate medical assistance & help",
