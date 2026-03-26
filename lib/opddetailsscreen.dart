@@ -55,33 +55,22 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
       backgroundColor: const Color(0xFFF8FAFF),
       body: CustomScrollView(
         slivers: [
-          // 1. Premium App Bar
-          SliverAppBar(
-            pinned: true,
-            elevation: 0,
-            backgroundColor: const Color(0xFF1565C0),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: const Text(
-              "Clinic Details",
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
-            ),
-            centerTitle: true,
-          ),
 
           // 2. Comprehensive Clinic Header
           SliverToBoxAdapter(
             child: _buildClinicHeaderCard(context),
           ),
 
-          // 3. Sticky Search Bar
-          SliverPersistentHeader(
+          // 3. Sticky Search Bar (Pinned)
+          SliverAppBar(
             pinned: true,
-            delegate: _StickySearchDelegate(
-              child: _buildStickySearchBar(),
-            ),
+            floating: false,
+            backgroundColor: const Color(0xFFF8FAFF),
+            elevation: 0,
+            toolbarHeight: 80,
+            titleSpacing: 0,
+            automaticallyImplyLeading: false,
+            title: _buildStickySearchBar(),
           ),
 
           // 4. Doctor List
@@ -111,25 +100,35 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
 
   Widget _buildClinicHeaderCard(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-      padding: const EdgeInsets.all(18),
+      margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10, bottom: 10),
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F7FF), // Non-white background
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF1565C0).withAlpha(15), width: 1),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF1565C0).withAlpha(5), blurRadius: 15, offset: const Offset(0, 5)),
+          BoxShadow(color: const Color(0xFF0D47A1).withAlpha(40), blurRadius: 20, offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          const SizedBox(height: 15),
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: const Color(0xFF1565C0).withAlpha(15), borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.business_rounded, color: Color(0xFF1565C0), size: 22),
+                decoration: BoxDecoration(color: Colors.white.withAlpha(30), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.business_rounded, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -138,35 +137,45 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
                   children: [
                     Text(
                       _capitalizeWords(widget.opd.clinicName),
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF263238), height: 1.1),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      "Healthcare Partner",
-                      style: TextStyle(color: const Color(0xFF1565C0).withAlpha(150), fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      "Official Healthcare Partner",
+                      style: TextStyle(color: Colors.white.withAlpha(180), fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 15),
-          _infoRow(Icons.person_outline_rounded, "Contact", _capitalizeWords(widget.opd.contactPersonName.isNotEmpty ? widget.opd.contactPersonName : "Incharge Manager")),
-          const SizedBox(height: 8),
-          _infoRow(Icons.location_on_outlined, "Address", "${widget.opd.clinicAddress}, ${widget.opd.clinicLandmark} - ${widget.opd.clinicPincode}"),
-          const SizedBox(height: 15),
+          const SizedBox(height: 20),
+          _infoRow(
+            Icons.person_outline_rounded, 
+            "Contact Manager", 
+            _capitalizeWords((widget.opd.contactPersonName.isNotEmpty) ? widget.opd.contactPersonName : "Incharge Manager"), 
+            isDark: true
+          ),
+          const SizedBox(height: 10),
+          _infoRow(
+            Icons.location_on_outlined, 
+            "Clinic Address", 
+            "${widget.opd.clinicAddress}, ${widget.opd.clinicLandmark}", 
+            isDark: true
+          ),
+          const SizedBox(height: 20),
           Row(
             children: [
-              _compactActionBtn(Icons.call_rounded, "CALL", const Color(0xFF1565C0), () => launchUrl(Uri.parse("tel:${widget.opd.clinicMobileNumber}"))),
+              _compactActionBtn(Icons.call_rounded, "CALL", Colors.white, () => launchUrl(Uri.parse("tel:${widget.opd.clinicMobileNumber}"))),
               const SizedBox(width: 10),
-              _compactActionBtn(Icons.directions_rounded, "MAP", const Color(0xFF00C853), () async {
+              _compactActionBtn(Icons.directions_rounded, "MAP", Colors.white, () async {
                 final url = widget.opd.clinicGoogleMapLink;
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
                   await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                 }
               }),
               const SizedBox(width: 10),
-              _compactActionBtn(Icons.rate_review_rounded, "FEEDBACK", Colors.orange[800] ?? Colors.orange, () => Navigator.push(
+              _compactActionBtn(Icons.rate_review_rounded, "FEEDBACK", Colors.white, () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => OPDFeedbackScreen(opd: widget.opd, userData: widget.userData)),
               )),
@@ -177,43 +186,47 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
     );
   }
 
-  Widget _compactActionBtn(IconData icon, String label, Color color, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(color: color.withAlpha(15), borderRadius: BorderRadius.circular(10)),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: color, size: 14),
-              const SizedBox(width: 6),
-              Text(label, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _infoRow(IconData icon, String label, String value, {bool isDark = false}) {
+    final Color defaultColor = Colors.blueGrey[300] ?? Colors.grey;
+    final color = isDark ? Colors.white : defaultColor;
+    final valueColor = isDark ? Colors.white.withAlpha(220) : const Color(0xFF455A64);
 
-  Widget _infoRow(IconData icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: Colors.blueGrey[300]),
+        Icon(icon, size: 16, color: color.withAlpha(150)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(color: Colors.blueGrey[300], fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+              Text(label, style: TextStyle(color: color.withAlpha(150), fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(color: Color(0xFF455A64), fontSize: 13, fontWeight: FontWeight.w600, height: 1.4)),
+              Text(value, style: TextStyle(color: valueColor, fontSize: 13, fontWeight: FontWeight.w600, height: 1.4)),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _compactActionBtn(IconData icon, String label, Color color, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(color: Colors.white.withAlpha(30), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withAlpha(20))),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 14),
+              const SizedBox(width: 6),
+              Text(label, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -406,35 +419,12 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
     );
   }
 
-  String _capitalizeWords(String input) {
+  String _capitalizeWords(String? input) {
+    if (input == null || input.isEmpty) return "";
     return input.split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1).toLowerCase() : word).join(' ');
   }
 }
 
-// -----------------------------------------------------------------------------
-// STICKY SEARCH DELEGATE
-// -----------------------------------------------------------------------------
-class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-
-  _StickySearchDelegate({required this.child});
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return SizedBox.expand(child: child);
-  }
-
-  @override
-  double get maxExtent => 75;
-
-  @override
-  double get minExtent => 75;
-
-  @override
-  bool shouldRebuild(covariant _StickySearchDelegate oldDelegate) {
-    return oldDelegate.child != child;
-  }
-}
 
 // -----------------------------------------------------------------------------
 // EMPTY STATE WIDGET
