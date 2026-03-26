@@ -2,7 +2,6 @@ import 'package:demoapp/allopdscreen.dart';
 import 'package:demoapp/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'aboutscreen.dart';
 import 'alldoctorsscreen.dart';
 import 'allavailablepathologyscreen.dart';
 import 'contactscreen.dart';
@@ -520,47 +519,49 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               padding: const EdgeInsets.symmetric(vertical: 10),
               children: [
                 _drawerItem(Icons.home_rounded, "Home", () => Navigator.pop(context), isSelected: true),
+                _drawerItem(Icons.medication_rounded, "Prescriptions", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MedicalHistoryScreen(initialTabIndex: 1)));
+                }),
+                _drawerItem(Icons.assignment_rounded, "Medical Reports", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MedicalHistoryScreen(initialTabIndex: 0)));
+                }),
+                _drawerItem(Icons.note_add_rounded, "Add Medical Records", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddMedicalRecordScreen()));
+                }),
+                
+                const Divider(indent: 20, endIndent: 20),
+                _drawerSectionTitle("Health management"),
+                _drawerItem(Icons.analytics_rounded, "Health parameters", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const HealthParametersScreen()));
+                }),
+                _drawerItem(Icons.add_moderator_rounded, "Add Health Parameters", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddVitalScreen()));
+                }),
+
+                const Divider(indent: 20, endIndent: 20),
+                _drawerSectionTitle("appointments & notifications"),
+                _drawerItem(Icons.calendar_month_rounded, "Appointments", () {}),
                 _drawerItem(Icons.notifications_active_rounded, "Notifications", () {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationScreen()));
                 }),
-                _drawerItem(Icons.calendar_month_rounded, "Appointments", () {}),
-                
-                const Divider(indent: 20, endIndent: 20),
-                _drawerSectionTitle("Health Management"),
-                _drawerItem(Icons.monitor_heart_rounded, "Health Parameters", () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const HealthParametersScreen()));
-                }),
-                _drawerItem(Icons.add_moderator_rounded, "Add health parameters", () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddVitalScreen()));
-                }),
-                _drawerItem(Icons.note_add_rounded, "Add Medical Records", () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddMedicalRecordScreen()));
-                }),
-                _drawerItem(Icons.assignment_rounded, "Reports", () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MedicalHistoryScreen(initialTabIndex: 0)));
-                }),
-                _drawerItem(Icons.medication_rounded, "Prescriptions", () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MedicalHistoryScreen(initialTabIndex: 1)));
-                }),
 
                 const Divider(indent: 20, endIndent: 20),
-                _drawerSectionTitle("Account & Support"),
-                _drawerItem(Icons.person_rounded, "My Profile", () {
+                _drawerSectionTitle("Account & support"),
+                _drawerItem(Icons.person_rounded, "My profile", () {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(userData: widget.userData))).then((_) => loadUserData());
                 }),
-                _drawerItem(Icons.support_agent_rounded, "24/7 Support", () {
+                _drawerItem(Icons.support_agent_rounded, "24/7 support", () {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactScreen()));
                 }),
-                _drawerItem(Icons.info_rounded, "About", () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutScreen()));
-                }),
-                _drawerItem(Icons.policy_rounded, "Privacy & Policy", () {}),
+                _drawerItem(Icons.policy_rounded, "Privacy & policy", () {}),
 
                 const SizedBox(height: 30),
               ],
