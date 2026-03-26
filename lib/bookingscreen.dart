@@ -45,16 +45,17 @@ class _BookingScreenState extends State<BookingScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.userData['user_name'] ?? '');
-    _emailController = TextEditingController(text: widget.userData['user_email'] ?? '');
-    _mobileController = TextEditingController(text: widget.userData['user_mobile'] ?? '');
+    // More robust pre-fill checking multiple possible keys
+    _nameController = TextEditingController(text: widget.userData['user_name'] ?? widget.userData['name'] ?? '');
+    _emailController = TextEditingController(text: widget.userData['user_email'] ?? widget.userData['email'] ?? '');
+    _mobileController = TextEditingController(text: widget.userData['user_mobile'] ?? widget.userData['mobile'] ?? '');
     
-    _dateController.text = DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 1)));
-    _timeController.text = "10:00";
+    // Set current date and time as default
+    _dateController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    _timeController.text = DateFormat('HH:mm').format(DateTime.now());
     
-    if (widget.type == BookingType.pathology) {
-      _visitMode = 'home_visit';
-    }
+    // Default visit mode
+    _visitMode = 'offline';
   }
 
   @override
@@ -400,9 +401,7 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Widget _buildVisitModeSelector() {
-    final modes = widget.type == BookingType.pathology 
-      ? ['home_visit', 'offline'] 
-      : ['offline', 'online', 'video'];
+    final modes = ['offline', 'online'];
       
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
