@@ -282,7 +282,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => BookingScreen(
-                  type: BookingType.doctor,
+                  type: BookingType.Doctor,
                   partnerId: widget.doctor.currentlyLoggedinPartnerId.toString(),
                   clinicName: widget.doctor.partnerDoctorName ?? "Specialist",
                   userData: widget.userData,

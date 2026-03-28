@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:demoapp/Services/apiservice.dart';
 
-enum BookingType { opd, pathology, doctor }
+enum BookingType { OPD, Pathology, Doctor }
 
 class BookingScreen extends StatefulWidget {
   final BookingType type;
@@ -113,17 +113,17 @@ class _BookingScreenState extends State<BookingScreen> {
 
   Color _getBrandColor() {
     switch (widget.type) {
-      case BookingType.opd: return const Color(0xFF1565C0);
-      case BookingType.pathology: return const Color(0xFF2E7D32);
-      case BookingType.doctor: return const Color(0xFF6A1B9A);
+      case BookingType.OPD: return const Color(0xFF1565C0);
+      case BookingType.Pathology: return const Color(0xFF2E7D32);
+      case BookingType.Doctor: return const Color(0xFF6A1B9A);
     }
   }
 
   String _getClinicType() {
     switch (widget.type) {
-      case BookingType.opd: return 'opd';
-      case BookingType.pathology: return 'pathology';
-      case BookingType.doctor: return 'doctor';
+      case BookingType.OPD: return 'OPD';
+      case BookingType.Pathology: return 'Pathology';
+      case BookingType.Doctor: return 'Doctor';
     }
   }
 
@@ -146,7 +146,7 @@ class _BookingScreenState extends State<BookingScreen> {
       'visit_mode': _visitMode,
     };
 
-    if (widget.type == BookingType.pathology && widget.itemId != null) {
+    if (widget.type == BookingType.Pathology && widget.itemId != null) {
       bookingData['test_id'] = widget.itemId;
     } else if (widget.itemId != null) {
       bookingData['doctor_id'] = widget.itemId;
@@ -154,9 +154,9 @@ class _BookingScreenState extends State<BookingScreen> {
 
     try {
       Map<String, dynamic> result;
-      if (widget.type == BookingType.opd) {
+      if (widget.type == BookingType.OPD) {
         result = await _apiService.bookOPDAppointment(bookingData);
-      } else if (widget.type == BookingType.pathology) {
+      } else if (widget.type == BookingType.Pathology) {
         result = await _apiService.bookPathAppointment(bookingData);
       } else {
         result = await _apiService.bookDocAppointment(bookingData);
@@ -321,7 +321,7 @@ class _BookingScreenState extends State<BookingScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(color: _getBrandColor().withAlpha(15), shape: BoxShape.circle),
-                child: Icon(widget.type == BookingType.pathology ? Icons.biotech_rounded : Icons.person_rounded, color: _getBrandColor(), size: 24),
+                child: Icon(widget.type == BookingType.Pathology ? Icons.biotech_rounded : Icons.person_rounded, color: _getBrandColor(), size: 24),
               ),
               const SizedBox(width: 15),
               Expanded(

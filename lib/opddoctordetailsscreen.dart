@@ -66,7 +66,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BookingScreen(
-                      type: BookingType.opd,
+                      type: BookingType.OPD,
                       partnerId: doctor['currently_loggedin_partner_id']?.toString() ?? opd.currentlyLoggedInPartnerId,
                       clinicName: opd.clinicName ?? "Clinic",
                       userData: userData,

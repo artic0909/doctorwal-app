@@ -178,7 +178,7 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BookingScreen(
-                      type: BookingType.pathology,
+                      type: BookingType.Pathology,
                       partnerId: test['currently_loggedin_partner_id']?.toString() ?? "",
                       clinicName: clinicName,
                       userData: userData,
