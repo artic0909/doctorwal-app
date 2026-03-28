@@ -241,8 +241,6 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
                       Text(
                         _capitalizeWords(clinic.clinicAddress),
                         style: const TextStyle(color: Color(0xFF1565C0), fontSize: 12, fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
                       Row(

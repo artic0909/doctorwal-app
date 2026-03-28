@@ -264,9 +264,9 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          _detailRow(Icons.calendar_today_outlined, "Date", item.bookingDate ?? "N/A"),
-                          const SizedBox(width: 20),
-                          _detailRow(Icons.access_time_rounded, "Time", _formatTime(item.bookingTime)),
+                          Expanded(child: _detailRow(Icons.calendar_today_outlined, "Date", item.bookingDate ?? "N/A")),
+                          const SizedBox(width: 10),
+                          Expanded(child: _detailRow(Icons.access_time_rounded, "Time", _formatTime(item.bookingTime))),
                         ],
                       ),
                     ],
@@ -285,8 +285,7 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
                   _actionButton(Icons.check_circle_outline, "Complete", Colors.green, () => _handleAction(item.id, 'Complete')),
                   _actionButton(Icons.cancel_outlined, "Cancel", Colors.red, () => _handleAction(item.id, 'Cancel')),
                 ],
-                _actionButton(Icons.edit_outlined, "Edit", Colors.blueAccent, () => _showSnackBar("Edit feature coming soon!")),
-                _actionButton(Icons.delete_outline, "Delete", Colors.grey, () => _showSnackBar("Delete feature coming soon!")),
+               
               ],
             ),
           ),
@@ -299,16 +298,22 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 14, color: Colors.blueGrey[300]),
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(icon, size: 14, color: Colors.blueGrey[300]),
+          ),
           const SizedBox(width: 6),
           Text(
             "$label: ",
             style: TextStyle(fontSize: 12, color: Colors.blueGrey[400], fontWeight: FontWeight.w500),
           ),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF455A64)),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF455A64)),
+            ),
           ),
         ],
       ),

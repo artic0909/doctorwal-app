@@ -259,8 +259,6 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                         child: Text(
                           _capitalizeWords(doctor.partnerDoctorAddress ?? "Address not provided"),
                           style: TextStyle(color: Colors.blueGrey[400], fontSize: 11, fontWeight: FontWeight.w600),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

@@ -239,8 +239,6 @@ class _AllAvailablePathologyScreenState
                   Text(
                     _capitalizeWords(clinic.clinicAddress),
                     style: const TextStyle(color: Color(0xFF2E7D32), fontSize: 12, fontWeight: FontWeight.bold),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
                   Row(
