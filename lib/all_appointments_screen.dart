@@ -213,95 +213,124 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
 
   Widget _buildAppointmentCard(AppointmentModel item) {
     final statusColor = _getStatusColor(item.status);
+    final bool isUpcoming = item.status == 'Upcoming';
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Icon based on type
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: statusColor.withAlpha(20), borderRadius: BorderRadius.circular(15)),
-                  child: Icon(_getTypeIcon(item.clinicType), color: statusColor, size: 28),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            item.clinicType?.toUpperCase() ?? "APPOINTMENT",
-                            style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-                          ),
-                          _buildStatusBadge(item.status),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _getClinicName(item),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF263238)),
-                      ),
-                      if (item.clinicType == 'Doctor')
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            item.doctorContact?['partner_doctor_specialist'] ?? item.doctor?['doctor_specialist'] ?? "Specialist",
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1565C0)),
-                          ),
-                        ),
-                      const SizedBox(height: 4),
-                      _detailRow(Icons.location_on_outlined, "Location", _getClinicAddress(item)),
-                      const SizedBox(height: 8),
-                      if (item.doctorId != null)
-                        _detailRow(Icons.person_outline, "Doctor", item.doctor?['doctor_name'] ?? "Specialist", isHighlighted: item.clinicType == 'OPD'),
-                      if (item.doctorId != null)
-                        _detailRow(Icons.person_outline, "Specialist", item.doctor?['doctor_specialist'] ?? "Medical Specialist", isHighlighted: item.clinicType == 'OPD'),
-                      if (item.testId != null)
-                        _detailRow(Icons.biotech_outlined, "Test", item.test?['test_name'] ?? "Diagnostic Test", isHighlighted: item.clinicType == 'Pathology'),
-                      if (item.testId != null && item.test?['test_type'] != null)
-                        _detailRow(Icons.biotech_outlined, "Type", item.test?['test_type'], isHighlighted: item.clinicType == 'Pathology'),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(child: _detailRow(Icons.calendar_today_outlined, "Date", item.bookingDate ?? "N/A")),
-                          const SizedBox(width: 10),
-                          Expanded(child: _detailRow(Icons.access_time_rounded, "Time", _formatTime(item.bookingTime))),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                if (item.status == 'Upcoming') ...[
-                  _actionButton(Icons.check_circle_outline, "Complete", Colors.green, () => _handleAction(item.id, 'Complete')),
-                  _actionButton(Icons.cancel_outlined, "Cancel", Colors.red, () => _handleAction(item.id, 'Cancel')),
-                ],
-               
-              ],
-            ),
-          ),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 15, offset: const Offset(0, 4)),
+          BoxShadow(color: statusColor.withAlpha(10), blurRadius: 5, spreadRadius: -2),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          children: [
+            // 1. Highlighted Header (Date & Time) at Top
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: statusColor.withAlpha(15),
+                border: Border(bottom: BorderSide(color: statusColor.withAlpha(20), width: 1)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today_rounded, size: 14, color: statusColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    item.bookingDate ?? "N/A",
+                    style: TextStyle(color: statusColor, fontWeight: FontWeight.w900, fontSize: 13),
+                  ),
+                  const Spacer(),
+                  Icon(Icons.access_time_rounded, size: 14, color: statusColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    _formatTime(item.bookingTime),
+                    style: TextStyle(color: statusColor, fontWeight: FontWeight.w900, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            
+            // 2. Main Content
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Icon
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: statusColor.withAlpha(20), borderRadius: BorderRadius.circular(15)),
+                    child: Icon(_getTypeIcon(item.clinicType), color: statusColor, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              item.clinicType?.toUpperCase() ?? "APPOINTMENT",
+                              style: TextStyle(color: statusColor.withAlpha(180), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                            ),
+                            _buildStatusBadge(item.status),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _getClinicName(item),
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
+                        ),
+                        if (item.clinicType == 'Doctor')
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              item.doctorContact?['partner_doctor_specialist'] ?? item.doctor?['doctor_specialist'] ?? "Specialist",
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
+                            ),
+                          ),
+                        const SizedBox(height: 12),
+                        _detailRow(Icons.location_on_outlined, "Location", _getClinicAddress(item)),
+                        const SizedBox(height: 6),
+                        if (item.doctorId != null)
+                          _detailRow(Icons.person_outline, "Doctor", item.doctor?['doctor_name'] ?? "Specialist", isHighlighted: item.clinicType == 'OPD'),
+                        if (item.doctorId != null)
+                          _detailRow(Icons.person_outline, "Specialist", item.doctor?['doctor_specialist'] ?? "Medical Specialist", isHighlighted: item.clinicType == 'OPD'),
+                        if (item.testId != null)
+                          _detailRow(Icons.biotech_outlined, "Test", item.test?['test_name'] ?? "Diagnostic Test", isHighlighted: item.clinicType == 'Pathology'),
+                        if (item.testId != null && item.test?['test_type'] != null)
+                          _detailRow(Icons.biotech_outlined, "Type", item.test?['test_type'], isHighlighted: item.clinicType == 'Pathology'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // 3. Action Area (No Divider)
+            if (isUpcoming)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _modernActionButton(Icons.check_circle_outline, "Complete", Colors.green, () => _handleAction(item.id, 'Complete')),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _modernActionButton(Icons.cancel_outlined, "Cancel", Colors.red, () => _handleAction(item.id, 'Cancel')),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -335,14 +364,30 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
     );
   }
 
-  Widget _actionButton(IconData icon, String label, Color color, VoidCallback onTap) {
-    return TextButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 18, color: color),
-      label: Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
-      style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12)),
+  Widget _modernActionButton(IconData icon, String label, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withAlpha(15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withAlpha(30), width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 8),
+            Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w900)),
+          ],
+        ),
+      ),
     );
   }
+
+
 
   Widget _buildStatusBadge(String? status) {
     final color = _getStatusColor(status);
