@@ -63,6 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = prefs.getString('email');
     final mobile = prefs.getString('mobile');
     final city = prefs.getString('city');
+    final id = prefs.getString('id');
 
     if (token != null && name != null && email != null) {
       Navigator.pushReplacement(
@@ -71,6 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
           builder:
               (_) => CategoryHomeScreen(
                 userData: {
+                  'id': id ?? '',
                   'token': token,
                   'name': name,
                   'email': email,
@@ -103,6 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200 && data.containsKey('token')) {
         final userData = data['user'] ?? {};
         return {
+          'id': userData['id']?.toString() ?? data['id']?.toString() ?? '',
           'token': data['token'],
           'name': userData['name'] ?? userData['user_name'] ?? data['name'] ?? data['user_name'] ?? 'User',
           'email': userData['email'] ?? userData['user_email'] ?? data['email'] ?? data['user_email'] ?? '',
@@ -197,6 +200,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           await prefs.setString(
                             'city',
                             _loggedUserData!['city'],
+                          );
+                          await prefs.setString(
+                            'id',
+                            _loggedUserData!['id'] ?? '',
                           );
                           await prefs.setString(
                             'member_id',

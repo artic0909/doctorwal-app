@@ -66,6 +66,7 @@ class _SignupScreenState extends State<SignupScreen> {
         await prefs.setString('email', user['email'] ?? '');
         await prefs.setString('mobile', user['mobile'] ?? '');
         await prefs.setString('city', user['city'] ?? '');
+        await prefs.setString('id', (user['id'] ?? jsonResponse['id'] ?? '').toString());
         await prefs.setString(
           'member_id',
           (user['member_id'] ?? user['memberid'] ?? '').toString(),
@@ -77,6 +78,7 @@ class _SignupScreenState extends State<SignupScreen> {
         await prefs.setString('image', (user['image'] ?? user['user_image'] ?? '').toString());
 
         final Map<String, dynamic> userData = {
+          'id': (user['id'] ?? jsonResponse['id'] ?? '').toString(),
           'token': token,
           'name': user['name'] ?? user['user_name'] ?? '',
           'email': user['email'] ?? user['user_email'] ?? '',

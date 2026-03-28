@@ -258,6 +258,7 @@ class _PathologyPatientInquiryScreenState
         "user_mobile": _phoneController.text,
         "user_email": _emailController.text,
         "user_inquiry": _messageController.text,
+        "dw_user_id": widget.userData['id'],
       };
 
       try {
