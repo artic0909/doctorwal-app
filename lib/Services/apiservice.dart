@@ -22,8 +22,14 @@ class ApiService {
     try {
       await _setAuthHeader();
       final response = await _dio.get('/api/user-profile');
-      return response.data;
+      if (response.statusCode == 200 && response.data is Map) {
+        return response.data;
+      }
+      return {'status': false, 'message': 'Failed to load profile'};
     } on DioException catch (e) {
+      if (e.response != null && e.response?.data is Map) {
+        return e.response?.data as Map<String, dynamic>;
+      }
       return {'status': false, 'message': e.message};
     }
   }
@@ -433,6 +439,76 @@ class ApiService {
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
         return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  // --- APPOINTMENT MANAGEMENT ---
+
+  Future<Map<String, dynamic>> getAppointments() async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.get('/api/appointments');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          return data;
+        }
+        return {'status': false, 'message': data.toString()};
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getAppointmentsByStatus(String status) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.get('/api/appointments/status/$status');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          return data;
+        }
+        return {'status': false, 'message': data.toString()};
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  Future<Map<String, dynamic>> markAppointmentAsCompleted(int id) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post('/api/appointments/$id/complete');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          return data;
+        }
+        return {'status': false, 'message': data.toString()};
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
+
+  Future<Map<String, dynamic>> cancelAppointment(int id) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post('/api/appointments/$id/cancel');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          return data;
+        }
+        return {'status': false, 'message': data.toString()};
       }
       return {'status': false, 'message': 'Network error occurred'};
     }

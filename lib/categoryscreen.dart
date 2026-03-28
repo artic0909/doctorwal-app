@@ -12,6 +12,8 @@ import 'package:demoapp/addvitalscreen.dart';
 import 'package:demoapp/medicalhistoryscreen.dart';
 import 'package:demoapp/addmedicalrecordscreen.dart';
 import 'package:demoapp/search_screen.dart';
+import 'package:demoapp/all_appointments_screen.dart';
+import 'package:demoapp/Services/apiservice.dart';
 import 'package:http/http.dart' as http;
 
 class CategoryHomeScreen extends StatefulWidget {
@@ -34,6 +36,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   void initState() {
     super.initState();
     loadUserData();
+    _syncUserId(); // Background sync
   }
 
   Future<void> loadUserData() async {
@@ -58,6 +61,29 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
       profileImg = prefs.getString('image') ?? widget.userData['image']?.toString() ?? '';
     });
+  }
+
+  Future<void> _syncUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? currentId = prefs.getString('id');
+
+    // If ID is already present, no need to sync
+    if (currentId != null && currentId.isNotEmpty) return;
+
+    // Fetch profile to get the ID
+    final apiService = ApiService();
+    final profile = await apiService.getProfile();
+
+    if (profile['status'] == true && profile['data'] != null) {
+      final user = profile['data'];
+      final String fetchedId = (user['id'] ?? '').toString();
+
+      if (fetchedId.isNotEmpty) {
+        await prefs.setString('id', fetchedId);
+        // Also update local state if needed (though userData is final in widget)
+        debugPrint("User ID synced successfully: $fetchedId");
+      }
+    }
   }
 
   Future<void> logout() async {
@@ -558,7 +584,10 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
                 const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("appointments & notifications"),
-                _drawerItem(Icons.calendar_month_rounded, "Appointments", () {}),
+                _drawerItem(Icons.calendar_month_rounded, "Appointments", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AllAppointmentsScreen(userData: widget.userData)));
+                }),
                 _drawerItem(Icons.notifications_active_rounded, "Notifications", () {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationScreen()));

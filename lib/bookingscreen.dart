@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:demoapp/Services/apiservice.dart';
 
 enum BookingType { OPD, Pathology, Doctor }
@@ -132,6 +133,9 @@ class _BookingScreenState extends State<BookingScreen> {
 
     setState(() => _isLoading = true);
 
+    final prefs = await SharedPreferences.getInstance();
+    final String? syncedId = prefs.getString('id');
+
     final Map<String, dynamic> bookingData = {
       'currently_loggedin_partner_id': widget.partnerId,
       'clinic_type': _getClinicType(),
@@ -140,7 +144,7 @@ class _BookingScreenState extends State<BookingScreen> {
       'user_mobile': _mobileController.text,
       'user_email': _emailController.text,
       'user_inquiry': _inquiryController.text,
-      'dw_user_id': widget.userData['id'],
+      'dw_user_id': syncedId ?? widget.userData['id'],
       'booking_date': _dateController.text,
       'booking_time': _timeController.text,
       'visit_mode': _visitMode,
