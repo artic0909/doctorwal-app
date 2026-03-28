@@ -14,6 +14,7 @@ import 'package:demoapp/addmedicalrecordscreen.dart';
 import 'package:demoapp/search_screen.dart';
 import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
+import 'package:demoapp/privacypolicyscreen.dart';
 import 'package:http/http.dart' as http;
 
 class CategoryHomeScreen extends StatefulWidget {
@@ -603,7 +604,10 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactScreen()));
                 }),
-                _drawerItem(Icons.policy_rounded, "Privacy & Policy", () {}),
+                _drawerItem(Icons.policy_rounded, "Privacy & Policy", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()));
+                }),
 
                 const SizedBox(height: 30),
               ],
