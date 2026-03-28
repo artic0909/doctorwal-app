@@ -254,13 +254,25 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
                         _getClinicName(item),
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF263238)),
                       ),
+                      if (item.clinicType == 'Doctor')
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            item.doctorContact?['partner_doctor_specialist'] ?? item.doctor?['doctor_specialist'] ?? "Specialist",
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1565C0)),
+                          ),
+                        ),
                       const SizedBox(height: 4),
                       _detailRow(Icons.location_on_outlined, "Location", _getClinicAddress(item)),
                       const SizedBox(height: 8),
                       if (item.doctorId != null)
-                        _detailRow(Icons.person_outline, "Doctor", item.doctor?['doctor_name'] ?? "Specialist"),
+                        _detailRow(Icons.person_outline, "Doctor", item.doctor?['doctor_name'] ?? "Specialist", isHighlighted: item.clinicType == 'OPD'),
+                      if (item.doctorId != null)
+                        _detailRow(Icons.person_outline, "Specialist", item.doctor?['doctor_specialist'] ?? "Medical Specialist", isHighlighted: item.clinicType == 'OPD'),
                       if (item.testId != null)
-                        _detailRow(Icons.biotech_outlined, "Test", item.test?['test_name'] ?? "Diagnostic Test"),
+                        _detailRow(Icons.biotech_outlined, "Test", item.test?['test_name'] ?? "Diagnostic Test", isHighlighted: item.clinicType == 'Pathology'),
+                      if (item.testId != null && item.test?['test_type'] != null)
+                        _detailRow(Icons.biotech_outlined, "Type", item.test?['test_type'], isHighlighted: item.clinicType == 'Pathology'),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -294,7 +306,10 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
     );
   }
 
-  Widget _detailRow(IconData icon, String label, String value) {
+  Widget _detailRow(IconData icon, String label, String value, {bool isHighlighted = false}) {
+    final Color valueColor = isHighlighted ? const Color(0xFF1565C0) : const Color(0xFF455A64);
+    final Color labelColor = isHighlighted ? const Color(0xFF1565C0).withAlpha(180) : Colors.blueGrey[400]!;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -302,17 +317,17 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 1),
-            child: Icon(icon, size: 14, color: Colors.blueGrey[300]),
+            child: Icon(icon, size: 14, color: isHighlighted ? const Color(0xFF1565C0) : Colors.blueGrey[300]),
           ),
           const SizedBox(width: 6),
           Text(
             "$label: ",
-            style: TextStyle(fontSize: 12, color: Colors.blueGrey[400], fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 12, color: labelColor, fontWeight: isHighlighted ? FontWeight.w900 : FontWeight.w500),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF455A64)),
+              style: TextStyle(fontSize: 12, fontWeight: isHighlighted ? FontWeight.w900 : FontWeight.bold, color: valueColor),
             ),
           ),
         ],
