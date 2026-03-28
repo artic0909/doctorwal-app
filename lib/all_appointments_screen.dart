@@ -356,18 +356,18 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
 
   String _getClinicName(AppointmentModel item) {
     String? name;
-    if (item.clinicType == 'OPD') name = item.opdContact?['partner_name'];
-    else if (item.clinicType == 'Pathology') name = item.pathologyContact?['partner_name'];
-    else if (item.clinicType == 'Doctor') name = item.doctorContact?['partner_name'];
+    if (item.clinicType == 'OPD') name = item.opdContact?['clinic_name'];
+    else if (item.clinicType == 'Pathology') name = item.pathologyContact?['clinic_name'];
+    else if (item.clinicType == 'Doctor') name = item.doctorContact?['partner_doctor_name'];
     
     return name ?? item.clinicName ?? "Unknown Clinic";
   }
 
   String _getClinicAddress(AppointmentModel item) {
     String? address;
-    if (item.clinicType == 'OPD') address = item.opdContact?['partner_address'];
-    else if (item.clinicType == 'Pathology') address = item.pathologyContact?['partner_name']; // If address missing, name is better than null
-    else if (item.clinicType == 'Doctor') address = item.doctorContact?['partner_address'];
+    if (item.clinicType == 'OPD') address = item.opdContact?['clinic_address'];
+    else if (item.clinicType == 'Pathology') address = item.pathologyContact?['clinic_address']; // If address missing, name is better than null
+    else if (item.clinicType == 'Doctor') address = item.doctorContact?['partner_doctor_address'];
 
     return address ?? "Address not provided";
   }
