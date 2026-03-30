@@ -32,6 +32,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   String memberId = '';
   String medicalCardNo = '';
   String profileImg = '';
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -527,8 +528,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           const SizedBox(height: 30),
 
           // 3. Category List Heading (Fixed)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 25),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25),
             child: Row(
               children: [
                 Text(
@@ -539,13 +540,24 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     color: Color(0xFF263238),
                   ),
                 ),
-                Spacer(),
-                Text(
-                  "View All",
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFE53935),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    if (_scrollController.hasClients) {
+                      _scrollController.animateTo(
+                        _scrollController.position.maxScrollExtent,
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeOutQuart,
+                      );
+                    }
+                  },
+                  child: Text(
+                    "View All",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFE53935),
+                    ),
                   ),
                 ),
               ],
@@ -557,38 +569,47 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           // 4. One-by-One Categories (Scrollable)
           Expanded(
             child: ListView(
+              controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
               children: [
-                _newCategoryCard(
-                  title: "Medical Reports",
-                  subtitle: "View & manage your health test results",
-                  icon: Icons.assignment_rounded,
-                  color: const Color(0xFF7E57C2),
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MedicalHistoryScreen(
-                            initialTabIndex: 0,
+                Row(
+                  children: [
+                    _eyeCatchyBox(
+                      title: "Medical Reports",
+                      subtitle: "View test results",
+                      icon: Icons.assignment_rounded,
+                      gradient: [const Color(0xFF7E57C2), const Color(0xFF512DA8)],
+                      onTap:
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => const MedicalHistoryScreen(
+                                    initialTabIndex: 0,
+                                  ),
+                            ),
                           ),
-                        ),
-                      ),
-                ),
-                _newCategoryCard(
-                  title: "Medical Prescriptions",
-                  subtitle: "Access all your digital prescriptions",
-                  icon: Icons.medication_rounded,
-                  color: const Color(0xFF26A69A),
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MedicalHistoryScreen(
-                            initialTabIndex: 1,
+                    ),
+                    const SizedBox(width: 15),
+                    _eyeCatchyBox(
+                      title: "Medical Prescriptions",
+                      subtitle: "Digital rx access",
+                      icon: Icons.medication_rounded,
+                      gradient: [const Color(0xFF26A69A), const Color(0xFF00796B)],
+                      onTap:
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => const MedicalHistoryScreen(
+                                    initialTabIndex: 1,
+                                  ),
+                            ),
                           ),
-                        ),
-                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 15),
                 _newCategoryCard(
                   title: "OPD Doctors & Clinics",
                   subtitle: "Book clinical appointments instantly",
@@ -653,6 +674,79 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _eyeCatchyBox({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> gradient,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 125,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: gradient,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: gradient.last.withAlpha(60),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(50),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: Colors.white, size: 22),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
