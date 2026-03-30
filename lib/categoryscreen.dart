@@ -34,12 +34,44 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   String profileImg = '';
   bool isGeneratingCard = false;
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _horizontalScrollController = ScrollController();
+  bool _hasScrolled = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _horizontalScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
     loadUserData();
     _syncUserId(); // Background sync
+    
+    // Discovery Animation: Peek at scrollable content
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (_horizontalScrollController.hasClients && !_hasScrolled) {
+          _horizontalScrollController.animateTo(
+            40,
+            duration: const Duration(milliseconds: 1000),
+            curve: Curves.easeInOut,
+          ).then((_) {
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (_horizontalScrollController.hasClients) {
+                _horizontalScrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 1200),
+                  curve: Curves.elasticOut,
+                );
+              }
+            });
+          });
+        }
+      });
+    });
   }
 
   Future<void> loadUserData() async {
@@ -674,43 +706,132 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           Expanded(
             child: ListView(
               controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
               children: [
-                Row(
+                Stack(
                   children: [
-                    _eyeCatchyBox(
-                      title: "Medical Reports",
-                      subtitle: "View test results",
-                      icon: Icons.assignment_rounded,
-                      gradient: [const Color(0xFF7E57C2), const Color(0xFF512DA8)],
-                      onTap:
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => const MedicalHistoryScreen(
-                                    initialTabIndex: 0,
-                                  ),
+                    NotificationListener<ScrollNotification>(
+                      onNotification: (notification) {
+                        if (notification is ScrollUpdateNotification) {
+                          if (notification.metrics.pixels > 30 && !_hasScrolled) {
+                            setState(() => _hasScrolled = true);
+                          }
+                        }
+                        return true;
+                      },
+                      child: SingleChildScrollView(
+                        controller: _horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: Row(
+                          children: [
+                            _eyeCatchyBox(
+                        title: "Medical Reports",
+                        subtitle: "Test results",
+                        icon: Icons.assignment_rounded,
+                        gradient: [const Color(0xFF7E57C2), const Color(0xFF512DA8)],
+                        onTap:
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const MedicalHistoryScreen(
+                                      initialTabIndex: 0,
+                                    ),
+                              ),
                             ),
-                          ),
-                    ),
-                    const SizedBox(width: 15),
-                    _eyeCatchyBox(
-                      title: "Medical Prescriptions",
-                      subtitle: "Digital rx access",
-                      icon: Icons.medication_rounded,
-                      gradient: [const Color(0xFF26A69A), const Color(0xFF00796B)],
-                      onTap:
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => const MedicalHistoryScreen(
-                                    initialTabIndex: 1,
-                                  ),
+                      ),
+                      const SizedBox(width: 8),
+                      _eyeCatchyBox(
+                        title: "Prescriptions",
+                        subtitle: "Digital RX",
+                        icon: Icons.medication_rounded,
+                        gradient: [const Color(0xFF26A69A), const Color(0xFF00796B)],
+                        onTap:
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const MedicalHistoryScreen(
+                                      initialTabIndex: 1,
+                                    ),
+                              ),
                             ),
-                          ),
+                      ),
+                      const SizedBox(width: 8),
+                      _eyeCatchyBox(
+                        title: "Appointments",
+                        subtitle: "Track visits",
+                        icon: Icons.calendar_today_rounded,
+                        gradient: [const Color(0xFFF06292), const Color(0xFFC2185B)],
+                        onTap:
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AllAppointmentsScreen(userData: widget.userData),
+                              ),
+                            ),
+                      ),
+                      const SizedBox(width: 8),
+                      _eyeCatchyBox(
+                        title: "Health Parameters",
+                        subtitle: "Monitor metrics",
+                        icon: Icons.monitor_heart_rounded,
+                        gradient: [const Color(0xFF5C6BC0), const Color(0xFF3949AB)],
+                        onTap:
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const HealthParametersScreen(),
+                              ),
+                            ),
+                      ),
+                          ],
+                        ),
+                      ),
                     ),
+                    
+                    // Animated Scroll Hint
+                    if (!_hasScrolled)
+                      Positioned(
+                        right: 10,
+                        top: 0,
+                        bottom: 0,
+                        child: IgnorePointer(
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: const Duration(milliseconds: 1500),
+                            builder: (context, value, child) {
+                              return Opacity(
+                                opacity: (1.0 - value).clamp(0.0, 1.0),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                      colors: [
+                                        Colors.white.withAlpha(0),
+                                        Colors.white.withAlpha(150),
+                                      ],
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Transform.translate(
+                                      offset: Offset(-20 * (1 - value % 1), 0),
+                                      child: const Icon(
+                                        Icons.swipe_left_rounded,
+                                        color: Color(0xFF1565C0),
+                                        size: 30,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 15),
@@ -789,67 +910,68 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     required List<Color> gradient,
     required VoidCallback onTap,
   }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 125,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: gradient,
+    // Peek effect: show roughly 3.1 cards to hint at more content
+    final double cardWidth = (MediaQuery.of(context).size.width - 48) / 3.1;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: cardWidth,
+        height: 120,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: gradient,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: gradient.last.withAlpha(50),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: gradient.last.withAlpha(60),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(50),
+                shape: BoxShape.circle,
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(50),
-                  shape: BoxShape.circle,
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                child: Icon(icon, color: Colors.white, size: 22),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

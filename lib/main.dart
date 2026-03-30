@@ -3,6 +3,7 @@ import 'package:demoapp/categoryscreen.dart';
 import 'package:demoapp/forgetpasswordscreen.dart';
 import 'package:demoapp/signupscreen.dart';
 import 'package:demoapp/spalashscreen.dart';
+import 'package:demoapp/contactscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:ui';
@@ -511,9 +512,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 25),
                   
                   // 4. Ecosystem Service Badges
-                  const Column(
+                  Column(
                     children: [
-                      Text(
+                      const Text(
                         "DISCOVER DOCTORWALA",
                         style: TextStyle(
                           fontSize: 10,
@@ -526,10 +527,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          EcosystemBadge(icon: Icons.personal_injury_rounded, label: "Doctors"),
-                          EcosystemBadge(icon: Icons.local_hospital_rounded, label: "Clinics"),
-                          EcosystemBadge(icon: Icons.science_rounded, label: "Labs"),
-                          EcosystemBadge(icon: Icons.support_agent_rounded, label: "24/7"),
+                          const EcosystemBadge(icon: Icons.personal_injury_rounded, label: "Doctors"),
+                          const EcosystemBadge(icon: Icons.local_hospital_rounded, label: "Clinics"),
+                          const EcosystemBadge(icon: Icons.science_rounded, label: "Labs"),
+                          EcosystemBadge(
+                            icon: Icons.support_agent_rounded, 
+                            label: "24/7",
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const ContactScreen()),
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -610,34 +618,38 @@ class _LoginScreenState extends State<LoginScreen> {
 class EcosystemBadge extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
-  const EcosystemBadge({super.key, required this.icon, required this.label});
+  const EcosystemBadge({super.key, required this.icon, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1565C0).withAlpha(25),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1565C0).withAlpha(25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: const Color(0xFF1565C0), size: 24),
           ),
-          child: Icon(icon, color: const Color(0xFF1565C0), size: 24),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueGrey),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+          ),
+        ],
+      ),
     );
   }
 }
