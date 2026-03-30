@@ -43,24 +43,40 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      name = prefs.getString('name') ?? widget.userData['name'] ?? widget.userData['user_name'] ?? 'User';
-      email = prefs.getString('email') ?? widget.userData['email'] ?? widget.userData['user_email'] ?? '';
-      
+      name =
+          prefs.getString('name') ??
+          widget.userData['name'] ??
+          widget.userData['user_name'] ??
+          'User';
+      email =
+          prefs.getString('email') ??
+          widget.userData['email'] ??
+          widget.userData['user_email'] ??
+          '';
+
       // Aggressive key checking for memberId
       memberId = prefs.getString('member_id') ?? '';
       if (memberId.trim().isEmpty) memberId = prefs.getString('memberid') ?? '';
-      if (memberId.trim().isEmpty) memberId = widget.userData['member_id']?.toString() ?? '';
-      if (memberId.trim().isEmpty) memberId = widget.userData['memberid']?.toString() ?? '';
+      if (memberId.trim().isEmpty)
+        memberId = widget.userData['member_id']?.toString() ?? '';
+      if (memberId.trim().isEmpty)
+        memberId = widget.userData['memberid']?.toString() ?? '';
       if (memberId.trim().isEmpty) memberId = 'DW-2026-CARD';
 
       // Aggressive key checking for medicalCardNo
       medicalCardNo = prefs.getString('medical_card_no') ?? '';
-      if (medicalCardNo.trim().isEmpty) medicalCardNo = prefs.getString('medicalcardno') ?? '';
-      if (medicalCardNo.trim().isEmpty) medicalCardNo = widget.userData['medical_card_no']?.toString() ?? '';
-      if (medicalCardNo.trim().isEmpty) medicalCardNo = widget.userData['medicalcardno']?.toString() ?? '';
+      if (medicalCardNo.trim().isEmpty)
+        medicalCardNo = prefs.getString('medicalcardno') ?? '';
+      if (medicalCardNo.trim().isEmpty)
+        medicalCardNo = widget.userData['medical_card_no']?.toString() ?? '';
+      if (medicalCardNo.trim().isEmpty)
+        medicalCardNo = widget.userData['medicalcardno']?.toString() ?? '';
       if (medicalCardNo.trim().isEmpty) medicalCardNo = 'DW26 0000 00';
 
-      profileImg = prefs.getString('image') ?? widget.userData['image']?.toString() ?? '';
+      profileImg =
+          prefs.getString('image') ??
+          widget.userData['image']?.toString() ??
+          '';
     });
   }
 
@@ -102,7 +118,10 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     try {
       final response = await http.post(
         Uri.parse('https://doctorwala.info/api/logout'),
-        headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -129,25 +148,51 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   @override
   Widget build(BuildContext context) {
     // Use local state if it's available, otherwise fallback to widget data
-    final String currentName = name.isNotEmpty && name != 'User' ? name : (widget.userData['name'] ?? widget.userData['user_name'] ?? 'Guest');
-    
+    final String currentName =
+        name.isNotEmpty && name != 'User'
+            ? name
+            : (widget.userData['name'] ??
+                widget.userData['user_name'] ??
+                'Guest');
+
     // Member ID Fallback logic
     String dispMemberId = memberId;
-    if (dispMemberId.trim().isEmpty || dispMemberId == 'DW-0000-000' || dispMemberId == 'DW-2026-CARD') {
-      dispMemberId = (widget.userData['member_id'] ?? widget.userData['memberid'] ?? 'DW-2026-CARD').toString();
+    if (dispMemberId.trim().isEmpty ||
+        dispMemberId == 'DW-0000-000' ||
+        dispMemberId == 'DW-2026-CARD') {
+      dispMemberId =
+          (widget.userData['member_id'] ??
+                  widget.userData['memberid'] ??
+                  'DW-2026-CARD')
+              .toString();
     }
 
     // Card No Fallback logic
     String dispCardNo = medicalCardNo;
-    if (dispCardNo.trim().isEmpty || dispCardNo == 'DW00 0000 00' || dispCardNo == 'DW01 0001 001' || dispCardNo == 'DW26 0000 00') {
-      dispCardNo = (widget.userData['medical_card_no'] ?? widget.userData['medicalcardno'] ?? 'DW26 0000 00').toString();
+    if (dispCardNo.trim().isEmpty ||
+        dispCardNo == 'DW00 0000 00' ||
+        dispCardNo == 'DW01 0001 001' ||
+        dispCardNo == 'DW26 0000 00') {
+      dispCardNo =
+          (widget.userData['medical_card_no'] ??
+                  widget.userData['medicalcardno'] ??
+                  'DW26 0000 00')
+              .toString();
     }
 
-    final String currentProfileImg = profileImg.isNotEmpty ? profileImg : (widget.userData['image']?.toString() ?? '');
+    final String currentProfileImg =
+        profileImg.isNotEmpty
+            ? profileImg
+            : (widget.userData['image']?.toString() ?? '');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
-      drawer: _buildPremiumDrawer(context, currentName, dispMemberId, currentProfileImg),
+      drawer: _buildPremiumDrawer(
+        context,
+        currentName,
+        dispMemberId,
+        currentProfileImg,
+      ),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -155,17 +200,22 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         title: Row(
           children: [
             Builder(
-              builder: (context) => GestureDetector(
-                onTap: () => Scaffold.of(context).openDrawer(),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1565C0).withAlpha(12),
-                    shape: BoxShape.circle,
+              builder:
+                  (context) => GestureDetector(
+                    onTap: () => Scaffold.of(context).openDrawer(),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1565C0).withAlpha(12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.menu_rounded,
+                        color: Color(0xFF1565C0),
+                        size: 24,
+                      ),
+                    ),
                   ),
-                  child: const Icon(Icons.menu_rounded, color: Color(0xFF1565C0), size: 24),
-                ),
-              ),
             ),
             const SizedBox(width: 15),
             Column(
@@ -173,11 +223,19 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               children: [
                 Text(
                   "Hello,",
-                  style: TextStyle(color: Colors.blueGrey[400], fontSize: 13, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: Colors.blueGrey[400],
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 Text(
                   currentName,
-                  style: const TextStyle(color: Color(0xFF263238), fontSize: 16, fontWeight: FontWeight.w900),
+                  style: const TextStyle(
+                    color: Color(0xFF263238),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -186,8 +244,18 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             Stack(
               children: [
                 IconButton(
-                  icon: Icon(Icons.notifications_none_rounded, color: Colors.blueGrey[600], size: 26),
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationScreen())),
+                  icon: Icon(
+                    Icons.notifications_none_rounded,
+                    color: Colors.blueGrey[600],
+                    size: 26,
+                  ),
+                  onPressed:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationScreen(),
+                        ),
+                      ),
                 ),
                 Positioned(
                   right: 12,
@@ -195,7 +263,10 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                   child: Container(
                     width: 8,
                     height: 8,
-                    decoration: const BoxDecoration(color: Color(0xFFE53935), shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE53935),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
               ],
@@ -204,20 +275,38 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             Hero(
               tag: 'profile',
               child: GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ProfileEditScreen(userData: widget.userData)),
-                ).then((_) => loadUserData()),
+                onTap:
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                ProfileEditScreen(userData: widget.userData),
+                      ),
+                    ).then((_) => loadUserData()),
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF1565C0).withAlpha(38), width: 2),
+                    border: Border.all(
+                      color: const Color(0xFF1565C0).withAlpha(38),
+                      width: 2,
+                    ),
                   ),
                   child: CircleAvatar(
                     radius: 20,
                     backgroundColor: Colors.blueGrey[50],
-                    backgroundImage: currentProfileImg.isNotEmpty ? NetworkImage(_getImageUrl(currentProfileImg)) : null,
-                    child: currentProfileImg.isEmpty ? const Icon(Icons.person_rounded, size: 20, color: Color(0xFF1565C0)) : null,
+                    backgroundImage:
+                        currentProfileImg.isNotEmpty
+                            ? NetworkImage(_getImageUrl(currentProfileImg))
+                            : null,
+                    child:
+                        currentProfileImg.isEmpty
+                            ? const Icon(
+                              Icons.person_rounded,
+                              size: 20,
+                              color: Color(0xFF1565C0),
+                            )
+                            : null,
                   ),
                 ),
               ),
@@ -225,226 +314,345 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 1. Premium Search Bar (Interactive)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-              child: GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen(userData: widget.userData))),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 55,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(8),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 15),
-                            const Icon(Icons.search_rounded, color: Color(0xFF1565C0), size: 22),
-                            const SizedBox(width: 12),
-                            Text(
-                              "Search doctor, clinic, test...",
-                              style: TextStyle(color: Colors.blueGrey[200], fontSize: 14, fontWeight: FontWeight.w500),
-                            ),
-                            const Spacer(),
-                            const Icon(Icons.location_on_rounded, color: Color(0xFFE53935), size: 18),
-                            const SizedBox(width: 15),
-                          ],
-                        ),
-                      ),
+      body: Column(
+        children: [
+          // 1. Premium Search Bar (Interactive)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+            child: GestureDetector(
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SearchScreen(userData: widget.userData),
                     ),
-                    const SizedBox(width: 12),
-                    Container(
+                  ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
                       height: 55,
-                      width: 55,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1565C0),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF1565C0).withAlpha(76),
-                            blurRadius: 12,
+                            color: Colors.black.withAlpha(8),
+                            blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 15),
+                          const Icon(
+                            Icons.search_rounded,
+                            color: Color(0xFF1565C0),
+                            size: 22,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            "Search doctor, clinic, test...",
+                            style: TextStyle(
+                              color: Colors.blueGrey[200],
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Spacer(),
+                          const Icon(
+                            Icons.location_on_rounded,
+                            color: Color(0xFFE53935),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 15),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-
-            // 2. Dynamic Virtual Medical Card
-            Container(
-              width: double.infinity,
-              height: 200,
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
-                ),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF1565C0).withAlpha(102),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
                   ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // Subtle Pattern
-                  Positioned(
-                    right: -20,
-                    top: -20,
-                    child: Icon(Icons.health_and_safety_rounded, size: 150, color: Colors.white.withAlpha(25)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(25),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Image.asset('assets/images/logo.png', height: 30, color: Colors.white),
-                            const SizedBox(width: 10),
-                            const Text(
-                              "DOCTORWALA MEDICAL CARD",
-                              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
-                            ),
-                            const Spacer(),
-                            const Icon(Icons.nfc_rounded, color: Colors.white70, size: 20),
-                          ],
-                        ),
-                        const Spacer(),
-                        Text(
-                          dispCardNo,
-                          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w400, letterSpacing: 4),
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text("CARD HOLDER", style: TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.bold)),
-                                Text(currentName.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text("MEMBER ID", style: TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.bold)),
-                                Text(dispMemberId, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ],
+                  const SizedBox(width: 12),
+                  Container(
+                    height: 55,
+                    width: 55,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1565C0),
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1565C0).withAlpha(76),
+                          blurRadius: 12,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
+                    child: const Icon(
+                      Icons.tune_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                 ],
               ),
             ),
+          ),
 
-            const SizedBox(height: 30),
-
-            // 3. Category List Heading
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 25),
-              child: Row(
-                children: [
-                  Text(
-                    "Medical Ecosystem",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
-                  ),
-                  Spacer(),
-                  Text(
-                    "View All",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFE53935)),
-                  ),
-                ],
+          // 2. Dynamic Virtual Medical Card
+          Container(
+            width: double.infinity,
+            height: 200,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
               ),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1565C0).withAlpha(102),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-
-            const SizedBox(height: 20),
-
-            // 4. One-by-One Categories
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  _newCategoryCard(
-                    title: "Medical Reports",
-                    subtitle: "View & manage your health test results",
-                    icon: Icons.assignment_rounded,
-                    color: const Color(0xFF7E57C2),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MedicalHistoryScreen(initialTabIndex: 0))),
+            child: Stack(
+              children: [
+                // Subtle Pattern
+                Positioned(
+                  right: -20,
+                  top: -20,
+                  child: Icon(
+                    Icons.health_and_safety_rounded,
+                    size: 150,
+                    color: Colors.white.withAlpha(25),
                   ),
-
-                  _newCategoryCard(
-                    title: "Medical Prescriptions",
-                    subtitle: "Access all your digital prescriptions",
-                    icon: Icons.medication_rounded,
-                    color: const Color(0xFF26A69A),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MedicalHistoryScreen(initialTabIndex: 1))),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(25),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Image.asset(
+                            'assets/images/logo.png',
+                            height: 30,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            "DOCTORWALA MEDICAL CARD",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const Spacer(),
+                          const Icon(
+                            Icons.nfc_rounded,
+                            color: Colors.white70,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Text(
+                        dispCardNo,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 4,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "CARD HOLDER",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                currentName.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "MEMBER ID",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                dispMemberId,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-
-                  _newCategoryCard(
-                    title: "OPD Doctors & Clinics",
-                    subtitle: "Book clinical appointments instantly",
-                    icon: Icons.local_hospital_rounded,
-                    color: const Color(0xFFE53935),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllAvailableOPDScreen(userData: widget.userData))),
-                  ),
-
-                  
-                  _newCategoryCard(
-                    title: "Pathology Tests & Labs",
-                    subtitle: "Certified diagnostic testing at home",
-                    icon: Icons.biotech_rounded,
-                    color: const Color(0xFF00C853),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllAvailablePathologyScreen(userData: widget.userData))),
-                  ),
-
-                  _newCategoryCard(
-                    title: "Individual Specialist Doctors",
-                    subtitle: "Connect with top experts in 50+ specialties",
-                    icon: Icons.personal_injury_rounded,
-                    color: const Color(0xFF1565C0),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllDoctorsScreen(userData: widget.userData))),
-                  ),
-                  
-                  _newCategoryCard(
-                    title: "24/7 Support",
-                    subtitle: "Immediate medical assistance & help",
-                    icon: Icons.support_agent_rounded,
-                    color: const Color(0xFFFFAB00),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactScreen())),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 40),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 30),
+
+          // 3. Category List Heading (Fixed)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 25),
+            child: Row(
+              children: [
+                Text(
+                  "Medical Ecosystem",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF263238),
+                  ),
+                ),
+                Spacer(),
+                Text(
+                  "View All",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFE53935),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 15),
+
+          // 4. One-by-One Categories (Scrollable)
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+              children: [
+                _newCategoryCard(
+                  title: "Medical Reports",
+                  subtitle: "View & manage your health test results",
+                  icon: Icons.assignment_rounded,
+                  color: const Color(0xFF7E57C2),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MedicalHistoryScreen(
+                            initialTabIndex: 0,
+                          ),
+                        ),
+                      ),
+                ),
+                _newCategoryCard(
+                  title: "Medical Prescriptions",
+                  subtitle: "Access all your digital prescriptions",
+                  icon: Icons.medication_rounded,
+                  color: const Color(0xFF26A69A),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MedicalHistoryScreen(
+                            initialTabIndex: 1,
+                          ),
+                        ),
+                      ),
+                ),
+                _newCategoryCard(
+                  title: "OPD Doctors & Clinics",
+                  subtitle: "Book clinical appointments instantly",
+                  icon: Icons.local_hospital_rounded,
+                  color: const Color(0xFFE53935),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => AllAvailableOPDScreen(
+                                userData: widget.userData,
+                              ),
+                        ),
+                      ),
+                ),
+                _newCategoryCard(
+                  title: "Pathology Tests & Labs",
+                  subtitle: "Certified diagnostic testing at home",
+                  icon: Icons.biotech_rounded,
+                  color: const Color(0xFF00C853),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => AllAvailablePathologyScreen(
+                                userData: widget.userData,
+                              ),
+                        ),
+                      ),
+                ),
+                _newCategoryCard(
+                  title: "Individual Specialist Doctors",
+                  subtitle: "Connect with top experts in 50+ specialties",
+                  icon: Icons.personal_injury_rounded,
+                  color: const Color(0xFF1565C0),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => AllDoctorsScreen(userData: widget.userData),
+                        ),
+                      ),
+                ),
+                _newCategoryCard(
+                  title: "24/7 Support",
+                  subtitle: "Immediate medical assistance & help",
+                  icon: Icons.support_agent_rounded,
+                  color: const Color(0xFFFFAB00),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ContactScreen(),
+                        ),
+                      ),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -489,24 +697,41 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF263238)),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF263238),
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.blueGrey[300], fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blueGrey[300],
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, color: Colors.blueGrey[100], size: 16),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.blueGrey[100],
+              size: 16,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPremiumDrawer(BuildContext context, String name, String memberId, String profileImg) {
+  Widget _buildPremiumDrawer(
+    BuildContext context,
+    String name,
+    String memberId,
+    String profileImg,
+  ) {
     return Drawer(
       backgroundColor: Colors.white,
       child: Column(
@@ -531,12 +756,25 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
                       child: CircleAvatar(
                         radius: 30,
                         backgroundColor: Colors.white,
-                        backgroundImage: profileImg.isNotEmpty ? NetworkImage(_getImageUrl(profileImg)) : null,
-                        child: profileImg.isEmpty ? const Icon(Icons.person, size: 30, color: Color(0xFF1565C0)) : null,
+                        backgroundImage:
+                            profileImg.isNotEmpty
+                                ? NetworkImage(_getImageUrl(profileImg))
+                                : null,
+                        child:
+                            profileImg.isEmpty
+                                ? const Icon(
+                                  Icons.person,
+                                  size: 30,
+                                  color: Color(0xFF1565C0),
+                                )
+                                : null,
                       ),
                     ),
                     Row(
@@ -544,7 +782,11 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                         _logoutIconButton(),
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 26),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white70,
+                            size: 26,
+                          ),
                         ),
                       ],
                     ),
@@ -553,16 +795,31 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 const SizedBox(height: 15),
                 Text(
                   name,
-                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.white.withAlpha(51), borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(51),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Text(
                     memberId,
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -574,67 +831,142 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 10),
               children: [
-                _drawerItem(Icons.home_rounded, "Home", () => Navigator.pop(context), isSelected: true),
+                _drawerItem(
+                  Icons.home_rounded,
+                  "Home",
+                  () => Navigator.pop(context),
+                  isSelected: true,
+                ),
                 _drawerItem(Icons.medication_rounded, "Prescriptions", () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MedicalHistoryScreen(initialTabIndex: 1)));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              const MedicalHistoryScreen(initialTabIndex: 1),
+                    ),
+                  );
                 }),
                 _drawerItem(Icons.assignment_rounded, "Medical Reports", () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MedicalHistoryScreen(initialTabIndex: 0)));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              const MedicalHistoryScreen(initialTabIndex: 0),
+                    ),
+                  );
                 }),
                 _drawerItem(Icons.note_add_rounded, "Add Medical Records", () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddMedicalRecordScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AddMedicalRecordScreen(),
+                    ),
+                  );
                 }),
-                
+
                 const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("Health management"),
                 _drawerItem(Icons.analytics_rounded, "Health Parameters", () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const HealthParametersScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HealthParametersScreen(),
+                    ),
+                  );
                 }),
-                _drawerItem(Icons.add_moderator_rounded, "Add Health Parameters", () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddVitalScreen()));
-                }),
+                _drawerItem(
+                  Icons.add_moderator_rounded,
+                  "Add Health Parameters",
+                  () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddVitalScreen(),
+                      ),
+                    );
+                  },
+                ),
 
                 const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("appointments & notifications"),
                 _drawerItem(Icons.calendar_month_rounded, "Appointments", () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => AllAppointmentsScreen(userData: widget.userData)));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              AllAppointmentsScreen(userData: widget.userData),
+                    ),
+                  );
                 }),
-                _drawerItem(Icons.notifications_active_rounded, "Notifications", () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationScreen()));
-                }),
+                _drawerItem(
+                  Icons.notifications_active_rounded,
+                  "Notifications",
+                  () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NotificationScreen(),
+                      ),
+                    );
+                  },
+                ),
 
                 const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("Account & support"),
                 _drawerItem(Icons.person_rounded, "My Profile", () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(userData: widget.userData))).then((_) => loadUserData());
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              ProfileEditScreen(userData: widget.userData),
+                    ),
+                  ).then((_) => loadUserData());
                 }),
                 _drawerItem(Icons.support_agent_rounded, "24/7 Support", () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ContactScreen(),
+                    ),
+                  );
                 }),
                 _drawerItem(Icons.policy_rounded, "Privacy & Policy", () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PrivacyPolicyScreen(),
+                    ),
+                  );
                 }),
 
                 const SizedBox(height: 30),
               ],
             ),
           ),
-          
+
           Container(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
               "Version 2.1.2",
-              style: TextStyle(color: Colors.blueGrey[200], fontSize: 12, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: Colors.blueGrey[200],
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -647,14 +979,26 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
       child: Text(
         title.toUpperCase(),
-        style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2),
+        style: TextStyle(
+          color: Colors.blueGrey[300],
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }
 
-  Widget _drawerItem(IconData icon, String title, VoidCallback onTap, {Color? color, bool isSelected = false}) {
+  Widget _drawerItem(
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    Color? color,
+    bool isSelected = false,
+  }) {
     final Color brandColor = const Color(0xFF1565C0);
-    final Color iconColor = color ?? (isSelected ? brandColor : const Color(0xFF546E7A));
+    final Color iconColor =
+        color ?? (isSelected ? brandColor : const Color(0xFF546E7A));
     final Color textColor = isSelected ? brandColor : const Color(0xFF263238);
 
     return Container(
@@ -663,7 +1007,10 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isSelected ? brandColor.withAlpha(20) : Colors.blueGrey[50]?.withAlpha(128),
+            color:
+                isSelected
+                    ? brandColor.withAlpha(20)
+                    : Colors.blueGrey[50]?.withAlpha(128),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: iconColor, size: 20),
@@ -689,25 +1036,28 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   String _getImageUrl(String? path) {
     if (path == null || path.isEmpty) return "";
     if (path.startsWith('http')) return path;
-    
+
     // Base URL must always point to the domain root
     const String domain = "https://doctorwala.info/";
-    
+
     // Normalize path: remove leading slash
     String cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    
+
     // If it doesn't have storage/ prefix and it's not a full URL, add it
     if (!cleanPath.startsWith('storage/')) {
       cleanPath = 'storage/' + cleanPath;
     }
-    
+
     return domain + cleanPath;
   }
 
   Widget _logoutIconButton() {
     return Container(
       margin: const EdgeInsets.only(right: 5),
-      decoration: BoxDecoration(color: Colors.white.withAlpha(40), shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(40),
+        shape: BoxShape.circle,
+      ),
       child: IconButton(
         onPressed: () => logout(),
         icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
