@@ -392,9 +392,25 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               child: Column(
                 children: [
                   _newCategoryCard(
+                    title: "Medical Reports",
+                    subtitle: "View & manage your health test results",
+                    icon: Icons.assignment_rounded,
+                    color: const Color(0xFF7E57C2),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MedicalHistoryScreen(initialTabIndex: 0))),
+                  ),
+
+                  _newCategoryCard(
+                    title: "Medical Prescriptions",
+                    subtitle: "Access all your digital prescriptions",
+                    icon: Icons.medication_rounded,
+                    color: const Color(0xFF26A69A),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MedicalHistoryScreen(initialTabIndex: 1))),
+                  ),
+
+                  _newCategoryCard(
                     title: "OPD Doctors & Clinics",
                     subtitle: "Book clinical appointments instantly",
-                    icon: Icons.assignment_rounded,
+                    icon: Icons.local_hospital_rounded,
                     color: const Color(0xFFE53935),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllAvailableOPDScreen(userData: widget.userData))),
                   ),
