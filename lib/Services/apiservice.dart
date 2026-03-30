@@ -513,4 +513,18 @@ class ApiService {
       return {'status': false, 'message': 'Network error occurred'};
     }
   }
+
+  // --- MEDICAL CARD GENERATION ---
+  Future<Map<String, dynamic>> generateMedicalCard() async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post('/api/generate-medical-card');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': 'Network error occurred'};
+    }
+  }
 }
