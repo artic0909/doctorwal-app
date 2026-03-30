@@ -32,6 +32,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   String memberId = '';
   String medicalCardNo = '';
   String profileImg = '';
+  bool isGeneratingCard = false;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -146,6 +147,51 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     }
   }
 
+  Future<void> _generateMedicalCard() async {
+    setState(() => isGeneratingCard = true);
+    try {
+      final apiService = ApiService();
+      final result = await apiService.generateMedicalCard();
+
+      if (result['status'] == true && result['data'] != null) {
+        final data = result['data'];
+        final String newMemberId = data['member_id']?.toString() ?? '';
+        final String newCardNo = data['medical_card_no']?.toString() ?? '';
+
+        if (newMemberId.isNotEmpty && newCardNo.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('member_id', newMemberId);
+          await prefs.setString('medical_card_no', newCardNo);
+
+          setState(() {
+            memberId = newMemberId;
+            medicalCardNo = newCardNo;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Medical card generated successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to generate card'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => isGeneratingCard = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Use local state if it's available, otherwise fallback to widget data
@@ -177,9 +223,17 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       dispCardNo =
           (widget.userData['medical_card_no'] ??
                   widget.userData['medicalcardno'] ??
-                  'DW26 0000 00')
+                  '')
               .toString();
     }
+
+    bool hasCard = dispMemberId.isNotEmpty &&
+        dispMemberId != 'DW-0000-000' &&
+        dispMemberId != 'DW-2026-CARD' &&
+        dispCardNo.isNotEmpty &&
+        dispCardNo != 'DW00 0000 00' &&
+        dispCardNo != 'DW01 0001 001' &&
+        dispCardNo != 'DW26 0000 00';
 
     final String currentProfileImg =
         profileImg.isNotEmpty
@@ -418,111 +472,161 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 ),
               ],
             ),
-            child: Stack(
-              children: [
-                // Subtle Pattern
-                Positioned(
-                  right: -20,
-                  top: -20,
-                  child: Icon(
-                    Icons.health_and_safety_rounded,
-                    size: 150,
-                    color: Colors.white.withAlpha(25),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(25),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Image.asset(
-                            'assets/images/logo.png',
-                            height: 30,
+            child:
+                !hasCard
+                    ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.credit_card_off_rounded,
+                          color: Colors.white54,
+                          size: 50,
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "Medical Card Not Found",
+                          style: TextStyle(
                             color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            "DOCTORWALA MEDICAL CARD",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
+                        ),
+                        const SizedBox(height: 15),
+                        ElevatedButton.icon(
+                          onPressed: isGeneratingCard ? null : _generateMedicalCard,
+                          icon:
+                              isGeneratingCard
+                                  ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFF1565C0),
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Icon(Icons.add_card_rounded),
+                          label: Text(
+                            isGeneratingCard ? "Generating..." : "Create Now",
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF1565C0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 12,
                             ),
                           ),
-                          const Spacer(),
-                          const Icon(
-                            Icons.nfc_rounded,
-                            color: Colors.white70,
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      Text(
-                        dispCardNo,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: 4,
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
+                      ],
+                    )
+                    : Stack(
+                      children: [
+                        // Subtle Pattern
+                        Positioned(
+                          right: -20,
+                          top: -20,
+                          child: Icon(
+                            Icons.health_and_safety_rounded,
+                            size: 150,
+                            color: Colors.white.withAlpha(25),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(25),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                "CARD HOLDER",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Row(
+                                children: [
+                                  Image.asset(
+                                    'assets/images/logo.png',
+                                    height: 30,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    "DOCTORWALA MEDICAL CARD",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  const Icon(
+                                    Icons.nfc_rounded,
+                                    color: Colors.white70,
+                                    size: 20,
+                                  ),
+                                ],
                               ),
+                              const Spacer(),
                               Text(
-                                currentName.toUpperCase(),
+                                dispCardNo,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: 4,
                                 ),
+                              ),
+                              const SizedBox(height: 20),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "CARD HOLDER",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        currentName.toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "MEMBER ID",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        dispMemberId,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "MEMBER ID",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                dispMemberId,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+                        ),
+                      ],
+                    ),
           ),
 
           const SizedBox(height: 30),
