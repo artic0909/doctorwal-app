@@ -558,177 +558,12 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           ],
 
           // 3. Category List Heading (Fixed)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25),
-            child: Row(
-              children: [
-                Text(
-                  "Medical Ecosystem",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF263238),
-                  ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {
-                    if (_scrollController.hasClients) {
-                      _scrollController.animateTo(
-                        _scrollController.position.maxScrollExtent,
-                        duration: const Duration(milliseconds: 600),
-                        curve: Curves.easeOutQuart,
-                      );
-                    }
-                  },
-                  child: Text(
-                    "View All",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFE53935),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 15),
-
           // 4. One-by-One Categories (Scrollable)
           Expanded(
             child: ListView(
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
               children: [
-                Stack(
-                  children: [
-                    NotificationListener<ScrollNotification>(
-                      onNotification: (notification) {
-                        if (notification is ScrollUpdateNotification) {
-                          if (notification.metrics.pixels > 30 && !_hasScrolled) {
-                            setState(() => _hasScrolled = true);
-                          }
-                        }
-                        return true;
-                      },
-                      child: SingleChildScrollView(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        child: Row(
-                          children: [
-                            _eyeCatchyBox(
-                        title: "Medical Reports",
-                        subtitle: "Test results",
-                        icon: Icons.assignment_rounded,
-                        gradient: [const Color(0xFF7E57C2), const Color(0xFF512DA8)],
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => const MedicalHistoryScreen(
-                                      initialTabIndex: 0,
-                                    ),
-                              ),
-                            ),
-                      ),
-                      const SizedBox(width: 8),
-                      _eyeCatchyBox(
-                        title: "Prescriptions",
-                        subtitle: "Digital RX",
-                        icon: Icons.medication_rounded,
-                        gradient: [const Color(0xFF26A69A), const Color(0xFF00796B)],
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => const MedicalHistoryScreen(
-                                      initialTabIndex: 1,
-                                    ),
-                              ),
-                            ),
-                      ),
-                      const SizedBox(width: 8),
-                      _eyeCatchyBox(
-                        title: "Appointments",
-                        subtitle: "Track visits",
-                        icon: Icons.calendar_today_rounded,
-                        gradient: [const Color(0xFFF06292), const Color(0xFFC2185B)],
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AllAppointmentsScreen(userData: widget.userData),
-                              ),
-                            ),
-                      ),
-                      const SizedBox(width: 8),
-                      _eyeCatchyBox(
-                        title: "Health Parameters",
-                        subtitle: "Monitor metrics",
-                        icon: Icons.monitor_heart_rounded,
-                        gradient: [const Color(0xFF5C6BC0), const Color(0xFF3949AB)],
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const HealthParametersScreen(),
-                              ),
-                            ),
-                      ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    // Animated Scroll Hint
-                    if (!_hasScrolled)
-                      Positioned(
-                        right: 10,
-                        top: 0,
-                        bottom: 0,
-                        child: IgnorePointer(
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            duration: const Duration(milliseconds: 1500),
-                            builder: (context, value, child) {
-                              return Opacity(
-                                opacity: (1.0 - value).clamp(0.0, 1.0),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                      colors: [
-                                        Colors.white.withAlpha(0),
-                                        Colors.white.withAlpha(150),
-                                      ],
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Transform.translate(
-                                      offset: Offset(-20 * (1 - value % 1), 0),
-                                      child: const Icon(
-                                        Icons.swipe_left_rounded,
-                                        color: Color(0xFF1565C0),
-                                        size: 30,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 15),
                 _newCategoryCard(
                   title: "OPD Doctors & Clinics",
                   subtitle: "Book clinical appointments instantly",
@@ -787,6 +622,154 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                           builder: (context) => const ContactScreen(),
                         ),
                       ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Stack(
+                  children: [
+                    NotificationListener<ScrollNotification>(
+                      onNotification: (notification) {
+                        if (notification is ScrollUpdateNotification) {
+                          if (notification.metrics.pixels > 30 && !_hasScrolled) {
+                            setState(() => _hasScrolled = true);
+                          }
+                        }
+                        return true;
+                      },
+                      child: SingleChildScrollView(
+                        controller: _horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: Row(
+                          children: [
+                            _eyeCatchyBox(
+                              title: "Medical Reports",
+                              subtitle: "Test results",
+                              icon: Icons.assignment_rounded,
+                              gradient: [
+                                const Color(0xFF7E57C2),
+                                const Color(0xFF512DA8),
+                              ],
+                              onTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => const MedicalHistoryScreen(
+                                            initialTabIndex: 0,
+                                          ),
+                                    ),
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            _eyeCatchyBox(
+                              title: "Prescriptions",
+                              subtitle: "Digital RX",
+                              icon: Icons.medication_rounded,
+                              gradient: [
+                                const Color(0xFF26A69A),
+                                const Color(0xFF00796B),
+                              ],
+                              onTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => const MedicalHistoryScreen(
+                                            initialTabIndex: 1,
+                                          ),
+                                    ),
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            _eyeCatchyBox(
+                              title: "Appointments",
+                              subtitle: "Track visits",
+                              icon: Icons.calendar_today_rounded,
+                              gradient: [
+                                const Color(0xFFF06292),
+                                const Color(0xFFC2185B),
+                              ],
+                              onTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => AllAppointmentsScreen(
+                                            userData: widget.userData,
+                                          ),
+                                    ),
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            _eyeCatchyBox(
+                              title: "Health Parameters",
+                              subtitle: "Monitor metrics",
+                              icon: Icons.monitor_heart_rounded,
+                              gradient: [
+                                const Color(0xFF5C6BC0),
+                                const Color(0xFF3949AB),
+                              ],
+                              onTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) =>
+                                              const HealthParametersScreen(),
+                                    ),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Animated Scroll Hint
+                    if (!_hasScrolled)
+                      Positioned(
+                        right: 10,
+                        top: 0,
+                        bottom: 0,
+                        child: IgnorePointer(
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: const Duration(milliseconds: 1500),
+                            builder: (context, value, child) {
+                              return Opacity(
+                                opacity: (1.0 - value).clamp(0.0, 1.0),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                      colors: [
+                                        Colors.white.withAlpha(0),
+                                        Colors.white.withAlpha(150),
+                                      ],
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Transform.translate(
+                                      offset: Offset(-20 * (1 - value % 1), 0),
+                                      child: const Icon(
+                                        Icons.swipe_left_rounded,
+                                        color: Color(0xFF1565C0),
+                                        size: 30,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 30),
               ],
