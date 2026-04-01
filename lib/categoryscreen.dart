@@ -484,184 +484,78 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             ),
           ),
 
-          // 2. Dynamic Virtual Medical Card
-          Container(
-            width: double.infinity,
-            height: 200,
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
-              ),
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF1565C0).withAlpha(102),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+          // 2. Dynamic Virtual Medical Card (Creation Card)
+          if (!hasCard) ...[
+            Container(
+              width: double.infinity,
+              height: 200,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
                 ),
-              ],
-            ),
-            child:
-                !hasCard
-                    ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.credit_card_off_rounded,
-                          color: Colors.white54,
-                          size: 50,
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          "Medical Card Not Found",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-                        ElevatedButton.icon(
-                          onPressed: isGeneratingCard ? null : _generateMedicalCard,
-                          icon:
-                              isGeneratingCard
-                                  ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Color(0xFF1565C0),
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                  : const Icon(Icons.add_card_rounded),
-                          label: Text(
-                            isGeneratingCard ? "Generating..." : "Create Now",
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF1565C0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 25,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                    : Stack(
-                      children: [
-                        // Subtle Pattern
-                        Positioned(
-                          right: -20,
-                          top: -20,
-                          child: Icon(
-                            Icons.health_and_safety_rounded,
-                            size: 150,
-                            color: Colors.white.withAlpha(25),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(25),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Image.asset(
-                                    'assets/images/logo.png',
-                                    height: 30,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Text(
-                                    "DOCTORWALA MEDICAL CARD",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  const Icon(
-                                    Icons.nfc_rounded,
-                                    color: Colors.white70,
-                                    size: 20,
-                                  ),
-                                ],
-                              ),
-                              const Spacer(),
-                              Text(
-                                dispCardNo,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w400,
-                                  letterSpacing: 4,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        "CARD HOLDER",
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        currentName.toUpperCase(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        "MEMBER ID",
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        dispMemberId,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1565C0).withAlpha(102),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.credit_card_off_rounded,
+                    color: Colors.white54,
+                    size: 50,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "Medical Card Not Found",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-          ),
-
-          const SizedBox(height: 30),
+                  ),
+                  const SizedBox(height: 15),
+                  ElevatedButton.icon(
+                    onPressed: isGeneratingCard ? null : _generateMedicalCard,
+                    icon:
+                        isGeneratingCard
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF1565C0),
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : const Icon(Icons.add_card_rounded),
+                    label: Text(
+                      isGeneratingCard ? "Generating..." : "Create Now",
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF1565C0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 25,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+          ],
 
           // 3. Category List Heading (Fixed)
           Padding(

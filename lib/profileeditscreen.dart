@@ -39,7 +39,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   String? _networkImageUrl;
   bool _isLoading = false;
   bool _isFetching = true;
-  bool isGeneratingCard = false;
   String _memberId = '';
   String _medicalCardNo = '';
 
@@ -144,50 +143,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     });
   }
 
-  Future<void> _generateMedicalCard() async {
-    setState(() => isGeneratingCard = true);
-    try {
-      final response = await _apiService.generateMedicalCard();
-      if (response['status'] == true) {
-        final prefs = await SharedPreferences.getInstance();
-        if (response['member_id'] != null)
-          await prefs.setString('member_id', response['member_id'].toString());
-        if (response['medical_card_no'] != null)
-          await prefs.setString(
-            'medical_card_no',
-            response['medical_card_no'].toString(),
-          );
-
-        await _loadMedicalCardData();
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Medical Card Generated Successfully!"),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response['message'] ?? "Generation Failed"),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      setState(() => isGeneratingCard = false);
-    }
-  }
 
   Future<void> _pickImage() async {
     showModalBottomSheet(
@@ -412,7 +367,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           const SizedBox(height: 20),
 
                           _buildProfileMedicalCard(),
-                          const SizedBox(height: 30),
 
                           _buildSectionTitle(
                             "Personal Information",
@@ -875,232 +829,189 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         dispCardNo != 'DW01 0001 001' &&
         dispCardNo != 'DW26 0000 00';
 
-    return Container(
-      width: double.infinity,
-      height: 200,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1565C0).withAlpha(102),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+    if (!hasCard) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          height: 200,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1565C0).withAlpha(102),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child:
-          !hasCard
-              ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.credit_card_off_rounded,
-                    color: Colors.white54,
-                    size: 50,
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    "Medical Card Not Found",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  ElevatedButton.icon(
-                    onPressed: isGeneratingCard ? null : _generateMedicalCard,
-                    icon:
-                        isGeneratingCard
-                            ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Color(0xFF1565C0),
-                                strokeWidth: 2,
-                              ),
-                            )
-                            : const Icon(Icons.add_card_rounded),
-                    label: Text(
-                      isGeneratingCard ? "Generating..." : "Create Now",
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF1565C0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 25,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-              : Stack(
-                children: [
-                  Positioned(
-                    right: -20,
-                    top: -20,
-                    child: Icon(
-                      Icons.health_and_safety_rounded,
-                      size: 150,
-                      color: Colors.white.withAlpha(25),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(25),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
+            children: [
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Icon(
+                  Icons.health_and_safety_rounded,
+                  size: 150,
+                  color: Colors.white.withAlpha(25),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(25),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
+                        const Text(
+                          "MEDICAL CARD",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const Spacer(),
+                        // ATM Card Chip Design
+                        Container(
+                          width: 45,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.amber[400]!,
+                                Colors.amber[200]!,
+                                Colors.amber[600]!,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: Colors.amber[800]!.withOpacity(0.5),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                top: 8,
+                                bottom: 8,
+                                left: 0,
+                                right: 0,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      top: BorderSide(
+                                        color: Colors.black12,
+                                        width: 0.5,
+                                      ),
+                                      bottom: BorderSide(
+                                        color: Colors.black12,
+                                        width: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                bottom: 0,
+                                left: 12,
+                                right: 12,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      left: BorderSide(
+                                        color: Colors.black12,
+                                        width: 0.5,
+                                      ),
+                                      right: BorderSide(
+                                        color: Colors.black12,
+                                        width: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      dispCardNo,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 4,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              "MEDICAL CARD",
+                              "CARD HOLDER",
                               style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.5,
+                                color: Colors.white70,
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const Spacer(),
-                            // ATM Card Chip Design
-                            Container(
-                              width: 45,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Colors.amber[400]!,
-                                    Colors.amber[200]!,
-                                    Colors.amber[600]!,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: Colors.amber[800]!.withOpacity(0.5),
-                                  width: 0.5,
-                                ),
-                              ),
-                              child: Stack(
-                                children: [
-                                  Positioned(
-                                    top: 8,
-                                    bottom: 8,
-                                    left: 0,
-                                    right: 0,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          top: BorderSide(
-                                            color: Colors.black12,
-                                            width: 0.5,
-                                          ),
-                                          bottom: BorderSide(
-                                            color: Colors.black12,
-                                            width: 0.5,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 0,
-                                    bottom: 0,
-                                    left: 12,
-                                    right: 12,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          left: BorderSide(
-                                            color: Colors.black12,
-                                            width: 0.5,
-                                          ),
-                                          right: BorderSide(
-                                            color: Colors.black12,
-                                            width: 0.5,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                            Text(
+                              currentName.toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
-                        const Spacer(),
-                        Text(
-                          dispCardNo,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 4,
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "CARD HOLDER",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  currentName.toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                            const Text(
+                              "MEMBER ID",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "MEMBER ID",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  dispMemberId,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              dispMemberId,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 30),
+      ],
     );
   }
 }
