@@ -16,6 +16,7 @@ import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/privacypolicyscreen.dart';
 import 'package:http/http.dart' as http;
+import 'package:share_plus/share_plus.dart';
 
 class CategoryHomeScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -995,7 +996,12 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                   ),
                   const SizedBox(height: 15),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Share.share(
+                        'Download the Doctorwala app for your health needs: https://play.google.com/store/apps/details?id=com.doctorwala.dochealth&hl=en_IN',
+                        subject: 'Join Doctorwala',
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: const Color(0xFFFF5722),
