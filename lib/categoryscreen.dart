@@ -771,7 +771,9 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 10),
+                _buildWellnessHub(),
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -919,6 +921,189 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildWellnessHub() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5),
+          child: Text(
+            "Wellness Hub",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF263238),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        const SizedBox(height: 15),
+        
+        // Promo Banner
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFF5722), Color(0xFFFF9800)],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF5722).withAlpha(76),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -10,
+                bottom: -10,
+                child: Icon(
+                  Icons.card_giftcard_rounded,
+                  size: 80,
+                  color: Colors.white.withAlpha(25),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Invite & Earn Rewards",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    "Share Doctorwala with your friends and explore premium benefits together.",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFFFF5722),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    ),
+                    child: const Text(
+                      "Invite Now",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 25),
+        
+        // Health Tips Horizontal
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5),
+          child: Text(
+            "Quick Health Insights",
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF455A64),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              _buildTipCard(
+                "STAY HYDRATED",
+                "Drink 8 glasses of water daily for better energy.",
+                Icons.water_drop_rounded,
+                const Color(0xFF03A9F4),
+              ),
+              const SizedBox(width: 12),
+              _buildTipCard(
+                "DAILY WALK",
+                "A 30-min walk can boost your heart health significantly.",
+                Icons.directions_walk_rounded,
+                const Color(0xFF4CAF50),
+              ),
+              const SizedBox(width: 12),
+              _buildTipCard(
+                "BETTER SLEEP",
+                "Aim for 7-9 hours of restful sleep every night.",
+                Icons.bedtime_rounded,
+                const Color(0xFF673AB7),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTipCard(String title, String desc, IconData icon, Color color) {
+    return Container(
+      width: 220,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withAlpha(30), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withAlpha(40),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            desc,
+            style: const TextStyle(
+              color: Color(0xFF37474F),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }
