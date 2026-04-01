@@ -19,7 +19,7 @@ class ProfileEditScreen extends StatefulWidget {
 class _ProfileEditScreenState extends State<ProfileEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final ApiService _apiService = ApiService();
-  
+
   // Controllers
   late TextEditingController _nameController;
   late TextEditingController _emailController;
@@ -44,7 +44,16 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   String _medicalCardNo = '';
 
   final List<String> _genders = ['Male', 'Female', 'Other'];
-  final List<String> _bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+  final List<String> _bloodGroups = [
+    'A+',
+    'A-',
+    'B+',
+    'B-',
+    'O+',
+    'O-',
+    'AB+',
+    'AB-',
+  ];
 
   @override
   void initState() {
@@ -82,26 +91,32 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           _addressController.text = user['address']?.toString() ?? '';
           _heightController.text = user['height']?.toString() ?? '';
           _weightController.text = user['weight']?.toString() ?? '';
-          _emergencyContactController.text = user['emergency_contact']?.toString() ?? '';
+          _emergencyContactController.text =
+              user['emergency_contact']?.toString() ?? '';
           _allergiesController.text = user['allergies']?.toString() ?? '';
-          _chronicConditionsController.text = user['chronic_conditions']?.toString() ?? '';
+          _chronicConditionsController.text =
+              user['chronic_conditions']?.toString() ?? '';
           _selectedGender = user['gender'];
           _selectedBloodGroup = user['blood_group'];
           _networkImageUrl = user['image'];
-          
+
           // Fallback if dropdown values don't match exactly
-          if (_selectedGender != null && !_genders.contains(_selectedGender)) _selectedGender = null;
-          if (_selectedBloodGroup != null && !_bloodGroups.contains(_selectedBloodGroup)) _selectedBloodGroup = null;
+          if (_selectedGender != null && !_genders.contains(_selectedGender))
+            _selectedGender = null;
+          if (_selectedBloodGroup != null &&
+              !_bloodGroups.contains(_selectedBloodGroup))
+            _selectedBloodGroup = null;
         });
-        
+
         // Update local prefs with latest core data
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('name', _nameController.text);
         await prefs.setString('email', _emailController.text);
         await prefs.setString('mobile', _mobileController.text);
         await prefs.setString('city', _cityController.text);
-        if (_networkImageUrl != null) await prefs.setString('image', _networkImageUrl!);
-        
+        if (_networkImageUrl != null)
+          await prefs.setString('image', _networkImageUrl!);
+
         await _loadMedicalCardData();
       }
     } catch (e) {
@@ -114,8 +129,18 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   Future<void> _loadMedicalCardData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _memberId = prefs.getString('member_id') ?? prefs.getString('memberid') ?? widget.userData['member_id']?.toString() ?? widget.userData['memberid']?.toString() ?? '';
-      _medicalCardNo = prefs.getString('medical_card_no') ?? prefs.getString('medicalcardno') ?? widget.userData['medical_card_no']?.toString() ?? widget.userData['medicalcardno']?.toString() ?? '';
+      _memberId =
+          prefs.getString('member_id') ??
+          prefs.getString('memberid') ??
+          widget.userData['member_id']?.toString() ??
+          widget.userData['memberid']?.toString() ??
+          '';
+      _medicalCardNo =
+          prefs.getString('medical_card_no') ??
+          prefs.getString('medicalcardno') ??
+          widget.userData['medical_card_no']?.toString() ??
+          widget.userData['medicalcardno']?.toString() ??
+          '';
     });
   }
 
@@ -125,20 +150,31 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       final response = await _apiService.generateMedicalCard();
       if (response['status'] == true) {
         final prefs = await SharedPreferences.getInstance();
-        if (response['member_id'] != null) await prefs.setString('member_id', response['member_id'].toString());
-        if (response['medical_card_no'] != null) await prefs.setString('medical_card_no', response['medical_card_no'].toString());
-        
+        if (response['member_id'] != null)
+          await prefs.setString('member_id', response['member_id'].toString());
+        if (response['medical_card_no'] != null)
+          await prefs.setString(
+            'medical_card_no',
+            response['medical_card_no'].toString(),
+          );
+
         await _loadMedicalCardData();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Medical Card Generated Successfully!"), backgroundColor: Colors.green),
+            const SnackBar(
+              content: Text("Medical Card Generated Successfully!"),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response['message'] ?? "Generation Failed"), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text(response['message'] ?? "Generation Failed"),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }
@@ -159,47 +195,55 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Select Image Source",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF263238)),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _buildSourceOption(
-                  icon: Icons.camera_alt_rounded,
-                  label: "Camera",
-                  onTap: () {
-                    Navigator.pop(context);
-                    _getImage(ImageSource.camera);
-                  },
+                const Text(
+                  "Select Image Source",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF263238),
+                  ),
                 ),
-                _buildSourceOption(
-                  icon: Icons.photo_library_rounded,
-                  label: "Gallery",
-                  onTap: () {
-                    Navigator.pop(context);
-                    _getImage(ImageSource.gallery);
-                  },
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildSourceOption(
+                      icon: Icons.camera_alt_rounded,
+                      label: "Camera",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _getImage(ImageSource.camera);
+                      },
+                    ),
+                    _buildSourceOption(
+                      icon: Icons.photo_library_rounded,
+                      label: "Gallery",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _getImage(ImageSource.gallery);
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
   Future<void> _getImage(ImageSource source) async {
     final ImagePicker picker = ImagePicker();
     try {
-      final XFile? image = await picker.pickImage(source: source, imageQuality: 70);
+      final XFile? image = await picker.pickImage(
+        source: source,
+        imageQuality: 70,
+      );
       if (image != null) {
         setState(() {
           _imageFile = File(image.path);
@@ -210,7 +254,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     }
   }
 
-  Widget _buildSourceOption({required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _buildSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -224,7 +272,13 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             child: Icon(icon, color: const Color(0xFF1565C0), size: 30),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF546E7A))),
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF546E7A),
+            ),
+          ),
         ],
       ),
     );
@@ -291,7 +345,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response['message'] ?? 'Profile updated successfully!'),
+              content: Text(
+                response['message'] ?? 'Profile updated successfully!',
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -339,144 +395,164 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
       appBar: _buildAppBar(),
-      body: _isFetching 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
-        : Stack(
-            children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      _buildProfileImage(),
-                      const SizedBox(height: 20),
-                      
-                      _buildProfileMedicalCard(),
-                      const SizedBox(height: 30),
-                      
-                      _buildSectionTitle("Personal Information", Icons.person_rounded),
-                      _buildCard([
-                        _buildTextField(
-                          controller: _nameController,
-                          label: "Full Name",
-                          icon: Icons.badge_outlined,
-                          validator: (v) => v!.isEmpty ? "Name is required" : null,
-                        ),
-                        _buildTextField(
-                          controller: _emailController,
-                          label: "Email Address",
-                          icon: Icons.email_outlined,
-                          readOnly: true,
-                        ),
-                        _buildTextField(
-                          controller: _mobileController,
-                          label: "Mobile Number",
-                          icon: Icons.phone_android_rounded,
-                          keyboardType: TextInputType.phone,
-                          validator: (v) => v!.isEmpty ? "Mobile is required" : null,
-                        ),
-                        _buildDropdownField(
-                          label: "Gender",
-                          icon: Icons.wc_rounded,
-                          value: _selectedGender,
-                          items: _genders,
-                          onChanged: (v) => setState(() => _selectedGender = v),
-                        ),
-                        _buildTextField(
-                          controller: _dobController,
-                          label: "Date of Birth",
-                          icon: Icons.calendar_today_rounded,
-                          readOnly: true,
-                          onTap: _selectDate,
-                        ),
-                        _buildTextField(
-                          controller: _cityController,
-                          label: "City",
-                          icon: Icons.location_city_rounded,
-                        ),
-                      ]),
+      body:
+          _isFetching
+              ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF1565C0)),
+              )
+              : Stack(
+                children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          _buildProfileImage(),
+                          const SizedBox(height: 20),
 
-                      const SizedBox(height: 25),
-                      _buildSectionTitle("Contact Details", Icons.contact_emergency_rounded),
-                      _buildCard([
-                        _buildTextField(
-                          controller: _addressController,
-                          label: "Full Address",
-                          icon: Icons.home_work_outlined,
-                          maxLines: 2,
-                        ),
-                        _buildTextField(
-                          controller: _emergencyContactController,
-                          label: "Emergency Contact",
-                          icon: Icons.contact_phone_outlined,
-                          keyboardType: TextInputType.phone,
-                        ),
-                      ]),
+                          _buildProfileMedicalCard(),
+                          const SizedBox(height: 30),
 
-                      const SizedBox(height: 25),
-                      _buildSectionTitle("Medical Details", Icons.health_and_safety_rounded),
-                      _buildCard([
-                        _buildDropdownField(
-                          label: "Blood Group",
-                          icon: Icons.bloodtype_rounded,
-                          value: _selectedBloodGroup,
-                          items: _bloodGroups,
-                          onChanged: (v) => setState(() => _selectedBloodGroup = v),
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildTextField(
-                                controller: _heightController,
-                                label: "Height (cm)",
-                                icon: Icons.height_rounded,
-                                keyboardType: TextInputType.number,
-                              ),
+                          _buildSectionTitle(
+                            "Personal Information",
+                            Icons.person_rounded,
+                          ),
+                          _buildCard([
+                            _buildTextField(
+                              controller: _nameController,
+                              label: "Full Name",
+                              icon: Icons.badge_outlined,
+                              validator:
+                                  (v) => v!.isEmpty ? "Name is required" : null,
                             ),
-                            const SizedBox(width: 15),
-                            Expanded(
-                              child: _buildTextField(
-                                controller: _weightController,
-                                label: "Weight (kg)",
-                                icon: Icons.monitor_weight_rounded,
-                                keyboardType: TextInputType.number,
-                              ),
+                            _buildTextField(
+                              controller: _emailController,
+                              label: "Email Address",
+                              icon: Icons.email_outlined,
+                              readOnly: true,
                             ),
-                          ],
-                        ),
-                        _buildTextField(
-                          controller: _allergiesController,
-                          label: "Allergies",
-                          icon: Icons.warning_amber_rounded,
-                          maxLines: 2,
-                          hint: "List any drug or food allergies",
-                        ),
-                        _buildTextField(
-                          controller: _chronicConditionsController,
-                          label: "Chronic Conditions",
-                          icon: Icons.history_edu_rounded,
-                          maxLines: 2,
-                          hint: "Diabetes, Hypertension, etc.",
-                        ),
-                      ]),
+                            _buildTextField(
+                              controller: _mobileController,
+                              label: "Mobile Number",
+                              icon: Icons.phone_android_rounded,
+                              keyboardType: TextInputType.phone,
+                              validator:
+                                  (v) =>
+                                      v!.isEmpty ? "Mobile is required" : null,
+                            ),
+                            _buildDropdownField(
+                              label: "Gender",
+                              icon: Icons.wc_rounded,
+                              value: _selectedGender,
+                              items: _genders,
+                              onChanged:
+                                  (v) => setState(() => _selectedGender = v),
+                            ),
+                            _buildTextField(
+                              controller: _dobController,
+                              label: "Date of Birth",
+                              icon: Icons.calendar_today_rounded,
+                              readOnly: true,
+                              onTap: _selectDate,
+                            ),
+                            _buildTextField(
+                              controller: _cityController,
+                              label: "City",
+                              icon: Icons.location_city_rounded,
+                            ),
+                          ]),
 
-                      const SizedBox(height: 40),
-                      _buildUpdateButton(),
-                      
-                      const SizedBox(height: 20),
-                      _buildChangePasswordButton(),
-                    ],
+                          const SizedBox(height: 25),
+                          _buildSectionTitle(
+                            "Contact Details",
+                            Icons.contact_emergency_rounded,
+                          ),
+                          _buildCard([
+                            _buildTextField(
+                              controller: _addressController,
+                              label: "Full Address",
+                              icon: Icons.home_work_outlined,
+                              maxLines: 2,
+                            ),
+                            _buildTextField(
+                              controller: _emergencyContactController,
+                              label: "Emergency Contact",
+                              icon: Icons.contact_phone_outlined,
+                              keyboardType: TextInputType.phone,
+                            ),
+                          ]),
+
+                          const SizedBox(height: 25),
+                          _buildSectionTitle(
+                            "Medical Details",
+                            Icons.health_and_safety_rounded,
+                          ),
+                          _buildCard([
+                            _buildDropdownField(
+                              label: "Blood Group",
+                              icon: Icons.bloodtype_rounded,
+                              value: _selectedBloodGroup,
+                              items: _bloodGroups,
+                              onChanged:
+                                  (v) =>
+                                      setState(() => _selectedBloodGroup = v),
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: _heightController,
+                                    label: "Height (cm)",
+                                    icon: Icons.height_rounded,
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                                const SizedBox(width: 15),
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: _weightController,
+                                    label: "Weight (kg)",
+                                    icon: Icons.monitor_weight_rounded,
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            _buildTextField(
+                              controller: _allergiesController,
+                              label: "Allergies",
+                              icon: Icons.warning_amber_rounded,
+                              maxLines: 2,
+                              hint: "List any drug or food allergies",
+                            ),
+                            _buildTextField(
+                              controller: _chronicConditionsController,
+                              label: "Chronic Conditions",
+                              icon: Icons.history_edu_rounded,
+                              maxLines: 2,
+                              hint: "Diabetes, Hypertension, etc.",
+                            ),
+                          ]),
+
+                          const SizedBox(height: 40),
+                          _buildUpdateButton(),
+
+                          const SizedBox(height: 20),
+                          _buildChangePasswordButton(),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  if (_isLoading)
+                    Container(
+                      color: Colors.black26,
+                      child: const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      ),
+                    ),
+                ],
               ),
-              if (_isLoading)
-                Container(
-                  color: Colors.black26,
-                  child: const Center(child: CircularProgressIndicator(color: Colors.white)),
-                ),
-            ],
-          ),
     );
   }
 
@@ -487,10 +563,18 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       centerTitle: true,
       title: const Text(
         "Edit Medical Profile",
-        style: TextStyle(color: Color(0xFF263238), fontSize: 18, fontWeight: FontWeight.w900),
+        style: TextStyle(
+          color: Color(0xFF263238),
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
+        ),
       ),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1565C0), size: 20),
+        icon: const Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: Color(0xFF1565C0),
+          size: 20,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
     );
@@ -503,7 +587,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF1565C0).withAlpha(51), width: 4),
+              border: Border.all(
+                color: const Color(0xFF1565C0).withAlpha(51),
+                width: 4,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF1565C0).withAlpha(25),
@@ -515,14 +602,24 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             child: CircleAvatar(
               radius: 50,
               backgroundColor: Colors.white,
-              backgroundImage: _imageFile != null
-                  ? FileImage(_imageFile!)
-                  : (_networkImageUrl != null && _networkImageUrl!.isNotEmpty
-                      ? NetworkImage(_networkImageUrl!)
-                      : null) as ImageProvider?,
-              child: (_imageFile == null && (_networkImageUrl == null || _networkImageUrl!.isEmpty))
-                  ? const Icon(Icons.person_rounded, size: 60, color: Color(0xFFB0BEC5))
-                  : null,
+              backgroundImage:
+                  _imageFile != null
+                      ? FileImage(_imageFile!)
+                      : (_networkImageUrl != null &&
+                                  _networkImageUrl!.isNotEmpty
+                              ? NetworkImage(_networkImageUrl!)
+                              : null)
+                          as ImageProvider?,
+              child:
+                  (_imageFile == null &&
+                          (_networkImageUrl == null ||
+                              _networkImageUrl!.isEmpty))
+                      ? const Icon(
+                        Icons.person_rounded,
+                        size: 60,
+                        color: Color(0xFFB0BEC5),
+                      )
+                      : null,
             ),
           ),
           Positioned(
@@ -536,7 +633,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   color: Color(0xFF1565C0),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ),
           ),
@@ -604,19 +705,30 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         maxLines: maxLines,
         onTap: onTap,
         validator: validator,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF263238)),
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF263238),
+        ),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
           labelStyle: TextStyle(color: Colors.blueGrey[300], fontSize: 13),
-          prefixIcon: Icon(icon, color: const Color(0xFF1565C0).withAlpha(153), size: 20),
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xFF1565C0).withAlpha(153),
+            size: 20,
+          ),
           filled: true,
           fillColor: const Color(0xFFF8FAFF),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
       ),
     );
@@ -633,24 +745,38 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       padding: const EdgeInsets.only(bottom: 15),
       child: DropdownButtonFormField<String>(
         value: value,
-        items: items.map((String val) {
-          return DropdownMenuItem<String>(
-            value: val,
-            child: Text(val, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-          );
-        }).toList(),
+        items:
+            items.map((String val) {
+              return DropdownMenuItem<String>(
+                value: val,
+                child: Text(
+                  val,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              );
+            }).toList(),
         onChanged: onChanged,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(color: Colors.blueGrey[300], fontSize: 13),
-          prefixIcon: Icon(icon, color: const Color(0xFF1565C0).withAlpha(153), size: 20),
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xFF1565C0).withAlpha(153),
+            size: 20,
+          ),
           filled: true,
           fillColor: const Color(0xFFF8FAFF),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
         ),
       ),
     );
@@ -668,7 +794,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       ),
       child: const Text(
         "UPDATE MEDICAL PROFILE",
-        style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 1),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1,
+        ),
       ),
     );
   }
@@ -679,7 +810,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChangePasswordScreen(email: _emailController.text),
+            builder:
+                (context) => ChangePasswordScreen(email: _emailController.text),
           ),
         );
       },
@@ -692,7 +824,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             ),
             TextSpan(
               text: "Change Password",
-              style: TextStyle(color: Color(0xFFE53935), fontWeight: FontWeight.w900, fontSize: 14),
+              style: TextStyle(
+                color: Color(0xFFE53935),
+                fontWeight: FontWeight.w900,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
@@ -701,21 +837,43 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   }
 
   Widget _buildProfileMedicalCard() {
-    String currentName = _nameController.text.isNotEmpty ? _nameController.text : (widget.userData['name'] ?? 'User Name').toString();
-    
+    String currentName =
+        _nameController.text.isNotEmpty
+            ? _nameController.text
+            : (widget.userData['name'] ?? 'User Name').toString();
+
     // Consistent with CategoryHomeScreen logic
     String dispMemberId = _memberId;
-    if (dispMemberId.trim().isEmpty || dispMemberId == 'DW-0000-000' || dispMemberId == 'DW-2026-CARD') {
-      dispMemberId = (widget.userData['member_id'] ?? widget.userData['memberid'] ?? 'DW-2026-CARD').toString();
-    }
-    
-    String dispCardNo = _medicalCardNo;
-    if (dispCardNo.trim().isEmpty || dispCardNo == 'DW00 0000 00' || dispCardNo == 'DW01 0001 001' || dispCardNo == 'DW26 0000 00') {
-      dispCardNo = (widget.userData['medical_card_no'] ?? widget.userData['medicalcardno'] ?? '').toString();
+    if (dispMemberId.trim().isEmpty ||
+        dispMemberId == 'DW-0000-000' ||
+        dispMemberId == 'DW-2026-CARD') {
+      dispMemberId =
+          (widget.userData['member_id'] ??
+                  widget.userData['memberid'] ??
+                  'DW-2026-CARD')
+              .toString();
     }
 
-    bool hasCard = dispMemberId.isNotEmpty && dispMemberId != 'DW-0000-000' && dispMemberId != 'DW-2026-CARD' &&
-                  dispCardNo.isNotEmpty && dispCardNo != 'DW00 0000 00' && dispCardNo != 'DW01 0001 001' && dispCardNo != 'DW26 0000 00';
+    String dispCardNo = _medicalCardNo;
+    if (dispCardNo.trim().isEmpty ||
+        dispCardNo == 'DW00 0000 00' ||
+        dispCardNo == 'DW01 0001 001' ||
+        dispCardNo == 'DW26 0000 00') {
+      dispCardNo =
+          (widget.userData['medical_card_no'] ??
+                  widget.userData['medicalcardno'] ??
+                  '')
+              .toString();
+    }
+
+    bool hasCard =
+        dispMemberId.isNotEmpty &&
+        dispMemberId != 'DW-0000-000' &&
+        dispMemberId != 'DW-2026-CARD' &&
+        dispCardNo.isNotEmpty &&
+        dispCardNo != 'DW00 0000 00' &&
+        dispCardNo != 'DW01 0001 001' &&
+        dispCardNo != 'DW26 0000 00';
 
     return Container(
       width: double.infinity,
@@ -735,90 +893,214 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           ),
         ],
       ),
-      child: !hasCard
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.credit_card_off_rounded, color: Colors.white54, size: 50),
-                const SizedBox(height: 10),
-                const Text(
-                  "Medical Card Not Found",
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 15),
-                ElevatedButton.icon(
-                  onPressed: isGeneratingCard ? null : _generateMedicalCard,
-                  icon: isGeneratingCard
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(color: Color(0xFF1565C0), strokeWidth: 2),
-                        )
-                      : const Icon(Icons.add_card_rounded),
-                  label: Text(isGeneratingCard ? "Generating..." : "Create Now"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF1565C0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+      child:
+          !hasCard
+              ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.credit_card_off_rounded,
+                    color: Colors.white54,
+                    size: 50,
                   ),
-                ),
-              ],
-            )
-          : Stack(
-              children: [
-                Positioned(
-                  right: -20,
-                  top: -20,
-                  child: Icon(Icons.health_and_safety_rounded, size: 150, color: Colors.white.withAlpha(25)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(25),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Image.asset('assets/images/logo.png', height: 30, color: Colors.white),
-                          const SizedBox(width: 10),
-                          const Text(
-                            "DOCTORWALA MEDICAL CARD",
-                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
-                          ),
-                          const Spacer(),
-                          const Icon(Icons.nfc_rounded, color: Colors.white70, size: 20),
-                        ],
-                      ),
-                      const Spacer(),
-                      Text(
-                        dispCardNo,
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w400, letterSpacing: 4),
-                      ),
-                      const SizedBox(height: 15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text("CARD HOLDER", style: TextStyle(color: Colors.white70, fontSize: 8, fontWeight: FontWeight.bold)),
-                              Text(currentName.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text("MEMBER ID", style: TextStyle(color: Colors.white70, fontSize: 8, fontWeight: FontWeight.bold)),
-                              Text(dispMemberId, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
+                  const SizedBox(height: 10),
+                  const Text(
+                    "Medical Card Not Found",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(height: 15),
+                  ElevatedButton.icon(
+                    onPressed: isGeneratingCard ? null : _generateMedicalCard,
+                    icon:
+                        isGeneratingCard
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF1565C0),
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : const Icon(Icons.add_card_rounded),
+                    label: Text(
+                      isGeneratingCard ? "Generating..." : "Create Now",
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF1565C0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 25,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+              : Stack(
+                children: [
+                  Positioned(
+                    right: -20,
+                    top: -20,
+                    child: Icon(
+                      Icons.health_and_safety_rounded,
+                      size: 150,
+                      color: Colors.white.withAlpha(25),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(25),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Text(
+                              "MEDICAL CARD",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const Spacer(),
+                            // ATM Card Chip Design
+                            Container(
+                              width: 45,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.amber[400]!,
+                                    Colors.amber[200]!,
+                                    Colors.amber[600]!,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: Colors.amber[800]!.withOpacity(0.5),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Stack(
+                                children: [
+                                  Positioned(
+                                    top: 8,
+                                    bottom: 8,
+                                    left: 0,
+                                    right: 0,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          top: BorderSide(
+                                            color: Colors.black12,
+                                            width: 0.5,
+                                          ),
+                                          bottom: BorderSide(
+                                            color: Colors.black12,
+                                            width: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    bottom: 0,
+                                    left: 12,
+                                    right: 12,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          left: BorderSide(
+                                            color: Colors.black12,
+                                            width: 0.5,
+                                          ),
+                                          right: BorderSide(
+                                            color: Colors.black12,
+                                            width: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Text(
+                          dispCardNo,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 4,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "CARD HOLDER",
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  currentName.toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "MEMBER ID",
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  dispMemberId,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
     );
   }
 }
