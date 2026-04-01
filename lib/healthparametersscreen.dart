@@ -304,7 +304,14 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
                       ),
                       const SizedBox(width: 10),
                     ],
-                    Text(dateStr, style: TextStyle(color: Colors.blueGrey[400], fontSize: 11, fontWeight: FontWeight.w700)),
+                    Text(
+                      dateStr,
+                      style: const TextStyle(
+                        color: Color(0xFF263238),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ],
                 ),
                 Row(
@@ -369,24 +376,43 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
       child: Stack(
         children: [
           Positioned(
-            top: 6,
-            left: 6,
+            top: 8,
+            left: 8,
             child: Container(
               padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(color: themeColor.withAlpha(25), shape: BoxShape.circle),
-              child: Icon(icon, size: 12, color: themeColor),
+              decoration: BoxDecoration(
+                color: themeColor.withAlpha(25),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 14, color: themeColor),
             ),
           ),
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 4),
-                Text(label, style: TextStyle(color: Colors.blueGrey[600], fontSize: 9, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-                const SizedBox(height: 1),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.blueGrey[600],
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 2),
                 FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(value, style: const TextStyle(color: Color(0xFF263238), fontSize: 15, fontWeight: FontWeight.w900), textAlign: TextAlign.center),
+                  child: Text(
+                    value,
+                    style: const TextStyle(
+                      color: Color(0xFF263238),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ],
             ),
