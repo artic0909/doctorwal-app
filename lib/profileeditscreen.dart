@@ -39,6 +39,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   String? _networkImageUrl;
   bool _isLoading = false;
   bool _isFetching = true;
+  bool isGeneratingCard = false;
+  String _memberId = '';
+  String _medicalCardNo = '';
 
   final List<String> _genders = ['Male', 'Female', 'Other'];
   final List<String> _bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
@@ -98,11 +101,55 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         await prefs.setString('mobile', _mobileController.text);
         await prefs.setString('city', _cityController.text);
         if (_networkImageUrl != null) await prefs.setString('image', _networkImageUrl!);
+        
+        await _loadMedicalCardData();
       }
     } catch (e) {
       debugPrint("Error fetching profile: $e");
     } finally {
       setState(() => _isFetching = false);
+    }
+  }
+
+  Future<void> _loadMedicalCardData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _memberId = prefs.getString('member_id') ?? prefs.getString('memberid') ?? widget.userData['member_id']?.toString() ?? widget.userData['memberid']?.toString() ?? '';
+      _medicalCardNo = prefs.getString('medical_card_no') ?? prefs.getString('medicalcardno') ?? widget.userData['medical_card_no']?.toString() ?? widget.userData['medicalcardno']?.toString() ?? '';
+    });
+  }
+
+  Future<void> _generateMedicalCard() async {
+    setState(() => isGeneratingCard = true);
+    try {
+      final response = await _apiService.generateMedicalCard();
+      if (response['status'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        if (response['member_id'] != null) await prefs.setString('member_id', response['member_id'].toString());
+        if (response['medical_card_no'] != null) await prefs.setString('medical_card_no', response['medical_card_no'].toString());
+        
+        await _loadMedicalCardData();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Medical Card Generated Successfully!"), backgroundColor: Colors.green),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response['message'] ?? "Generation Failed"), backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      setState(() => isGeneratingCard = false);
     }
   }
 
@@ -303,6 +350,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   child: Column(
                     children: [
                       _buildProfileImage(),
+                      const SizedBox(height: 20),
+                      
+                      _buildProfileMedicalCard(),
                       const SizedBox(height: 30),
                       
                       _buildSectionTitle("Personal Information", Icons.person_rounded),
@@ -463,7 +513,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               ],
             ),
             child: CircleAvatar(
-              radius: 65,
+              radius: 50,
               backgroundColor: Colors.white,
               backgroundImage: _imageFile != null
                   ? FileImage(_imageFile!)
@@ -647,6 +697,128 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProfileMedicalCard() {
+    String currentName = _nameController.text.isNotEmpty ? _nameController.text : (widget.userData['name'] ?? 'User Name').toString();
+    
+    // Consistent with CategoryHomeScreen logic
+    String dispMemberId = _memberId;
+    if (dispMemberId.trim().isEmpty || dispMemberId == 'DW-0000-000' || dispMemberId == 'DW-2026-CARD') {
+      dispMemberId = (widget.userData['member_id'] ?? widget.userData['memberid'] ?? 'DW-2026-CARD').toString();
+    }
+    
+    String dispCardNo = _medicalCardNo;
+    if (dispCardNo.trim().isEmpty || dispCardNo == 'DW00 0000 00' || dispCardNo == 'DW01 0001 001' || dispCardNo == 'DW26 0000 00') {
+      dispCardNo = (widget.userData['medical_card_no'] ?? widget.userData['medicalcardno'] ?? '').toString();
+    }
+
+    bool hasCard = dispMemberId.isNotEmpty && dispMemberId != 'DW-0000-000' && dispMemberId != 'DW-2026-CARD' &&
+                  dispCardNo.isNotEmpty && dispCardNo != 'DW00 0000 00' && dispCardNo != 'DW01 0001 001' && dispCardNo != 'DW26 0000 00';
+
+    return Container(
+      width: double.infinity,
+      height: 200,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1565C0).withAlpha(102),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: !hasCard
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.credit_card_off_rounded, color: Colors.white54, size: 50),
+                const SizedBox(height: 10),
+                const Text(
+                  "Medical Card Not Found",
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 15),
+                ElevatedButton.icon(
+                  onPressed: isGeneratingCard ? null : _generateMedicalCard,
+                  icon: isGeneratingCard
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(color: Color(0xFF1565C0), strokeWidth: 2),
+                        )
+                      : const Icon(Icons.add_card_rounded),
+                  label: Text(isGeneratingCard ? "Generating..." : "Create Now"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF1565C0),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                  ),
+                ),
+              ],
+            )
+          : Stack(
+              children: [
+                Positioned(
+                  right: -20,
+                  top: -20,
+                  child: Icon(Icons.health_and_safety_rounded, size: 150, color: Colors.white.withAlpha(25)),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(25),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Image.asset('assets/images/logo.png', height: 30, color: Colors.white),
+                          const SizedBox(width: 10),
+                          const Text(
+                            "DOCTORWALA MEDICAL CARD",
+                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                          ),
+                          const Spacer(),
+                          const Icon(Icons.nfc_rounded, color: Colors.white70, size: 20),
+                        ],
+                      ),
+                      const Spacer(),
+                      Text(
+                        dispCardNo,
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w400, letterSpacing: 4),
+                      ),
+                      const SizedBox(height: 15),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("CARD HOLDER", style: TextStyle(color: Colors.white70, fontSize: 8, fontWeight: FontWeight.bold)),
+                              Text(currentName.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("MEMBER ID", style: TextStyle(color: Colors.white70, fontSize: 8, fontWeight: FontWeight.bold)),
+                              Text(dispMemberId, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
