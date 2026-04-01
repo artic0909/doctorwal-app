@@ -463,14 +463,38 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Image.asset('assets/images/logo.png', height: 25, color: Colors.white),
-                                  const SizedBox(width: 8),
+                                  // Image.asset('assets/images/logo.png', height: 25, color: Colors.white),
+                                  // const SizedBox(width: 8),
                                   const Text(
-                                    "Doctorwala MEDICAL CARD",
-                                    style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                    "MEDICAL CARD",
+                                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1),
                                   ),
                                   const Spacer(),
-                                  const Icon(Icons.wifi_rounded, color: Colors.white70, size: 14),
+                                  // ATM Card Chip Design
+                                  Container(
+                                    width: 35,
+                                    height: 25,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Colors.amber[400]!,
+                                          Colors.amber[200]!,
+                                          Colors.amber[600]!,
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: Colors.amber[800]!.withOpacity(0.5), width: 0.5),
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        // Chip lines for realism
+                                        Positioned(top: 8, bottom: 8, left: 0, right: 0, child: Container(decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.black12, width: 0.5), bottom: BorderSide(color: Colors.black12, width: 0.5))))),
+                                        Positioned(top: 0, bottom: 0, left: 12, right: 12, child: Container(decoration: BoxDecoration(border: Border(left: BorderSide(color: Colors.black12, width: 0.5), right: BorderSide(color: Colors.black12, width: 0.5))))),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                               const Spacer(),
