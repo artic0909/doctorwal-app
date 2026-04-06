@@ -100,7 +100,16 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
               Container(
                 width: 55, height: 55,
                 decoration: BoxDecoration(color: Colors.white.withAlpha(40), borderRadius: BorderRadius.circular(15)),
-                child: const Icon(Icons.person_rounded, color: Colors.white, size: 30),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: d.banner != null && d.banner!.isNotEmpty
+                      ? Image.network(
+                          _getImageUrl(d.banner),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person_rounded, color: Colors.white, size: 30),
+                        )
+                      : const Icon(Icons.person_rounded, color: Colors.white, size: 30),
+                ),
               ),
               const SizedBox(width: 15),
               Expanded(
@@ -308,5 +317,16 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
   String _capitalizeWords(String input) {
     if (input.isEmpty) return "";
     return input.split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1).toLowerCase() : word).join(' ');
+  }
+
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return "";
+    if (path.startsWith('http')) return path;
+    const String domain = "https://doctorwala.info/";
+    String cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    if (!cleanPath.startsWith('storage/')) {
+      cleanPath = 'storage/' + cleanPath;
+    }
+    return domain + cleanPath;
   }
 }

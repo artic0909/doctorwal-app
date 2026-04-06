@@ -344,7 +344,16 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               Container(
                 width: 55, height: 55,
                 decoration: BoxDecoration(color: color.withAlpha(12), borderRadius: BorderRadius.circular(12)),
-                child: Icon(icon, color: color, size: 28),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: (type == 'DOCTOR' && rawData['banner'] != null)
+                      ? Image.network(
+                          _getImageUrl(rawData['banner'] is Map ? rawData['banner']['doctorbanner'] : rawData['banner']),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Icon(icon, color: color, size: 28),
+                        )
+                      : Icon(icon, color: color, size: 28),
+                ),
               ),
               const SizedBox(width: 15),
               Expanded(
@@ -454,5 +463,16 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         ),
       ),
     );
+  }
+
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return "";
+    if (path.startsWith('http')) return path;
+    const String domain = "https://doctorwala.info/";
+    String cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    if (!cleanPath.startsWith('storage/')) {
+      cleanPath = 'storage/' + cleanPath;
+    }
+    return domain + cleanPath;
   }
 }

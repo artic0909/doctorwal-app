@@ -232,7 +232,13 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                 borderRadius: BorderRadius.circular(13),
                 child: Container(
                   width: 80, height: 80, color: const Color(0xFF6A1B9A).withAlpha(10),
-                  child: const Icon(Icons.person_rounded, color: Color(0xFF6A1B9A), size: 40),
+                  child: doctor.banner != null && doctor.banner!.isNotEmpty
+                      ? Image.network(
+                          _getImageUrl(doctor.banner),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person_rounded, color: Color(0xFF6A1B9A), size: 40),
+                        )
+                      : const Icon(Icons.person_rounded, color: Color(0xFF6A1B9A), size: 40),
                 ),
               ),
             ),
@@ -298,5 +304,16 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   String _capitalizeWords(String input) {
     if (input.isEmpty) return "";
     return input.split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1).toLowerCase() : word).join(' ');
+  }
+
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return "";
+    if (path.startsWith('http')) return path;
+    const String domain = "https://doctorwala.info/";
+    String cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    if (!cleanPath.startsWith('storage/')) {
+      cleanPath = 'storage/' + cleanPath;
+    }
+    return domain + cleanPath;
   }
 }
