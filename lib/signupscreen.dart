@@ -290,14 +290,14 @@ class _SignupScreenState extends State<SignupScreen> {
                             children: [
                               buildElegantInput(
                                 controller: nameController,
-                                label: "Legal Full Name",
+                                label: "Full Name",
                                 icon: Icons.person_add_alt_1_rounded,
                                 validator: (value) => value!.isEmpty ? "Required" : null,
                               ),
                               const SizedBox(height: 12),
                               buildElegantInput(
                                 controller: phoneController,
-                                label: "Mobile Contact",
+                                label: "Mobile Number",
                                 icon: Icons.phone_iphone_rounded,
                                 keyboardType: TextInputType.phone,
                                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -306,14 +306,14 @@ class _SignupScreenState extends State<SignupScreen> {
                               const SizedBox(height: 12),
                               buildElegantInput(
                                 controller: cityController,
-                                label: "Primary City",
+                                label: "Your City",
                                 icon: Icons.map_rounded,
                                 validator: (value) => value!.isEmpty ? "Required" : null,
                               ),
                               const SizedBox(height: 12),
                               buildElegantInput(
                                 controller: emailController,
-                                label: "Email Address",
+                                label: "Email ID",
                                 icon: Icons.alternate_email_rounded,
                                 keyboardType: TextInputType.emailAddress,
                                 validator: (value) => !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}$').hasMatch(value!) ? "Invalid email" : null,
@@ -321,7 +321,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               const SizedBox(height: 12),
                               buildElegantInput(
                                 controller: passwordController,
-                                label: "Create Access Key",
+                                label: "Enter Password",
                                 icon: Icons.password_rounded,
                                 obscure: _obscurePassword,
                                 toggle: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -330,7 +330,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               const SizedBox(height: 12),
                               buildElegantInput(
                                 controller: confirmPasswordController,
-                                label: "Verify Access Key",
+                                label: "Re-enter Password",
                                 icon: Icons.verified_user_rounded,
                                 obscure: _obscureConfirmPassword,
                                 toggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
@@ -351,7 +351,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                         shadowColor: const Color(0xFF1565C0).withAlpha(128),
                                       ),
                                       child: const Text(
-                                        "CREATE ECOSYSTEM ACCOUNT",
+                                        "CREATE ACCOUNT",
                                         style: TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w800,
@@ -395,7 +395,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                   // Image.asset('assets/images/logo.png', height: 25, color: Colors.white),
                                   // const SizedBox(width: 8),
                                   const Text(
-                                    "SECURE REGISTRATION CARD",
+                                    "YOUR MEDICAL CARD",
                                     style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                                   ),
                                   const Spacer(),
@@ -428,7 +428,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                               const Spacer(),
                               const Text(
-                                "YOUR MEDICAL CARD",
+                                "DW00 0000 0001",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
@@ -444,14 +444,14 @@ class _SignupScreenState extends State<SignupScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text("CARD HOLDER", style: TextStyle(color: Colors.white70, fontSize: 8)),
-                                      Text("NEW MEMBER", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                      Text("MY NAME", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                                     ],
                                   ),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text("VERIFIED BY", style: TextStyle(color: Colors.white70, fontSize: 8)),
-                                      Text("DOCTORWALA", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                      Text("MEMBER ID", style: TextStyle(color: Colors.white70, fontSize: 8)),
+                                      Text("DW-0000-01", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                                     ],
                                   ),
                                 ],
@@ -469,7 +469,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Already have access? ",
+                        "Already Have Account? ",
                         style: TextStyle(color: Colors.blueGrey[400], fontSize: 15),
                       ),
                       GestureDetector(
@@ -478,7 +478,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           MaterialPageRoute(builder: (_) => const LoginScreen()),
                         ),
                         child: const Text(
-                          "Login Now",
+                          "LOGIN NOW",
                           style: TextStyle(
                             color: Color(0xFFE53935),
                             fontWeight: FontWeight.w900,

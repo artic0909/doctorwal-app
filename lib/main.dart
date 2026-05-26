@@ -369,14 +369,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               buildElegantInput(
                                 controller: emailController,
-                                label: "Email or Mobile ID",
+                                label: "Mobile Number or Email",
                                 icon: Icons.person_outline_rounded,
                                 validator: (value) => value!.isEmpty ? 'Identity required' : null,
                               ),
                               const SizedBox(height: 20),
                               buildElegantInput(
                                 controller: passwordController,
-                                label: "Security Password",
+                                label: "Enter Password",
                                 icon: Icons.lock_outline_rounded,
                                 obscure: _obscurePassword,
                                 toggle: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -390,7 +390,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     MaterialPageRoute(builder: (_) => const ForgetPasswordScreen()),
                                   ),
                                   child: const Text(
-                                    "Forgot Access?",
+                                    "Forgot Password?",
                                     style: TextStyle(
                                       color: Color(0xFF1565C0),
                                       fontWeight: FontWeight.w700,
@@ -425,7 +425,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         shadowColor: const Color(0xFF1565C0).withAlpha(128),
                                       ),
                                       child: const Text(
-                                        "PROCEED TO ECOSYSTEM",
+                                        "CONTINUE",
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w800,
@@ -518,14 +518,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text("CARD HOLDER", style: TextStyle(color: Colors.white70, fontSize: 8)),
-                                      Text("YOUR IDENTITY", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                      Text("MY NAME", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                                     ],
                                   ),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text("EXPIRY", style: TextStyle(color: Colors.white70, fontSize: 8)),
-                                      Text("MM/YY", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                      Text("MEMBER ID", style: TextStyle(color: Colors.white70, fontSize: 8)),
+                                      Text("DW-0000-01", style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                                     ],
                                   ),
                                 ],
@@ -576,7 +576,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Not a member yet? ",
+                        "Don't Have Account? ",
                         style: TextStyle(color: Colors.blueGrey[400], fontSize: 15),
                       ),
                       GestureDetector(
@@ -585,7 +585,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           MaterialPageRoute(builder: (_) => const SignupScreen()),
                         ),
                         child: const Text(
-                          "Create Medical Card",
+                          "CREATE ACCOUNT",
                           style: TextStyle(
                             color: Color(0xFFE53935),
                             fontWeight: FontWeight.w900,
