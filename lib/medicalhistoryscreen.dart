@@ -605,13 +605,19 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                   // Vitals row
                   Row(
                     children: [
-                      _buildVitalBox(Icons.calendar_today_rounded, "Age", record['user_age'] ?? 'N/A'),
+                      Expanded(child: _buildVitalBox(Icons.calendar_today_rounded, "Age", record['user_age'] ?? 'N/A')),
                       const SizedBox(width: 10),
-                      _buildVitalBox(Icons.face_rounded, "Gender", record['user_gender'] ?? 'N/A'),
+                      Expanded(child: _buildVitalBox(Icons.face_rounded, "Gender", record['user_gender'] ?? 'N/A')),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  _buildVitalBox(Icons.water_drop_rounded, "Blood", record['blood_group'] ?? 'N/A'),
+                  Row(
+                    children: [
+                      Expanded(child: _buildVitalBox(Icons.water_drop_rounded, "Blood", record['blood_group'] ?? 'N/A')),
+                      const SizedBox(width: 10),
+                      Expanded(child: const SizedBox.shrink()), // Empty space to match the grid look
+                    ],
+                  ),
                   
                   const SizedBox(height: 20),
                   
@@ -639,6 +645,26 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                   if (record['medicines'] != null && (record['medicines'] as List).isNotEmpty) ...[
                     _buildSectionHeading("MEDICINES / RX"),
                     ...(record['medicines'] as List).map<Widget>((med) {
+                      final mName = med['name'] ?? 'N/A';
+                      
+                      final timingRaw = med['timing'] ?? med['frequency'];
+                      String mTiming = 'N/A';
+                      if (timingRaw is List) {
+                        mTiming = timingRaw.join(', ');
+                      } else if (timingRaw is String) {
+                        mTiming = timingRaw;
+                      }
+
+                      final eatingRaw = med['eating'] ?? med['relation'];
+                      String mEating = '';
+                      if (eatingRaw is List) {
+                        mEating = eatingRaw.join(', ');
+                      } else if (eatingRaw is String) {
+                        mEating = eatingRaw;
+                      }
+
+                      final mDuration = med['days'] ?? med['duration'] ?? 'N/A';
+
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Column(
@@ -648,13 +674,13 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                               children: [
                                 const Icon(Icons.circle, size: 6, color: Color(0xFF1565C0)),
                                 const SizedBox(width: 6),
-                                Expanded(child: Text(med['name'] ?? "", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)))),
+                                Expanded(child: Text(mName.toString(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)))),
                               ],
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 12, top: 4),
                               child: Text(
-                                "Frequency: ${med['frequency'] ?? 'N/A'} | Relation: ${med['relation'] ?? 'N/A'} | Duration: ${med['duration'] ?? 'N/A'}",
+                                "Frequency: $mTiming" + (mEating.isNotEmpty ? " | Relation: $mEating" : "") + " | Duration: $mDuration Days",
                                 style: TextStyle(color: Colors.blueGrey[600], fontSize: 12, height: 1.4),
                               ),
                             ),
@@ -669,6 +695,51 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                   if (record['recommended_tests'] != null && (record['recommended_tests'] as List).isNotEmpty) ...[
                     _buildSectionHeading("RECOMMENDED TESTS"),
                     ...(record['recommended_tests'] as List).map<Widget>((test) {
+                      if (test is Map) {
+                        final tName = test['name'] ?? 'N/A';
+                        final tPriority = test['priority'] ?? 'Normal';
+                        final tNotes = test['notes'] ?? '';
+                        
+                        Color priorityColor = Colors.grey;
+                        if (tPriority == 'Urgent') priorityColor = Colors.orangeAccent.shade700;
+                        if (tPriority == 'Critical') priorityColor = Colors.redAccent;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.circle, size: 6, color: Color(0xFF7E57C2)),
+                                  const SizedBox(width: 6),
+                                  Expanded(child: Text(tName.toString(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF7E57C2)))),
+                                  if (tPriority != 'Normal')
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: priorityColor.withAlpha(25),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        tPriority.toString().toUpperCase(),
+                                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: priorityColor),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              if (tNotes.toString().isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 12, top: 2),
+                                  child: Text(
+                                    'Note: $tNotes',
+                                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Colors.blueGrey[400]),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      }
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Row(
@@ -700,27 +771,25 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
   }
 
   Widget _buildVitalBox(IconData icon, String title, String val) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.blueGrey.withAlpha(30)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: const Color(0xFF00897B), size: 16),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(color: Colors.blueGrey[400], fontSize: 10, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 2),
-                Text(val, style: const TextStyle(color: Color(0xFF1565C0), fontSize: 13, fontWeight: FontWeight.w900)),
-              ],
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.blueGrey.withAlpha(30)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xFF00897B), size: 16),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: TextStyle(color: Colors.blueGrey[400], fontSize: 10, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 2),
+              Text(val, style: const TextStyle(color: Color(0xFF1565C0), fontSize: 13, fontWeight: FontWeight.w900)),
+            ],
+          ),
+        ],
       ),
     );
   }
