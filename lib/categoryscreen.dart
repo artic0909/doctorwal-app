@@ -658,6 +658,24 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                         child: Row(
                           children: [
                             _eyeCatchyBox(
+                              title: "BMR Calculator",
+                              subtitle: "Daily calories",
+                              icon: Icons.monitor_weight_rounded,
+                              gradient: [
+                                const Color(0xFFFF8A65),
+                                const Color(0xFFD84315),
+                              ],
+                              onTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const BMRCalculatorScreen(),
+                                    ),
+                                  ),
+                            ),
+
+                            const SizedBox(width: 8),
+                            _eyeCatchyBox(
                               title: "Test Reports",
                               subtitle: "Test results",
                               icon: Icons.assignment_rounded,
@@ -735,6 +753,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                                     ),
                                   ),
                             ),
+
                           ],
                         ),
                       ),
