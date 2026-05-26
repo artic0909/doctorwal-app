@@ -3,6 +3,7 @@ import 'package:demoapp/addmedicalrecordscreen.dart';
 import 'package:demoapp/viewmedicalrecordscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MedicalHistoryScreen extends StatefulWidget {
   final int initialTabIndex; // 0 for Reports, 1 for Prescriptions
@@ -68,6 +69,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTabIndex);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) {
+        _fetchData();
+      }
+    });
     _fetchData();
   }
 
@@ -272,7 +278,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                     children: [
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _isSystemPrescriptionView = false),
+                          onTap: () {
+                            setState(() => _isSystemPrescriptionView = false);
+                            _fetchData();
+                          },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
@@ -288,7 +297,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                       const SizedBox(width: 10),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _isSystemPrescriptionView = true),
+                          onTap: () {
+                            setState(() => _isSystemPrescriptionView = true);
+                            _fetchData();
+                          },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
@@ -373,6 +385,33 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
       dateStr = record['date_of_report'] ?? "";
     }
 
+    String? clinicStr;
+    String? doctorStr;
+    String regType = (record['registration_type'] ?? "").toString().toLowerCase();
+
+    if (record['partner_id'] != null) {
+      if (regType == 'opd & pathology' || regType == 'opd') {
+        if (record['clinic_name'] != null) clinicStr = "Clinic: ${record['clinic_name']}";
+        if (record['doctor_name'] != null) {
+          doctorStr = "Doctor: ${record['doctor_name']}";
+          if (record['doctor_specialist'] != null) doctorStr += " (${record['doctor_specialist']})";
+        }
+      } else if (regType == 'pathology') {
+        if (record['clinic_name'] != null) clinicStr = "Clinic: ${record['clinic_name']}";
+      } else if (regType == 'doctor') {
+        if (record['doctor_name'] != null) {
+          doctorStr = "Doctor: ${record['doctor_name']}";
+          if (record['doctor_specialist'] != null) doctorStr += " (${record['doctor_specialist']})";
+        }
+      } else {
+        if (record['doctor_name'] != null && record['doctor_name'].toString().isNotEmpty) doctorStr = "Doctor: ${record['doctor_name']}";
+        if (record['clinic_name'] != null && record['clinic_name'].toString().isNotEmpty) clinicStr = "Clinic: ${record['clinic_name']}";
+      }
+    } else {
+      if (record['doctor_name'] != null && record['doctor_name'].toString().isNotEmpty) doctorStr = "Doctor: ${record['doctor_name']}";
+      if (record['clinic_name'] != null && record['clinic_name'].toString().isNotEmpty) clinicStr = "Clinic: ${record['clinic_name']}";
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
@@ -402,6 +441,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                    children: [
                      Text(record['heading'] ?? "Untitled Record", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF263238))),
                      const SizedBox(height: 4),
+                     if (doctorStr != null) Text(doctorStr, style: TextStyle(color: Colors.blueGrey[600], fontSize: 11)),
+                     if (clinicStr != null) Text(clinicStr, style: TextStyle(color: Colors.blueGrey[600], fontSize: 11)),
+                     const SizedBox(height: 2),
                      Text(dateStr, style: TextStyle(color: Colors.blueGrey[300], fontSize: 11, fontWeight: FontWeight.bold)),
                    ],
                  ),
@@ -454,7 +496,38 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
     );
   }
 
+  void _openWebPage(String url) async {
+    final Uri uri = Uri.parse(url);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      debugPrint("Could not launch $url");
+    }
+  }
+
   Widget _buildExpandingSystemPrescriptionCard(dynamic record, String dateStr) {
+    String? clinicStr;
+    String? doctorStr;
+    String regType = (record['registration_type'] ?? "").toString().toLowerCase();
+
+    if (regType == 'opd & pathology' || regType == 'opd') {
+      if (record['clinic_name'] != null) clinicStr = "Clinic: ${record['clinic_name']}";
+      if (record['doctor_name'] != null) {
+        doctorStr = "Prescribed by ${record['doctor_name']}";
+        if (record['doctor_specialist'] != null) doctorStr += " (${record['doctor_specialist']})";
+      }
+    } else if (regType == 'pathology') {
+      if (record['clinic_name'] != null) clinicStr = "Clinic: ${record['clinic_name']}";
+    } else if (regType == 'doctor') {
+      if (record['doctor_name'] != null) {
+        doctorStr = "Prescribed by ${record['doctor_name']}";
+        if (record['doctor_specialist'] != null) doctorStr += " (${record['doctor_specialist']})";
+      }
+    } else {
+      if (record['doctor_name'] != null && record['doctor_name'].toString().isNotEmpty) doctorStr = "Prescribed by ${record['doctor_name']}";
+      if (record['clinic_name'] != null && record['clinic_name'].toString().isNotEmpty) clinicStr = "Clinic: ${record['clinic_name']}";
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
@@ -487,12 +560,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
               const SizedBox(height: 12),
               Text(record['heading'] ?? "Prescription", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF263238))),
               const SizedBox(height: 4),
-              if (record['doctor_name'] != null)
-                Text("Prescribed by ${record['doctor_name']}", style: TextStyle(color: Colors.blueGrey[600], fontSize: 13)),
-              if (record['clinic_name'] != null)
+              if (doctorStr != null)
+                Text(doctorStr, style: TextStyle(color: Colors.blueGrey[600], fontSize: 13)),
+              if (clinicStr != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
-                  child: Text("Clinic: ${record['clinic_name']}", style: TextStyle(color: Colors.blueGrey[600], fontSize: 13)),
+                  child: Text(clinicStr, style: TextStyle(color: Colors.blueGrey[600], fontSize: 13)),
                 ),
             ],
           ),
@@ -505,8 +578,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                   // View PDF Button
                   InkWell(
                     onTap: () {
-                      // Depending on implementation, you might navigate differently for SystemPrescription
-                      // Navigator.push(context, MaterialPageRoute(builder: (context) => ViewMedicalRecordScreen(recordId: record['id'])));
+                      final url = 'https://www.doctorwala.info/share/prescription/${record['id']}/view';
+                      _openWebPage(url);
                     },
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
