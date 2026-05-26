@@ -22,7 +22,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   final List<String> _popularTags = [
     'Cardiologist', 'Blood Test', 'Urine Test', 'Eye Specialist', 'X-Ray',
-    'Skin Doctor', 'Dentist', 'Orthopedic', 'Pediatrician', 'General Physician',
+    'Skin', 'Dentist', 'Orthopedic', 'Pediatrician', 'General Physician',
     'General Surgeon', 'Gynecologist'
   ];
 

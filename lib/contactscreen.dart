@@ -10,7 +10,7 @@ class ContactScreen extends StatelessWidget {
   Future<void> _launchEmail() async {
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
-      path: 'info.doctorwala@gmail.com',
+      path: 'dw@doctorwala.info',
     );
     try {
       if (await canLaunchUrl(emailLaunchUri)) {
@@ -22,7 +22,7 @@ class ContactScreen extends StatelessWidget {
   }
 
   Future<void> _launchPhone() async {
-    final Uri phoneLaunchUri = Uri(scheme: 'tel', path: '+916292237205');
+    final Uri phoneLaunchUri = Uri(scheme: 'tel', path: '+916292237207');
     try {
       if (await canLaunchUrl(phoneLaunchUri)) {
         await launchUrl(phoneLaunchUri, mode: LaunchMode.externalApplication);
@@ -169,7 +169,7 @@ class ContactScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 const Text(
-                                  "info.doctorwala\n@gmail.com",
+                                  "dw@doctorwala.info",
                                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
                                 ),
                               ],
@@ -190,7 +190,7 @@ class ContactScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 const Text(
-                                  "+91 62922\n37205",
+                                  "+91 6292237207",
                                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
                                 ),
                               ],
