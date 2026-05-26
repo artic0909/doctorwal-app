@@ -1248,7 +1248,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     ),
                   );
                 }),
-                _drawerItem(Icons.assignment_rounded, "Medical Reports", () {
+                _drawerItem(Icons.assignment_rounded, "Test Reports", () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -1259,42 +1259,18 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     ),
                   );
                 }),
-                _drawerItem(Icons.note_add_rounded, "Add Medical Records", () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AddMedicalRecordScreen(),
-                    ),
-                  );
-                }),
+                // _drawerItem(Icons.note_add_rounded, "Add Medical Records", () {
+                //   Navigator.pop(context);
+                //   Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder: (context) => const AddMedicalRecordScreen(),
+                //     ),
+                //   );
+                // }),
 
-                const Divider(indent: 20, endIndent: 20),
-                _drawerSectionTitle("Health management"),
-                _drawerItem(Icons.analytics_rounded, "Health Parameters", () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const HealthParametersScreen(),
-                    ),
-                  );
-                }),
-                _drawerItem(
-                  Icons.add_moderator_rounded,
-                  "Add Health Parameters",
-                  () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddVitalScreen(),
-                      ),
-                    );
-                  },
-                ),
 
-                const Divider(indent: 20, endIndent: 20),
+                                const Divider(indent: 20, endIndent: 20),
                 _drawerSectionTitle("appointments & notifications"),
                 _drawerItem(Icons.calendar_month_rounded, "Appointments", () {
                   Navigator.pop(context);
@@ -1316,6 +1292,33 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const NotificationScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+
+
+                const Divider(indent: 20, endIndent: 20),
+                _drawerSectionTitle("Health Vitals"),
+                _drawerItem(Icons.analytics_rounded, "Health Parameters", () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HealthParametersScreen(),
+                    ),
+                  );
+                }),
+                _drawerItem(
+                  Icons.add_moderator_rounded,
+                  "Add Health Parameters",
+                  () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddVitalScreen(),
                       ),
                     );
                   },
@@ -1343,6 +1346,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     ),
                   );
                 }),
+
+
                 _drawerItem(Icons.policy_rounded, "Privacy & Policy", () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -1361,7 +1366,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
-              "Version 2.1.2",
+              "Doctorwala Patient",
               style: TextStyle(
                 color: Colors.blueGrey[200],
                 fontSize: 12,
