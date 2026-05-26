@@ -10,7 +10,8 @@ import 'profileeditscreen.dart';
 import 'package:demoapp/healthparametersscreen.dart';
 import 'package:demoapp/addvitalscreen.dart';
 import 'package:demoapp/medicalhistoryscreen.dart';
-import 'package:demoapp/addmedicalrecordscreen.dart';
+import 'package:demoapp/bmr.dart';
+// import 'package:demoapp/addmedicalrecordscreen.dart';
 import 'package:demoapp/search_screen.dart';
 import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
@@ -578,8 +579,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
               children: [
                 _newCategoryCard(
-                  title: "OPD Doctors & Clinics",
-                  subtitle: "Book clinical appointments instantly",
+                  title: "Doctor Chambers & Clinics",
+                  subtitle: "Book doctors appointments instantly",
                   icon: Icons.local_hospital_rounded,
                   color: const Color(0xFFE53935),
                   onTap:
@@ -595,7 +596,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 ),
                 _newCategoryCard(
                   title: "Pathology Tests & Labs",
-                  subtitle: "Certified diagnostic testing at home",
+                  subtitle: "Certified diagnostic testing",
                   icon: Icons.biotech_rounded,
                   color: const Color(0xFF00C853),
                   onTap:
@@ -611,7 +612,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 ),
                 _newCategoryCard(
                   title: "Individual Specialist Doctors",
-                  subtitle: "Connect with top experts in 50+ specialties",
+                  subtitle: "Connect with top experts",
                   icon: Icons.personal_injury_rounded,
                   color: const Color(0xFF1565C0),
                   onTap:
@@ -623,19 +624,19 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                         ),
                       ),
                 ),
-                _newCategoryCard(
-                  title: "24/7 Support",
-                  subtitle: "Immediate medical assistance & help",
-                  icon: Icons.support_agent_rounded,
-                  color: const Color(0xFFFFAB00),
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ContactScreen(),
-                        ),
-                      ),
-                ),
+                // _newCategoryCard(
+                //   title: "24/7 Support",
+                //   subtitle: "Immediate medical assistance & help",
+                //   icon: Icons.support_agent_rounded,
+                //   color: const Color(0xFFFFAB00),
+                //   onTap:
+                //       () => Navigator.push(
+                //         context,
+                //         MaterialPageRoute(
+                //           builder: (context) => const ContactScreen(),
+                //         ),
+                //       ),
+                // ),
 
                 const SizedBox(height: 20),
 
@@ -657,7 +658,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                         child: Row(
                           children: [
                             _eyeCatchyBox(
-                              title: "Medical Reports",
+                              title: "Test Reports",
                               subtitle: "Test results",
                               icon: Icons.assignment_rounded,
                               gradient: [
@@ -678,7 +679,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                             const SizedBox(width: 8),
                             _eyeCatchyBox(
                               title: "Prescriptions",
-                              subtitle: "Digital RX",
+                              subtitle: "Digital & Hand Written",
                               icon: Icons.medication_rounded,
                               gradient: [
                                 const Color(0xFF26A69A),
@@ -717,8 +718,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                             ),
                             const SizedBox(width: 8),
                             _eyeCatchyBox(
-                              title: "Health Parameters",
-                              subtitle: "Monitor metrics",
+                              title: "Health Vitals",
+                              subtitle: "Track metrics",
                               icon: Icons.monitor_heart_rounded,
                               gradient: [
                                 const Color(0xFF5C6BC0),
@@ -1248,7 +1249,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     ),
                   );
                 }),
-                _drawerItem(Icons.assignment_rounded, "Test Reports", () {
+                _drawerItem(Icons.assignment_rounded, "Test & Lab Reports", () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -1256,6 +1257,26 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                       builder:
                           (context) =>
                               const MedicalHistoryScreen(initialTabIndex: 0),
+                    ),
+                  );
+                }),
+                // _drawerItem(Icons.calculate, "BMI Calculator", () {
+                //   Navigator.pop(context);
+                //   Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder:
+                //           (context) =>
+                //               const MedicalHistoryScreen(initialTabIndex: 0),
+                //     ),
+                //   );
+                // }),
+                _drawerItem(Icons.calculate, "BMR Calculator", () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BMRCalculatorScreen(),
                     ),
                   );
                 }),
