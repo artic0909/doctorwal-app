@@ -36,7 +36,15 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
     _selectedType = widget.recordData?['type'] ?? widget.initialType ?? 'report';
     _headingController = TextEditingController(text: widget.recordData?['heading']);
     
-    String initialDate = widget.recordData?['date_of_report'] ?? DateFormat('yyyy-MM-dd').format(DateTime.now());
+    String initialDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    if (widget.recordData != null && widget.recordData!['date_of_report'] != null) {
+      try {
+        DateTime dt = DateTime.parse(widget.recordData!['date_of_report']).toLocal();
+        initialDate = DateFormat('yyyy-MM-dd').format(dt);
+      } catch (e) {
+        initialDate = widget.recordData!['date_of_report'];
+      }
+    }
     _dateController = TextEditingController(text: initialDate);
     
     if (widget.recordData != null && widget.recordData!['images'] != null) {

@@ -19,7 +19,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
   
   List<dynamic> _reports = [];
   List<dynamic> _prescriptions = [];
+  List<dynamic> _systemPrescriptions = [];
   bool _isLoading = true;
+  bool _isSystemPrescriptionView = false;
 
   DateTime? _fromDate;
   DateTime? _toDate;
@@ -74,6 +76,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
     try {
       final reportsRes = await _apiService.getMedicalHistory(type: 'report');
       final prescriptionsRes = await _apiService.getMedicalHistory(type: 'prescription');
+      final sysPresRes = await _apiService.getMedicalHistory(type: 'system-prescription');
 
       if (mounted) {
         // Sort descending by date
@@ -83,9 +86,13 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
         final List prescriptionsList = prescriptionsRes['data'] ?? [];
         prescriptionsList.sort((a, b) => (b['date_of_report'] ?? "").compareTo(a['date_of_report'] ?? ""));
 
+        final List sysPresList = sysPresRes['data'] ?? [];
+        sysPresList.sort((a, b) => (b['created_at'] ?? "").compareTo(a['created_at'] ?? ""));
+
         setState(() {
           _reports = reportsList;
           _prescriptions = prescriptionsList;
+          _systemPrescriptions = sysPresList;
           _isLoading = false;
         });
       }
@@ -163,7 +170,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                   controller: _tabController,
                   children: [
                     _buildList(_applyFilter(_reports), 'report'),
-                    _buildList(_applyFilter(_prescriptions), 'prescription'),
+                    _isSystemPrescriptionView 
+                        ? _buildSystemList(_applyFilter(_systemPrescriptions))
+                        : _buildList(_applyFilter(_prescriptions), 'prescription'),
                   ],
                 ),
           ),
@@ -254,6 +263,49 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
               padding: const EdgeInsets.only(top: 8, left: 4),
               child: Text("Showing latest 10 records by default", style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.bold)),
             ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            child: _tabController.index == 1 
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 15),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _isSystemPrescriptionView = false),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: !_isSystemPrescriptionView ? const Color(0xFF1565C0) : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFF1565C0).withAlpha(100)),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text("Uploaded", style: TextStyle(color: !_isSystemPrescriptionView ? Colors.white : const Color(0xFF1565C0), fontWeight: FontWeight.bold, fontSize: 13)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _isSystemPrescriptionView = true),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _isSystemPrescriptionView ? const Color(0xFF00897B) : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFF00897B).withAlpha(100)),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text("Generated", style: TextStyle(color: _isSystemPrescriptionView ? Colors.white : const Color(0xFF00897B), fontWeight: FontWeight.bold, fontSize: 13)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+          ),
         ],
       ),
     );
@@ -281,12 +333,42 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
     );
   }
 
+  Widget _buildSystemList(List<dynamic> items) {
+    if (items.isEmpty) {
+      return _buildEmptyState('system-prescription');
+    }
+    return RefreshIndicator(
+      onRefresh: _fetchData,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(20),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          String dateStr = "";
+          try {
+            DateTime dt = DateTime.parse(items[index]['created_at'] ?? items[index]['prescription_date'] ?? "").toLocal();
+            dateStr = DateFormat('yyyy-MM-dd').format(dt);
+          } catch(e) {
+            dateStr = items[index]['prescription_date'] ?? "";
+          }
+          return _buildExpandingSystemPrescriptionCard(items[index], dateStr);
+        },
+      ),
+    );
+  }
+
   Widget _buildRecordCard(dynamic record) {
     int imgCount = (record['images'] as List?)?.length ?? 0;
     String dateStr = "";
     try {
-      DateTime dt = DateTime.parse(record['date_of_report']).toLocal();
-      dateStr = DateFormat('dd MMM yyyy').format(dt);
+      String targetDate = (record['partner_id'] != null && record['created_at'] != null) 
+          ? record['created_at'] 
+          : record['date_of_report'];
+      DateTime dt = DateTime.parse(targetDate).toLocal();
+      if (record['partner_id'] != null) {
+        dateStr = DateFormat('dd MMM yyyy, hh:mm a').format(dt);
+      } else {
+        dateStr = DateFormat('dd MMM yyyy').format(dt);
+      }
     } catch (e) {
       dateStr = record['date_of_report'] ?? "";
     }
@@ -339,18 +421,19 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        _actionIcon(Icons.edit_rounded, Colors.blue, () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => AddMedicalRecordScreen(recordData: record)),
-                          ).then((v) => v == true ? _fetchData() : null);
-                        }),
-                        const SizedBox(width: 8),
-                        _actionIcon(Icons.delete_outline_rounded, Colors.red, () => _deleteRecord(record['id'])),
-                      ],
-                    ),
+                    if (record['partner_id'] == null)
+                      Row(
+                        children: [
+                          _actionIcon(Icons.edit_rounded, Colors.blue, () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => AddMedicalRecordScreen(recordData: record)),
+                            ).then((v) => v == true ? _fetchData() : null);
+                          }),
+                          const SizedBox(width: 8),
+                          _actionIcon(Icons.delete_outline_rounded, Colors.red, () => _deleteRecord(record['id'])),
+                        ],
+                      ),
                  ],
                ),
              ],
@@ -367,6 +450,204 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(color: color.withAlpha(20), shape: BoxShape.circle),
         child: Icon(icon, color: color, size: 14),
+      ),
+    );
+  }
+
+  Widget _buildExpandingSystemPrescriptionCard(dynamic record, String dateStr) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.blueGrey.withAlpha(30)),
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.all(16),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00897B).withAlpha(20),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text("PRESCRIPTION", style: TextStyle(color: Color(0xFF00897B), fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
+                  Text(dateStr, style: TextStyle(color: Colors.blueGrey[400], fontSize: 12, fontWeight: FontWeight.w600)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(record['heading'] ?? "Prescription", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF263238))),
+              const SizedBox(height: 4),
+              if (record['doctor_name'] != null)
+                Text("Prescribed by ${record['doctor_name']}", style: TextStyle(color: Colors.blueGrey[600], fontSize: 13)),
+              if (record['clinic_name'] != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text("Clinic: ${record['clinic_name']}", style: TextStyle(color: Colors.blueGrey[600], fontSize: 13)),
+                ),
+            ],
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // View PDF Button
+                  InkWell(
+                    onTap: () {
+                      // Depending on implementation, you might navigate differently for SystemPrescription
+                      // Navigator.push(context, MaterialPageRoute(builder: (context) => ViewMedicalRecordScreen(recordId: record['id'])));
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00897B),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 18),
+                          const SizedBox(width: 8),
+                          const Text("View Prescription PDF", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Vitals row
+                  Row(
+                    children: [
+                      _buildVitalBox(Icons.calendar_today_rounded, "Age", record['user_age'] ?? 'N/A'),
+                      const SizedBox(width: 10),
+                      _buildVitalBox(Icons.face_rounded, "Gender", record['user_gender'] ?? 'N/A'),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _buildVitalBox(Icons.water_drop_rounded, "Blood", record['blood_group'] ?? 'N/A'),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Symptoms
+                  if (record['symptoms'] != null && (record['symptoms'] as List).isNotEmpty) ...[
+                    _buildSectionHeading("SYMPTOMS / COMPLAINTS"),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: (record['symptoms'] as List).map<Widget>((symp) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.blueGrey.withAlpha(50)),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(symp.toString(), style: const TextStyle(color: Color(0xFF1565C0), fontSize: 12, fontWeight: FontWeight.w600)),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Medicines
+                  if (record['medicines'] != null && (record['medicines'] as List).isNotEmpty) ...[
+                    _buildSectionHeading("MEDICINES / RX"),
+                    ...(record['medicines'] as List).map<Widget>((med) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.circle, size: 6, color: Color(0xFF1565C0)),
+                                const SizedBox(width: 6),
+                                Expanded(child: Text(med['name'] ?? "", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)))),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12, top: 4),
+                              child: Text(
+                                "Frequency: ${med['frequency'] ?? 'N/A'} | Relation: ${med['relation'] ?? 'N/A'} | Duration: ${med['duration'] ?? 'N/A'}",
+                                style: TextStyle(color: Colors.blueGrey[600], fontSize: 12, height: 1.4),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    const SizedBox(height: 10),
+                  ],
+
+                  // Tests
+                  if (record['recommended_tests'] != null && (record['recommended_tests'] as List).isNotEmpty) ...[
+                    _buildSectionHeading("RECOMMENDED TESTS"),
+                    ...(record['recommended_tests'] as List).map<Widget>((test) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.circle, size: 6, color: Color(0xFF7E57C2)),
+                            const SizedBox(width: 6),
+                            Expanded(child: Text(test.toString(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF7E57C2)))),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeading(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Center(
+        child: Text(title, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.blueGrey[300], letterSpacing: 1)),
+      ),
+    );
+  }
+
+  Widget _buildVitalBox(IconData icon, String title, String val) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.blueGrey.withAlpha(30)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFF00897B), size: 16),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(color: Colors.blueGrey[400], fontSize: 10, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(val, style: const TextStyle(color: Color(0xFF1565C0), fontSize: 13, fontWeight: FontWeight.w900)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

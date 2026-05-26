@@ -277,6 +277,8 @@ class ApiService {
         endpoint += '/reports';
       } else if (type == 'prescription') {
         endpoint += '/prescriptions';
+      } else if (type == 'system-prescription') {
+        endpoint += '/system-prescriptions';
       } else if (singleId != null) {
         endpoint += '/$singleId';
       }
