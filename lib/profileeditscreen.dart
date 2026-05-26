@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/changepasswordscreen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -100,11 +99,13 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           _networkImageUrl = user['image'];
 
           // Fallback if dropdown values don't match exactly
-          if (_selectedGender != null && !_genders.contains(_selectedGender))
+          if (_selectedGender != null && !_genders.contains(_selectedGender)) {
             _selectedGender = null;
+          }
           if (_selectedBloodGroup != null &&
-              !_bloodGroups.contains(_selectedBloodGroup))
+              !_bloodGroups.contains(_selectedBloodGroup)) {
             _selectedBloodGroup = null;
+          }
         });
 
         // Update local prefs with latest core data
@@ -113,8 +114,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         await prefs.setString('email', _emailController.text);
         await prefs.setString('mobile', _mobileController.text);
         await prefs.setString('city', _cityController.text);
-        if (_networkImageUrl != null)
+        if (_networkImageUrl != null) {
           await prefs.setString('image', _networkImageUrl!);
+        }
 
         await _loadMedicalCardData();
       }
@@ -895,7 +897,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                             ),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                              color: Colors.amber[800]!.withOpacity(0.5),
+                              color: Colors.amber[800]!.withValues(alpha:0.5),
                               width: 0.5,
                             ),
                           ),
@@ -907,7 +909,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                 left: 0,
                                 right: 0,
                                 child: Container(
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     border: Border(
                                       top: BorderSide(
                                         color: Colors.black12,
@@ -927,7 +929,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                                 left: 12,
                                 right: 12,
                                 child: Container(
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     border: Border(
                                       left: BorderSide(
                                         color: Colors.black12,

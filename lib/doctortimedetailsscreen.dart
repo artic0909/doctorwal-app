@@ -143,7 +143,7 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
                 const SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    doctor.partnerDoctorFees ?? "Not Defined",
+                    doctor.partnerDoctorFees,
                     style: const TextStyle(fontSize: 15, color: Colors.black54),
                   ),
                 ),

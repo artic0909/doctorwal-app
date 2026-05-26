@@ -312,7 +312,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
     const String domain = "https://doctorwala.info/";
     String cleanPath = path.startsWith('/') ? path.substring(1) : path;
     if (!cleanPath.startsWith('storage/')) {
-      cleanPath = 'storage/' + cleanPath;
+      cleanPath = 'storage/$cleanPath';
     }
     return domain + cleanPath;
   }

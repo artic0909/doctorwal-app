@@ -12,7 +12,7 @@ class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  _SignupScreenState createState() => _SignupScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
 class _SignupScreenState extends State<SignupScreen> {
@@ -164,6 +164,7 @@ class _SignupScreenState extends State<SignupScreen> {
           );
         }
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(jsonResponse['message'] ?? 'Registration failed'),
@@ -171,6 +172,7 @@ class _SignupScreenState extends State<SignupScreen> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -412,13 +414,13 @@ class _SignupScreenState extends State<SignupScreen> {
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(color: Colors.amber[800]!.withOpacity(0.5), width: 0.5),
+                                      border: Border.all(color: Colors.amber[800]!.withValues(alpha:0.5), width: 0.5),
                                     ),
                                     child: Stack(
                                       children: [
                                         // Chip lines for realism
-                                        Positioned(top: 8, bottom: 8, left: 0, right: 0, child: Container(decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.black12, width: 0.5), bottom: BorderSide(color: Colors.black12, width: 0.5))))),
-                                        Positioned(top: 0, bottom: 0, left: 12, right: 12, child: Container(decoration: BoxDecoration(border: Border(left: BorderSide(color: Colors.black12, width: 0.5), right: BorderSide(color: Colors.black12, width: 0.5))))),
+                                        Positioned(top: 8, bottom: 8, left: 0, right: 0, child: Container(decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.black12, width: 0.5), bottom: BorderSide(color: Colors.black12, width: 0.5))))),
+                                        Positioned(top: 0, bottom: 0, left: 12, right: 12, child: Container(decoration: const BoxDecoration(border: Border(left: BorderSide(color: Colors.black12, width: 0.5), right: BorderSide(color: Colors.black12, width: 0.5))))),
                                       ],
                                     ),
                                   ),

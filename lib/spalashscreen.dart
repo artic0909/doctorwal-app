@@ -47,8 +47,8 @@ class _SplashScreenState extends State<SplashScreen>
     _fadeController.forward();
 
     Timer(const Duration(milliseconds: 3500), () async {
+      final prefs = await SharedPreferences.getInstance();
       if (mounted) {
-        final prefs = await SharedPreferences.getInstance();
         final token = prefs.getString('token');
         
         Widget nextScreen;
@@ -142,7 +142,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 30),
                     // Doctorwala Brand Name
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
@@ -150,7 +150,7 @@ class _SplashScreenState extends State<SplashScreen>
                           style: TextStyle(
                             fontSize: 42,
                             fontWeight: FontWeight.w900,
-                            color: const Color(0xFF35824A), // 0xFF35824A Brand Red
+                            color: Color(0xFF35824A), // 0xFF35824A Brand Red
                             letterSpacing: -1,
                           ),
                         ),
@@ -159,7 +159,7 @@ class _SplashScreenState extends State<SplashScreen>
                           style: TextStyle(
                             fontSize: 42,
                             fontWeight: FontWeight.w900,
-                            color: const Color(0xFFE53935), // Brand Blue
+                            color: Color(0xFFE53935), // Brand Blue
                             letterSpacing: -1,
                           ),
                         ),

@@ -40,8 +40,8 @@ class _PathologyPatientInquiryScreenState
     super.initState();
 
     _partnerIdController.text =
-        widget.pathology.currentlyLoggedInPartnerId ?? '';
-    _enquiryAboutController.text = widget.pathology.clinicName ?? '';
+        widget.pathology.currentlyLoggedInPartnerId;
+    _enquiryAboutController.text = widget.pathology.clinicName;
 
     _nameController.text = widget.userData['name'] ?? '';
     _cityController.text = widget.userData['city'] ?? '';
@@ -269,6 +269,7 @@ class _PathologyPatientInquiryScreenState
         );
 
         final data = jsonDecode(response.body);
+        if (!mounted) return;
         if (response.statusCode == 200 && data['status'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Inquiry submitted successfully!")),
@@ -280,6 +281,7 @@ class _PathologyPatientInquiryScreenState
           );
         }
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Error: $e")));

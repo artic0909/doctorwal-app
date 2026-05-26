@@ -340,7 +340,7 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => BookingScreen(
-                          type: BookingType.OPD,
+                          type: BookingType.opd,
                           partnerId: widget.opd.currentlyLoggedInPartnerId.toString(),
                           clinicName: widget.opd.clinicName,
                           userData: widget.userData,

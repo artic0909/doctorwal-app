@@ -41,7 +41,7 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
       setState(() {
         _isLoading = false;
       });
-      print("Error fetching coupons: $e");
+      // print("Error fetching coupons: $e");
     }
   }
 

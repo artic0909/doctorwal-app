@@ -32,8 +32,8 @@ class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
   void initState() {
     super.initState();
 
-    _partnerIdController.text = widget.opd.currentlyLoggedInPartnerId ?? '';
-    _enquiryAboutController.text = widget.opd.clinicName ?? '';
+    _partnerIdController.text = widget.opd.currentlyLoggedInPartnerId;
+    _enquiryAboutController.text = widget.opd.clinicName;
     _nameController.text = widget.userData['name'] ?? '';
     _emailController.text = widget.userData['email'] ?? '';
   }
@@ -147,7 +147,7 @@ class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.08),
+            color: Colors.blue.withValues(alpha:0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -177,7 +177,7 @@ class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.withValues(alpha:0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: Colors.blue[800], size: 20),
@@ -219,7 +219,7 @@ class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.08),
+            color: Colors.blue.withValues(alpha:0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -297,7 +297,7 @@ class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.08),
+            color: Colors.blue.withValues(alpha:0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -339,7 +339,7 @@ class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
+            color: Colors.blue.withValues(alpha:0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -415,6 +415,7 @@ class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
           body: jsonEncode(body),
         );
 
+        if (!mounted) return;
         Navigator.pop(context); // Close loading dialog
 
         final data = jsonDecode(response.body);
@@ -439,6 +440,7 @@ class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
           );
         }
       } catch (e) {
+        if (!mounted) return;
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

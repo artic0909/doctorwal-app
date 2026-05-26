@@ -66,7 +66,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BookingScreen(
-                      type: BookingType.OPD,
+                      type: BookingType.opd,
                       partnerId: doctor['currently_loggedin_partner_id']?.toString() ?? opd.currentlyLoggedInPartnerId,
                       clinicName: opd.clinicName ?? "Clinic",
                       userData: userData,
@@ -90,7 +90,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.calendar_today_rounded, size: 20),
                   SizedBox(width: 12),
-                  const Text("BOOK APPOINTMENT", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                  Text("BOOK APPOINTMENT", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
                 ],
               ),
             ),

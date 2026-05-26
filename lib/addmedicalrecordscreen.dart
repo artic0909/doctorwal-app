@@ -25,9 +25,9 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   late TextEditingController _dateController;
   
   String _selectedType = 'report';
-  List<File> _newImages = [];
+  final List<File> _newImages = [];
   List<String> _existingImages = [];
-  List<String> _deletedExistingImages = [];
+  final List<String> _deletedExistingImages = [];
   bool _isLoading = false;
 
   @override

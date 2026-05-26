@@ -273,9 +273,13 @@ class ApiService {
     try {
       await _setAuthHeader();
       String endpoint = '/api/medical-history';
-      if (type == 'report') endpoint += '/reports';
-      else if (type == 'prescription') endpoint += '/prescriptions';
-      else if (singleId != null) endpoint += '/$singleId';
+      if (type == 'report') {
+        endpoint += '/reports';
+      } else if (type == 'prescription') {
+        endpoint += '/prescriptions';
+      } else if (singleId != null) {
+        endpoint += '/$singleId';
+      }
 
       final response = await _dio.get(endpoint);
       return response.data;

@@ -92,9 +92,9 @@ class ContactScreen extends StatelessWidget {
                             end: Alignment.bottomRight,
                           ),
                         ),
-                        child: Column(
+                        child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             SizedBox(height: 60),
                             CircleAvatar(
                               radius: 40,
@@ -210,10 +210,10 @@ class ContactScreen extends StatelessWidget {
                               children: [
                                 _bentoIcon(Icons.language_rounded, const Color(0xFFE65100)),
                                 const SizedBox(width: 16),
-                                Column(
+                                const Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
+                                  children: [
                                     Text("WEBSITE", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFFE65100))),
                                     Text("www.doctorwala.info", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Color(0xFF263238))),
                                   ],

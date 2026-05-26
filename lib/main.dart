@@ -67,6 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final id = prefs.getString('id');
 
     if (token != null && name != null && email != null) {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -149,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       barrierDismissible: false,
       builder:
-          (context) => Dialog(
+          (dialogContext) => Dialog(
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.symmetric(horizontal: 40),
             child: Container(
@@ -220,7 +221,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
 
                           Future.delayed(const Duration(seconds: 1), () {
-                            Navigator.of(context).pop();
+                            if (!dialogContext.mounted) return;
+                            Navigator.of(dialogContext).pop();
+                            if (!mounted) return;
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -485,13 +488,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(color: Colors.amber[800]!.withOpacity(0.5), width: 0.5),
+                                      border: Border.all(color: Colors.amber[800]!.withValues(alpha: 0.5), width: 0.5),
                                     ),
                                     child: Stack(
                                       children: [
                                         // Chip lines for realism
-                                        Positioned(top: 8, bottom: 8, left: 0, right: 0, child: Container(decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.black12, width: 0.5), bottom: BorderSide(color: Colors.black12, width: 0.5))))),
-                                        Positioned(top: 0, bottom: 0, left: 12, right: 12, child: Container(decoration: BoxDecoration(border: Border(left: BorderSide(color: Colors.black12, width: 0.5), right: BorderSide(color: Colors.black12, width: 0.5))))),
+                                        Positioned(top: 8, bottom: 8, left: 0, right: 0, child: Container(decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.black12, width: 0.5), bottom: BorderSide(color: Colors.black12, width: 0.5))))),
+                                        Positioned(top: 0, bottom: 0, left: 12, right: 12, child: Container(decoration: const BoxDecoration(border: Border(left: BorderSide(color: Colors.black12, width: 0.5), right: BorderSide(color: Colors.black12, width: 0.5))))),
                                       ],
                                     ),
                                   ),

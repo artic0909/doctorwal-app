@@ -38,8 +38,8 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
   void initState() {
     super.initState();
 
-    _partnerIdController.text = widget.opd.currentlyLoggedInPartnerId ?? '';
-    _enquiryAboutController.text = widget.opd.clinicName ?? '';
+    _partnerIdController.text = widget.opd.currentlyLoggedInPartnerId;
+    _enquiryAboutController.text = widget.opd.clinicName;
 
     _nameController.text = widget.userData['name'] ?? '';
     _cityController.text = widget.userData['city'] ?? '';
@@ -237,16 +237,14 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
       }
 
       // Debug print all form data to console:
-      print('partnerId: ${_partnerIdController.text}');
-      print('enquiryAbout: ${_enquiryAboutController.text}');
-      print('name: ${_nameController.text}');
-      print('city: ${_cityController.text}');
-      print('email: ${_emailController.text}');
-      print('phone: ${_phoneController.text}');
-      print('message: ${_messageController.text}');
-      print(
-        'Inquiry Types: OPD=$_inquiryOPD, Path=$_inquiryPath, Doctor=$_inquiryDoctor',
-      );
+      // print('partnerId: ${_partnerIdController.text}');
+      // print('enquiryAbout: ${_enquiryAboutController.text}');
+      // print('name: ${_nameController.text}');
+      // print('city: ${_cityController.text}');
+      // print('email: ${_emailController.text}');
+      // print('phone: ${_phoneController.text}');
+      // print('message: ${_messageController.text}');
+      // print('Inquiry Types: OPD=$_inquiryOPD, Path=$_inquiryPath, Doctor=$_inquiryDoctor');
 
       final inquiryType =
           _inquiryOPD
@@ -279,6 +277,7 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
         );
 
         final data = jsonDecode(response.body);
+        if (!mounted) return;
         if (response.statusCode == 200 && data['status'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Inquiry submitted successfully!")),
@@ -290,6 +289,7 @@ class _OPDPatientInquiryScreenState extends State<OPDPatientInquiryScreen> {
           );
         }
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Error: $e")));

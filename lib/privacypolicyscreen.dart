@@ -65,9 +65,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                             end: Alignment.bottomRight,
                           ),
                         ),
-                        child: Column(
+                        child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             SizedBox(height: 40),
                             Icon(
                               Icons.shield_rounded,

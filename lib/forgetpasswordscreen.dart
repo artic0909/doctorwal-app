@@ -52,12 +52,14 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
       final data = jsonDecode(response.body);
       if (response.statusCode == 200 && data['status'] == true) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'])),
         );
         setState(() => isOTPSent = true);
         startCountdown();
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'] ?? "Something went wrong.")),
         );
@@ -82,11 +84,13 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
       final data = jsonDecode(response.body);
       if (response.statusCode == 200 && data['status'] == true) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'])),
         );
         setState(() => isOTPVerified = true);
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'] ?? "OTP verification failed.")),
         );
@@ -130,6 +134,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
       final data = jsonDecode(response.body);
       if (response.statusCode == 200 && data['status'] == true) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'] ?? "Password updated")),
         );
@@ -138,6 +143,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'] ?? "Password update failed")),
         );
@@ -241,7 +247,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                 color: isActive ? Colors.blue[800] : Colors.grey[300],
                 shape: BoxShape.circle,
                 boxShadow: isActive
-                    ? [BoxShadow(color: Colors.blue.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))]
+                    ? [BoxShadow(color: Colors.blue.withValues(alpha:0.3), blurRadius: 8, offset: const Offset(0, 4))]
                     : [],
               ),
               child: Center(
@@ -290,7 +296,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           height: 120,
           width: 120,
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.withValues(alpha:0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(Icons.alternate_email_rounded, size: 60, color: Colors.blue[800]),
@@ -332,7 +338,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           height: 120,
           width: 120,
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
+            color: Colors.orange.withValues(alpha:0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(Icons.shield_outlined, size: 60, color: Colors.orange[800]),
@@ -390,7 +396,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           height: 120,
           width: 120,
           decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.1),
+            color: Colors.green.withValues(alpha:0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(Icons.lock_reset_rounded, size: 60, color: Colors.green[800]),
@@ -446,7 +452,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withOpacity(0.05),
+                color: Colors.blue.withValues(alpha:0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -505,7 +511,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.blue.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(color: Colors.blue.withValues(alpha:0.08), blurRadius: 20, offset: const Offset(0, 10)),
         ],
       ),
       child: TextField(
@@ -538,7 +544,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.blue.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(color: Colors.blue.withValues(alpha:0.08), blurRadius: 20, offset: const Offset(0, 10)),
         ],
       ),
       child: TextField(
@@ -576,7 +582,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         gradient: LinearGradient(colors: gradientColors),
         boxShadow: [
           BoxShadow(
-            color: gradientColors[0].withOpacity(0.3),
+            color: gradientColors[0].withValues(alpha:0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),

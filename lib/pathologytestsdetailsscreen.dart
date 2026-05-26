@@ -178,7 +178,7 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BookingScreen(
-                      type: BookingType.Pathology,
+                      type: BookingType.pathology,
                       partnerId: test['currently_loggedin_partner_id']?.toString() ?? "",
                       clinicName: clinicName,
                       userData: userData,
@@ -201,8 +201,8 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.calendar_today_rounded, size: 20),
-                  const SizedBox(width: 12),
-                  const Text("BOOK THIS TEST", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                  SizedBox(width: 12),
+                  Text("BOOK THIS TEST", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
                 ],
               ),
             ),

@@ -92,20 +92,25 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       // Aggressive key checking for memberId
       memberId = prefs.getString('member_id') ?? '';
       if (memberId.trim().isEmpty) memberId = prefs.getString('memberid') ?? '';
-      if (memberId.trim().isEmpty)
+      if (memberId.trim().isEmpty) {
         memberId = widget.userData['member_id']?.toString() ?? '';
-      if (memberId.trim().isEmpty)
+      }
+      if (memberId.trim().isEmpty) {
         memberId = widget.userData['memberid']?.toString() ?? '';
+      }
       if (memberId.trim().isEmpty) memberId = 'DW-2026-CARD';
 
       // Aggressive key checking for medicalCardNo
       medicalCardNo = prefs.getString('medical_card_no') ?? '';
-      if (medicalCardNo.trim().isEmpty)
+      if (medicalCardNo.trim().isEmpty) {
         medicalCardNo = prefs.getString('medicalcardno') ?? '';
-      if (medicalCardNo.trim().isEmpty)
+      }
+      if (medicalCardNo.trim().isEmpty) {
         medicalCardNo = widget.userData['medical_card_no']?.toString() ?? '';
-      if (medicalCardNo.trim().isEmpty)
+      }
+      if (medicalCardNo.trim().isEmpty) {
         medicalCardNo = widget.userData['medicalcardno']?.toString() ?? '';
+      }
       if (medicalCardNo.trim().isEmpty) medicalCardNo = 'DW26 0000 00';
 
       profileImg =
@@ -143,6 +148,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     final token = prefs.getString('token');
 
     if (token == null) {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -161,11 +167,13 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
       if (response.statusCode == 200) {
         await prefs.clear();
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Logout failed: ${response.body}')),
         );
@@ -173,6 +181,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     } catch (e) {
       // If error (e.g. 401), just clear and go back
       await prefs.clear();
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -201,6 +210,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             medicalCardNo = newCardNo;
           });
 
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Medical card generated successfully!'),
@@ -209,6 +219,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           );
         }
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result['message'] ?? 'Failed to generate card'),
@@ -217,6 +228,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );
@@ -997,10 +1009,10 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                   const SizedBox(height: 15),
                   ElevatedButton(
                     onPressed: () {
-                      Share.share(
-                        'Download the Doctorwala app for your health needs: https://play.google.com/store/apps/details?id=com.doctorwala.dochealth&hl=en_IN',
+                      SharePlus.instance.share(ShareParams(
+                        text: 'Download the Doctorwala app for your health needs: https://play.google.com/store/apps/details?id=com.doctorwala.dochealth&hl=en_IN',
                         subject: 'Join Doctorwala',
-                      );
+                      ));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -1384,7 +1396,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     Color? color,
     bool isSelected = false,
   }) {
-    final Color brandColor = const Color(0xFF1565C0);
+    const Color brandColor = Color(0xFF1565C0);
     final Color iconColor =
         color ?? (isSelected ? brandColor : const Color(0xFF546E7A));
     final Color textColor = isSelected ? brandColor : const Color(0xFF263238);
@@ -1433,7 +1445,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
     // If it doesn't have storage/ prefix and it's not a full URL, add it
     if (!cleanPath.startsWith('storage/')) {
-      cleanPath = 'storage/' + cleanPath;
+      cleanPath = 'storage/$cleanPath';
     }
 
     return domain + cleanPath;

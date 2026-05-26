@@ -50,12 +50,14 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
     final result = jsonDecode(response.body);
 
     if (response.statusCode == 200 && result['status'] == true) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result['message'])));
       setState(() => isOTPSent = true);
       startCountdown();
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result['message'] ?? 'Something went wrong.')),
       );
@@ -75,11 +77,13 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
     final result = jsonDecode(response.body);
 
     if (response.statusCode == 200 && result['status'] == true) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result['message'])));
       setState(() => isOTPVerified = true);
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result['message'] ?? 'OTP verification failed')),
       );
@@ -118,6 +122,7 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
     final result = jsonDecode(response.body);
 
     if (response.statusCode == 200 && result['status'] == true) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result['message'] ?? "Password updated")),
       );
@@ -127,6 +132,7 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message'] ?? "Failed to update password"),

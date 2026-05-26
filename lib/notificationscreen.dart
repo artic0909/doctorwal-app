@@ -38,7 +38,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         },
       );
 
-      print("NOTIFICATION_RAW_DATA: ${response.body}"); // FOR DEBUGGING
+      // print("NOTIFICATION_RAW_DATA: ${response.body}"); // FOR DEBUGGING
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -74,16 +74,19 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
       final data = jsonDecode(response.body);
       if (data['status'] == true) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message']), backgroundColor: Colors.green),
         );
         _fetchNotifications(); // Refresh list
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'] ?? 'Action failed'), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );
@@ -159,9 +162,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _headerStat("${unread}", "Unread"),
+              _headerStat("$unread", "Unread"),
               Container(width: 1, height: 40, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 25)),
-              _headerStat("${total}", "Total"),
+              _headerStat("$total", "Total"),
             ],
           ),
         ],
@@ -404,7 +407,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(color: const Color(0xFFE3F2FD), shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: Color(0xFFE3F2FD), shape: BoxShape.circle),
             child: Icon(icon, color: const Color(0xFF1976D2), size: 14),
           ),
           const SizedBox(width: 8),
