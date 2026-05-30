@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:demoapp/main.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:demoapp/categoryscreen.dart';
+import 'package:demoapp/bottom_nav.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -63,7 +63,7 @@ class _SplashScreenState extends State<SplashScreen>
             'medical_card_no': prefs.getString('medical_card_no') ?? '',
             'image': prefs.getString('image') ?? '',
           };
-          nextScreen = CategoryHomeScreen(userData: userData);
+          nextScreen = BottomNavScreen(userData: userData);
         } else {
           nextScreen = const LoginScreen();
         }

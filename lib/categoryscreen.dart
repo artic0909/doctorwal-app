@@ -4,18 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'alldoctorsscreen.dart';
 import 'allavailablepathologyscreen.dart';
-import 'contactscreen.dart';
-import 'notificationscreen.dart';
+import 'package:demoapp/notificationscreen.dart';
 import 'profileeditscreen.dart';
 import 'package:demoapp/healthparametersscreen.dart';
-import 'package:demoapp/addvitalscreen.dart';
 import 'package:demoapp/medicalhistoryscreen.dart';
 import 'package:demoapp/bmr.dart';
 // import 'package:demoapp/addmedicalrecordscreen.dart';
 import 'package:demoapp/search_screen.dart';
 import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
-import 'package:demoapp/privacypolicyscreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 
@@ -288,12 +285,6 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
-      drawer: _buildPremiumDrawer(
-        context,
-        currentName,
-        dispMemberId,
-        currentProfileImg,
-      ),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -303,7 +294,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             Builder(
               builder:
                   (context) => GestureDetector(
-                    onTap: () => Scaffold.of(context).openDrawer(),
+                    onTap: () => Scaffold.of(this.context).openDrawer(),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -1146,338 +1137,6 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     );
   }
 
-  Widget _buildPremiumDrawer(
-    BuildContext context,
-    String name,
-    String memberId,
-    String profileImg,
-  ) {
-    return Drawer(
-      backgroundColor: Colors.white,
-      child: Column(
-        children: [
-          // Premium Immersive Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(24, 60, 24, 20),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
-              ),
-              borderRadius: BorderRadius.only(bottomRight: Radius.circular(50)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.white,
-                        backgroundImage:
-                            profileImg.isNotEmpty
-                                ? NetworkImage(_getImageUrl(profileImg))
-                                : null,
-                        child:
-                            profileImg.isEmpty
-                                ? const Icon(
-                                  Icons.person,
-                                  size: 30,
-                                  color: Color(0xFF1565C0),
-                                )
-                                : null,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        _logoutIconButton(),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
-                            Icons.close_rounded,
-                            color: Colors.white70,
-                            size: 26,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 15),
-                Text(
-                  name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(51),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    memberId,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Menu Items
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              children: [
-                _drawerItem(
-                  Icons.home_rounded,
-                  "Home",
-                  () => Navigator.pop(context),
-                  isSelected: true,
-                ),
-                _drawerItem(Icons.medication_rounded, "Prescriptions", () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              const MedicalHistoryScreen(initialTabIndex: 1),
-                    ),
-                  );
-                }),
-                _drawerItem(Icons.assignment_rounded, "Test & Lab Reports", () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              const MedicalHistoryScreen(initialTabIndex: 0),
-                    ),
-                  );
-                }),
-                // _drawerItem(Icons.calculate, "BMI Calculator", () {
-                //   Navigator.pop(context);
-                //   Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder:
-                //           (context) =>
-                //               const MedicalHistoryScreen(initialTabIndex: 0),
-                //     ),
-                //   );
-                // }),
-                _drawerItem(Icons.calculate, "BMR Calculator", () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BMRCalculatorScreen(),
-                    ),
-                  );
-                }),
-                // _drawerItem(Icons.note_add_rounded, "Add Medical Records", () {
-                //   Navigator.pop(context);
-                //   Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (context) => const AddMedicalRecordScreen(),
-                //     ),
-                //   );
-                // }),
-
-
-                                const Divider(indent: 20, endIndent: 20),
-                _drawerSectionTitle("appointments & notifications"),
-                _drawerItem(Icons.calendar_month_rounded, "Appointments", () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              AllAppointmentsScreen(userData: widget.userData),
-                    ),
-                  );
-                }),
-                _drawerItem(
-                  Icons.notifications_active_rounded,
-                  "Notifications",
-                  () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NotificationScreen(),
-                      ),
-                    );
-                  },
-                ),
-
-
-
-                const Divider(indent: 20, endIndent: 20),
-                _drawerSectionTitle("Health Vitals"),
-                _drawerItem(Icons.analytics_rounded, "Health Parameters", () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const HealthParametersScreen(),
-                    ),
-                  );
-                }),
-                _drawerItem(
-                  Icons.add_moderator_rounded,
-                  "Add Health Parameters",
-                  () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddVitalScreen(),
-                      ),
-                    );
-                  },
-                ),
-
-                const Divider(indent: 20, endIndent: 20),
-                _drawerSectionTitle("Account & support"),
-                _drawerItem(Icons.person_rounded, "My Profile", () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              ProfileEditScreen(userData: widget.userData),
-                    ),
-                  ).then((_) => loadUserData());
-                }),
-                _drawerItem(Icons.support_agent_rounded, "24/7 Support", () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ContactScreen(),
-                    ),
-                  );
-                }),
-
-
-                _drawerItem(Icons.policy_rounded, "Privacy & Policy", () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PrivacyPolicyScreen(),
-                    ),
-                  );
-                }),
-
-                const SizedBox(height: 30),
-              ],
-            ),
-          ),
-
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Text(
-              "Doctorwala Patient",
-              style: TextStyle(
-                color: Colors.blueGrey[200],
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _drawerSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          color: Colors.blueGrey[300],
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-
-  Widget _drawerItem(
-    IconData icon,
-    String title,
-    VoidCallback onTap, {
-    Color? color,
-    bool isSelected = false,
-  }) {
-    const Color brandColor = Color(0xFF1565C0);
-    final Color iconColor =
-        color ?? (isSelected ? brandColor : const Color(0xFF546E7A));
-    final Color textColor = isSelected ? brandColor : const Color(0xFF263238);
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color:
-                isSelected
-                    ? brandColor.withAlpha(20)
-                    : Colors.blueGrey[50]?.withAlpha(128),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: iconColor, size: 20),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-          ),
-        ),
-        onTap: onTap,
-        dense: true,
-        visualDensity: VisualDensity.compact,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-        selected: isSelected,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
   String _getImageUrl(String? path) {
     if (path == null || path.isEmpty) return "";
     if (path.startsWith('http')) return path;
@@ -1494,20 +1153,5 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     }
 
     return domain + cleanPath;
-  }
-
-  Widget _logoutIconButton() {
-    return Container(
-      margin: const EdgeInsets.only(right: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(40),
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        onPressed: () => logout(),
-        icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
-        tooltip: "Logout",
-      ),
-    );
   }
 }

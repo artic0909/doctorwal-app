@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:demoapp/categoryscreen.dart';
+import 'package:demoapp/bottom_nav.dart';
 import 'package:demoapp/forgetpasswordscreen.dart';
 import 'package:demoapp/signupscreen.dart';
 import 'package:demoapp/spalashscreen.dart';
@@ -228,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (_) => CategoryHomeScreen(
+                                    (_) => BottomNavScreen(
                                       userData: _loggedUserData!,
                                     ),
                               ),

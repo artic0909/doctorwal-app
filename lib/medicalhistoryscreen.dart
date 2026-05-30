@@ -7,8 +7,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 class MedicalHistoryScreen extends StatefulWidget {
   final int initialTabIndex; // 0 for Reports, 1 for Prescriptions
+  final bool isTab;
 
-  const MedicalHistoryScreen({super.key, this.initialTabIndex = 0});
+  const MedicalHistoryScreen({super.key, this.initialTabIndex = 0, this.isTab = false});
 
   @override
   State<MedicalHistoryScreen> createState() => _MedicalHistoryScreenState();
@@ -150,10 +151,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
           "Medical History",
           style: TextStyle(color: Color(0xFF263238), fontSize: 18, fontWeight: FontWeight.w900),
         ),
-        leading: IconButton(
+        leading: widget.isTab ? null : IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1565C0), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+        automaticallyImplyLeading: !widget.isTab,
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF1565C0),
