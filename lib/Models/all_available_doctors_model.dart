@@ -78,7 +78,7 @@ class AllAvailableDoctorsModel {
       partnerDoctorName: json['partner_doctor_name'] == 'null' ? null : json['partner_doctor_name'],
       partnerDoctorSpecialist: json['partner_doctor_specialist'] == 'null' ? null : json['partner_doctor_specialist'],
       partnerDoctorDesignation: json['partner_doctor_designation'] == 'null' ? null : json['partner_doctor_designation'],
-      partnerDoctorFees: json['partner_doctor_fees']?.toString() ?? '',
+      partnerDoctorFees: (json['partner_doctor_fees'] == null || json['partner_doctor_fees'] == 'null') ? '' : json['partner_doctor_fees'].toString(),
       partnerDoctorMobile: json['partner_doctor_mobile'] ?? '',
       partnerDoctorEmail: json['partner_doctor_email'] ?? '',
       partnerDoctorLandmark: json['partner_doctor_landmark'] == 'null' ? null : json['partner_doctor_landmark'],
@@ -91,8 +91,10 @@ class AllAvailableDoctorsModel {
       status: json['status'] ?? '',
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updated_at'] ?? '') ?? DateTime.now(),
-      banner: (json['banner'] != null && json['banner'] is String)
-          ? json['banner'].toString().replaceFirst('127.0.0.1', '10.0.2.2')
+      banner: json['banner'] != null
+          ? (json['banner'] is Map
+              ? (json['banner']['doctorbanner']?.toString() ?? '')
+              : json['banner'].toString()).replaceFirst('127.0.0.1', '10.0.2.2')
           : '',
     );
   }

@@ -160,7 +160,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
       child: Column(
         children: [
           const Text("FEES", style: TextStyle(color: Colors.white70, fontSize: 8, fontWeight: FontWeight.w900)),
-          Text("₹$fees", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+          Text(fees.trim().isEmpty || fees == 'null' ? "N/A" : "₹$fees", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
         ],
       ),
     );
