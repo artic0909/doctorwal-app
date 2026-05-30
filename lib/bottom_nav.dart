@@ -14,6 +14,7 @@ import 'package:demoapp/privacypolicyscreen.dart';
 import 'package:demoapp/main.dart'; // For LoginScreen
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart' as import_services;
 
 class BottomNavScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -25,19 +26,46 @@ class BottomNavScreen extends StatefulWidget {
   State<BottomNavScreen> createState() => _BottomNavScreenState();
 }
 
+class TabNavigator extends StatelessWidget {
+  final GlobalKey<NavigatorState> navigatorKey;
+  final Widget child;
+
+  const TabNavigator({super.key, required this.navigatorKey, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      key: navigatorKey,
+      onGenerateRoute: (routeSettings) {
+        return MaterialPageRoute(
+          builder: (context) => child,
+        );
+      },
+    );
+  }
+}
+
 class _BottomNavScreenState extends State<BottomNavScreen> {
   int _currentIndex = 0;
   late final List<Widget> _pages;
+  late final List<GlobalKey<NavigatorState>> _navigatorKeys;
 
   @override
   void initState() {
     super.initState();
+    _navigatorKeys = [
+      GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
+    ];
     _pages = [
-      CategoryHomeScreen(userData: widget.userData),
-      AllAppointmentsScreen(userData: widget.userData),
-      SearchScreen(userData: widget.userData),
-      const MedicalHistoryScreen(initialTabIndex: 1, isTab: true), // Prescriptions
-      const MedicalHistoryScreen(initialTabIndex: 0, isTab: true), // Reports
+      TabNavigator(navigatorKey: _navigatorKeys[0], child: CategoryHomeScreen(userData: widget.userData)),
+      TabNavigator(navigatorKey: _navigatorKeys[1], child: AllAppointmentsScreen(userData: widget.userData)),
+      TabNavigator(navigatorKey: _navigatorKeys[2], child: SearchScreen(userData: widget.userData)),
+      TabNavigator(navigatorKey: _navigatorKeys[3], child: const MedicalHistoryScreen(initialTabIndex: 1, isTab: true)), // Prescriptions
+      TabNavigator(navigatorKey: _navigatorKeys[4], child: const MedicalHistoryScreen(initialTabIndex: 0, isTab: true)), // Reports
     ];
   }
 
@@ -364,17 +392,28 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     String currentProfileImg = widget.userData['image']?.toString() ?? '';
 
     return PopScope(
-      canPop: _currentIndex == 0,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _currentIndex != 0) {
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        
+        final NavigatorState? currentNavigator = _navigatorKeys[_currentIndex].currentState;
+        if (currentNavigator != null && currentNavigator.canPop()) {
+          currentNavigator.pop();
+          return;
+        }
+
+        if (_currentIndex != 0) {
           setState(() {
             _currentIndex = 0;
           });
+        } else {
+          // If we are on the Home tab and cannot pop the inner navigator, exit the app
+          import_services.SystemNavigator.pop();
         }
       },
       child: Scaffold(
         key: BottomNavScreen.globalScaffoldKey,
-        extendBody: true,
+        extendBody: false,
         drawer: _buildPremiumDrawer(context, currentName, dispMemberId, currentProfileImg),
         body: IndexedStack(
           index: _currentIndex,
@@ -412,7 +451,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                   _buildNavItem(Icons.home_rounded, "Home", 0, context),
                   _buildNavItem(Icons.calendar_today_rounded, "Appts", 1, context),
                   _buildNavItem(Icons.search_rounded, "Search", 2, context),
-                  _buildNavItem(Icons.medication_rounded, "Rx", 3, context),
+                  _buildNavItem(Icons.medication_rounded, "Prescribe", 3, context),
                   _buildNavItem(Icons.assignment_rounded, "Reports", 4, context),
                   _buildNavItem(Icons.menu_rounded, "More", 5, context), // More opens drawer
                 ],

@@ -215,7 +215,7 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
         border: Border.all(color: const Color(0xFF1565C0).withAlpha(15), width: 1),
       ),
       child: InkWell(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => OPDDetailsScreen(opd: clinic, userData: widget.userData))),
+        onTap: () => Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(builder: (context) => OPDDetailsScreen(opd: clinic, userData: widget.userData))),
         child: Column(
           children: [
             Row(

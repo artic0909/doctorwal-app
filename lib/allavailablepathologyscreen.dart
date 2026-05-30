@@ -215,7 +215,7 @@ class _AllAvailablePathologyScreenState
         border: Border.all(color: const Color(0xFF2E7D32).withAlpha(15), width: 1),
       ),
       child: InkWell(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => PathologyDetailsScreen(pathology: clinic, userData: widget.userData))),
+        onTap: () => Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(builder: (context) => PathologyDetailsScreen(pathology: clinic, userData: widget.userData))),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

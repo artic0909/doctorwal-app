@@ -410,8 +410,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   void _navigateToDetail(String type, Map<String, dynamic> rawData) {
     if (type == 'OPD CLINIC') {
       final opdModel = AllAvailableOPDModel.fromSearchResult(rawData);
-      Navigator.push(
-        context,
+      Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute(
           builder: (context) => OPDDetailsScreen(
             opd: opdModel,
@@ -421,8 +420,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       );
     } else if (type == 'PATHOLOGY LAB') {
       final pathModel = AllAvailablePathModel.fromSearchResult(rawData);
-      Navigator.push(
-        context,
+      Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute(
           builder: (context) => PathologyDetailsScreen(
             pathology: pathModel,
@@ -432,8 +430,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       );
     } else if (type == 'DOCTOR') {
       final doctorModel = AllAvailableDoctorsModel.fromSearchResult(rawData);
-      Navigator.push(
-        context,
+      Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute(
           builder: (context) => DoctorDetailsScreen(
             doctor: doctorModel,

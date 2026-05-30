@@ -148,8 +148,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
     if (token == null) {
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
+      Navigator.of(context, rootNavigator: true).pushReplacement(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
       return;
@@ -167,9 +166,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       if (response.statusCode == 200) {
         await prefs.clear();
         if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        Navigator.of(context, rootNavigator: true).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       } else {
         if (!mounted) return;
@@ -181,8 +179,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       // If error (e.g. 401), just clear and go back
       await prefs.clear();
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
+      Navigator.of(context, rootNavigator: true).pushReplacement(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     }

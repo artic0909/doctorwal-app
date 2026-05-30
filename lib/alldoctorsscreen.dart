@@ -214,8 +214,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
         border: Border.all(color: const Color(0xFF6A1B9A).withAlpha(15), width: 1),
       ),
       child: InkWell(
-        onTap: () => Navigator.push(
-          context,
+        onTap: () => Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             builder: (context) => DoctorDetailsScreen(doctor: doctor, userData: widget.userData),
           ),
