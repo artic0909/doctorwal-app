@@ -17,6 +17,7 @@ import 'package:http/http.dart' as http;
 
 class BottomNavScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
+  static final GlobalKey<ScaffoldState> globalScaffoldKey = GlobalKey<ScaffoldState>();
 
   const BottomNavScreen({super.key, required this.userData});
 
@@ -27,7 +28,6 @@ class BottomNavScreen extends StatefulWidget {
 class _BottomNavScreenState extends State<BottomNavScreen> {
   int _currentIndex = 0;
   late final List<Widget> _pages;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -363,18 +363,17 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     String dispMemberId = widget.userData['member_id']?.toString() ?? 'DW-2026-CARD';
     String currentProfileImg = widget.userData['image']?.toString() ?? '';
 
-    return WillPopScope(
-      onWillPop: () async {
-        if (_currentIndex != 0) {
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _currentIndex != 0) {
           setState(() {
             _currentIndex = 0;
           });
-          return false;
         }
-        return true;
       },
       child: Scaffold(
-        key: _scaffoldKey,
+        key: BottomNavScreen.globalScaffoldKey,
         extendBody: true,
         drawer: _buildPremiumDrawer(context, currentName, dispMemberId, currentProfileImg),
         body: IndexedStack(
@@ -432,7 +431,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     return GestureDetector(
       onTap: () {
         if (isMore) {
-          _scaffoldKey.currentState?.openDrawer();
+          BottomNavScreen.globalScaffoldKey.currentState?.openDrawer();
         } else {
           setState(() {
             _currentIndex = index;

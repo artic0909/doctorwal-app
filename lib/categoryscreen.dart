@@ -15,6 +15,7 @@ import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
+import 'package:demoapp/bottom_nav.dart';
 
 class CategoryHomeScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -294,7 +295,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             Builder(
               builder:
                   (context) => GestureDetector(
-                    onTap: () => Scaffold.of(this.context).openDrawer(),
+                    onTap: () => BottomNavScreen.globalScaffoldKey.currentState?.openDrawer(),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(

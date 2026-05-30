@@ -187,6 +187,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => AddMedicalRecordScreen(initialType: _tabController.index == 0 ? 'report' : 'prescription')),
@@ -592,12 +593,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                         borderRadius: BorderRadius.circular(10),
                       ),
                       alignment: Alignment.center,
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 18),
-                          const SizedBox(width: 8),
-                          const Text("View Prescription PDF", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                          Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 18),
+                          SizedBox(width: 8),
+                          Text("View Prescription PDF", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
                         ],
                       ),
                     ),
@@ -617,7 +618,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                     children: [
                       Expanded(child: _buildVitalBox(Icons.water_drop_rounded, "Blood", record['blood_group'] ?? 'N/A')),
                       const SizedBox(width: 10),
-                      Expanded(child: const SizedBox.shrink()), // Empty space to match the grid look
+                      const Expanded(child: SizedBox.shrink()), // Empty space to match the grid look
                     ],
                   ),
                   
@@ -682,7 +683,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
                             Padding(
                               padding: const EdgeInsets.only(left: 12, top: 4),
                               child: Text(
-                                "Frequency: $mTiming" + (mEating.isNotEmpty ? " | Relation: $mEating" : "") + " | Duration: $mDuration Days",
+                                "Frequency: $mTiming${mEating.isNotEmpty ? ' | Relation: $mEating' : ''} | Duration: $mDuration Days",
                                 style: TextStyle(color: Colors.blueGrey[600], fontSize: 12, height: 1.4),
                               ),
                             ),
