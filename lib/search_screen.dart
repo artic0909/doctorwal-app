@@ -111,7 +111,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     Expanded(
                       child: TextField(
                         controller: _searchController,
-                        autofocus: true,
+                        autofocus: false,
                         decoration: const InputDecoration(
                           hintText: "Type doctor name, clinic, test, city...",
                           hintStyle: TextStyle(color: Colors.blueGrey, fontSize: 14),
