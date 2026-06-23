@@ -361,7 +361,7 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
     required Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: items.map((val) => DropdownMenuItem(value: val, child: Text(val, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)))).toList(),
       onChanged: onChanged,
       decoration: InputDecoration(

@@ -700,7 +700,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         items:
             items.map((String val) {
               return DropdownMenuItem<String>(
