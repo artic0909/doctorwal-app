@@ -8,14 +8,13 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> userData; // Added userData
 
   // Parse everything up front into final fields
-  late final String clinicName;
+  final String clinicName;
   late final String testName;
   late final String testType;
   late final String testPrice;
   late final List<Map<String, dynamic>> testDayTime;
 
-  PathologyTestsDetailsScreen({super.key, required this.test, required this.userData}) {
-    clinicName = test['clinic_name'] ?? 'N/A';
+  PathologyTestsDetailsScreen({super.key, required this.test, required this.userData, required this.clinicName}) {
     testName = test['test_name'] ?? 'N/A';
     testType = test['test_type'] ?? 'N/A';
     testPrice = test['test_price']?.toString() ?? '0';

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:demoapp/Services/apiservice.dart';
 
 class PathologyPatientInquiryScreen extends StatefulWidget {
   final AllAvailablePathModel pathology;
@@ -120,7 +121,7 @@ class _PathologyPatientInquiryScreenState
               _buildTextField("Name", _nameController, readOnly: true),
               _buildTextField("City", _cityController, readOnly: true),
               _buildTextField(
-                "Email",
+                "Email (Optional)",
                 _emailController,
                 keyboardType: TextInputType.emailAddress,
                 readOnly: true,
@@ -245,10 +246,6 @@ class _PathologyPatientInquiryScreenState
               ? 'Path'
               : 'Doctor'; // First selected one
 
-      final url = Uri.parse(
-        'https://doctorwala.info/api/patient-inquiry',
-      ); // replace with your actual API endpoint
-
       final body = {
         "currently_loggedin_partner_id": _partnerIdController.text,
         "clinic_type": inquiryType,
@@ -262,15 +259,10 @@ class _PathologyPatientInquiryScreenState
       };
 
       try {
-        final response = await http.post(
-          url,
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode(body),
-        );
+        final data = await ApiService().bookPathAppointment(body);
 
-        final data = jsonDecode(response.body);
         if (!mounted) return;
-        if (response.statusCode == 200 && data['status'] == true) {
+        if (data['status'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Inquiry submitted successfully!")),
           );

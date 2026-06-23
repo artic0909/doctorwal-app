@@ -339,7 +339,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
         border: Border.all(color: const Color(0xFF2E7D32).withAlpha(10)),
       ),
       child: InkWell(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => PathologyTestsDetailsScreen(test: t, userData: widget.userData))),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => PathologyTestsDetailsScreen(test: t, userData: widget.userData, clinicName: widget.pathology.clinicName))),
         child: Row(
           children: [
             Container(

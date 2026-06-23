@@ -264,7 +264,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     children: [
                       Expanded(child: _buildTextField(_mobileController, "Mobile", Icons.phone_rounded, keyboardType: TextInputType.phone)),
                       const SizedBox(width: 15),
-                      Expanded(child: _buildTextField(_emailController, "Email", Icons.email_rounded, keyboardType: TextInputType.emailAddress)),
+                      Expanded(child: _buildTextField(_emailController, "Email (Optional)", Icons.email_rounded, keyboardType: TextInputType.emailAddress, isRequired: false)),
                     ],
                   ),
                   const SizedBox(height: 30),
@@ -347,7 +347,7 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {TextInputType? keyboardType, int maxLines = 1}) {
+  Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {TextInputType? keyboardType, int maxLines = 1, bool isRequired = true}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -358,7 +358,7 @@ class _BookingScreenState extends State<BookingScreen> {
         controller: controller,
         keyboardType: keyboardType,
         maxLines: maxLines,
-        validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
+        validator: (v) => isRequired && (v == null || v.isEmpty) ? "Required" : null,
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 13),
