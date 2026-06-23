@@ -12,7 +12,7 @@ class ForgetPasswordScreen extends StatefulWidget {
 }
 
 class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
-  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
   final otpController = TextEditingController();
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
@@ -40,14 +40,14 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   }
 
   Future<void> sendCode() async {
-    final email = emailController.text.trim();
-    if (email.isEmpty) return;
+    final phone = phoneController.text.trim();
+    if (phone.isEmpty) return;
 
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/send-otp'),
         headers: {'Accept': 'application/json'},
-        body: {'user_email': email},
+        body: {'user_mobile_number': phone},
       );
 
       final data = jsonDecode(response.body);
@@ -72,14 +72,14 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   }
 
   Future<void> verifyCode() async {
-    final email = emailController.text.trim();
+    final phone = phoneController.text.trim();
     final otp = otpController.text.trim();
 
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/verify-otp'),
         headers: {'Accept': 'application/json'},
-        body: {'user_email': email, 'otp': otp},
+        body: {'user_mobile_number': phone, 'otp': otp},
       );
 
       final data = jsonDecode(response.body);
@@ -103,7 +103,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   }
 
   Future<void> updatePassword() async {
-    final email = emailController.text.trim();
+    final phone = phoneController.text.trim();
     final newPassword = newPasswordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
 
@@ -126,7 +126,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         Uri.parse('$baseUrl/api/update-password-during-otp'),
         headers: {'Accept': 'application/json'},
         body: {
-          'user_email': email,
+          'user_mobile_number': phone,
           'user_password': newPassword,
           'user_password_confirmation': confirmPassword,
         },
@@ -158,7 +158,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   @override
   void dispose() {
     countdownTimer?.cancel();
-    emailController.dispose();
+    phoneController.dispose();
     otpController.dispose();
     newPasswordController.dispose();
     confirmPasswordController.dispose();
@@ -299,7 +299,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
             color: Colors.blue.withValues(alpha:0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.alternate_email_rounded, size: 60, color: Colors.blue[800]),
+          child: Icon(Icons.phone_android_rounded, size: 60, color: Colors.blue[800]),
         ),
         const SizedBox(height: 30),
         const Text(
@@ -308,17 +308,17 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          "Enter your registered email to receive\nan OTP for password reset.",
+          "Enter your registered WhatsApp number to receive\nan OTP for password reset.",
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: Colors.grey[600], height: 1.5),
         ),
         const SizedBox(height: 40),
         _buildTextFieldWithIcon(
-          controller: emailController,
-          label: "Email Address",
-          hint: "user@example.com",
-          icon: Icons.email_outlined,
-          keyboardType: TextInputType.emailAddress,
+          controller: phoneController,
+          label: "Your Existing Number",
+          hint: "e.g., +919876543210",
+          icon: Icons.phone_android_outlined,
+          keyboardType: TextInputType.phone,
         ),
         const SizedBox(height: 40),
         _buildActionButton(
@@ -350,7 +350,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          "We've sent a 4-digit code to\n${emailController.text}",
+          "We've sent a 4-digit code to\n${phoneController.text}",
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: Colors.grey[600], height: 1.5),
         ),
