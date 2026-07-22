@@ -16,6 +16,7 @@ import 'package:demoapp/Services/apiservice.dart';
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 import 'package:demoapp/bottom_nav.dart';
+import 'package:demoapp/services/location_service.dart';
 
 class CategoryHomeScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -36,6 +37,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   final ScrollController _scrollController = ScrollController();
   final ScrollController _horizontalScrollController = ScrollController();
   bool _hasScrolled = false;
+  String? _userCity;
 
   @override
   void dispose() {
@@ -49,6 +51,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     super.initState();
     loadUserData();
     _syncUserId(); // Background sync
+    _fetchCity();
     
     // Discovery Animation: Peek at scrollable content
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -117,6 +120,15 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           widget.userData['image']?.toString() ??
           '';
     });
+  }
+
+  Future<void> _fetchCity({BuildContext? context}) async {
+    final city = await LocationService.getUserCity(context: context);
+    if (mounted) {
+      setState(() {
+        _userCity = city;
+      });
+    }
   }
 
   Future<void> _syncUserId() async {
@@ -311,12 +323,32 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Hello,",
-                  style: TextStyle(
-                    color: Colors.blueGrey[400],
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                GestureDetector(
+                  onTap: () async {
+                    final city = await LocationService.getUserCity(context: context);
+                    if (mounted && city != null) {
+                      setState(() {
+                        _userCity = city;
+                      });
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_rounded,
+                        color: _userCity != null ? const Color(0xFF1565C0) : Colors.redAccent,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _userCity ?? "Enable Location",
+                        style: TextStyle(
+                          color: _userCity != null ? const Color(0xFF1565C0) : Colors.redAccent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Text(
