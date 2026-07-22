@@ -12,6 +12,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'all';
+  bool _isNearMe = true;
 
   final List<Map<String, String>> _categories = [
     {'id': 'all', 'name': 'All'},
@@ -34,6 +35,7 @@ class _SearchScreenState extends State<SearchScreen> {
         builder: (context) => SearchResultsScreen(
           initialQuery: query,
           initialCategory: _selectedCategory,
+          initialIsNearMe: _isNearMe,
           userData: widget.userData,
         ),
       ),
@@ -85,6 +87,49 @@ class _SearchScreenState extends State<SearchScreen> {
                       padding: EdgeInsets.zero,
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.blueGrey[50],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Toggle
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() => _isNearMe = !_isNearMe);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _isNearMe ? Colors.green : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(color: _isNearMe ? Colors.greenAccent : Colors.grey[300]!, width: 1.5),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _isNearMe ? Icons.location_on_rounded : Icons.location_off_rounded,
+                            color: _isNearMe ? Colors.white : Colors.grey[600],
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _isNearMe ? "Near Me" : "Everywhere",
+                            style: TextStyle(
+                              color: _isNearMe ? Colors.white : Colors.grey[600],
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

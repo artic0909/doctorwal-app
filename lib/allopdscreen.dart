@@ -22,6 +22,7 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   bool _isLoadMoreLoading = false;
   int _currentPage = 1;
   int _lastPage = 1;
+  bool _isNearMe = true;
   Timer? _debounce;
 
   @override
@@ -59,10 +60,12 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   }
 
   Future<void> _fetchClinics(int page) async {
-    final city = await LocationService.getUserCity(context: context);
     String queryParam = _searchQuery.isNotEmpty ? '&query=${Uri.encodeComponent(_searchQuery)}' : '';
-    if (city != null && city.isNotEmpty) {
-      queryParam += '&user_city=${Uri.encodeComponent(city)}';
+    if (_isNearMe) {
+      final city = await LocationService.getUserCity(context: context);
+      if (city != null && city.isNotEmpty) {
+        queryParam += '&user_city=${Uri.encodeComponent(city)}';
+      }
     }
     final url = Uri.parse(
       "https://doctorwala.info/api/api/all-opd-contacts?page=$page$queryParam",
@@ -203,6 +206,46 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
                 contentPadding: const EdgeInsets.symmetric(vertical: 15),
               ),
             ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  setState(() => _isNearMe = !_isNearMe);
+                  _fetchInitialClinics();
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _isNearMe ? Colors.green : Colors.white24,
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(color: _isNearMe ? Colors.greenAccent : Colors.white54, width: 1.5),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _isNearMe ? Icons.location_on_rounded : Icons.location_off_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _isNearMe ? "Near Me" : "Everywhere",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

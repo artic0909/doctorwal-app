@@ -11,12 +11,14 @@ import 'package:demoapp/services/location_service.dart';
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
   final String initialCategory;
+  final bool initialIsNearMe;
   final Map<String, dynamic> userData;
 
   const SearchResultsScreen({
     super.key,
     required this.initialQuery,
     required this.initialCategory,
+    this.initialIsNearMe = true,
     required this.userData,
   });
 
@@ -30,6 +32,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   
   String _currentCategory = 'all';
   bool _isLoading = true;
+  bool _isNearMe = true;
   String _userCity = '';
   Map<String, dynamic> _results = {
     'opds': [],
@@ -43,13 +46,18 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     super.initState();
     _searchController.text = widget.initialQuery;
     _currentCategory = widget.initialCategory;
+    _isNearMe = widget.initialIsNearMe;
     _initLocationAndSearch();
   }
 
   Future<void> _initLocationAndSearch() async {
-    final city = await LocationService.getUserCity(context: context);
-    if (city != null) {
-      _userCity = city;
+    if (_isNearMe) {
+      final city = await LocationService.getUserCity(context: context);
+      if (city != null) {
+        _userCity = city;
+      }
+    } else {
+      _userCity = '';
     }
     _performSearch();
   }
@@ -143,6 +151,46 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               ),
               onSubmitted: (_) => _performSearch(),
             ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  setState(() => _isNearMe = !_isNearMe);
+                  _initLocationAndSearch();
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _isNearMe ? Colors.green : Colors.white24,
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(color: _isNearMe ? Colors.greenAccent : Colors.white54, width: 1.5),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _isNearMe ? Icons.location_on_rounded : Icons.location_off_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _isNearMe ? "Near Me" : "Everywhere",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

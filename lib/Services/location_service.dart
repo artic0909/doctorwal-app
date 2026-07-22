@@ -17,15 +17,19 @@ class LocationService {
       serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         if (context != null && context.mounted) {
-          await _showLocationRequiredDialog(
+          bool shouldRetry = await _showLocationRequiredDialog(
             context,
             "Location Services Disabled",
             "Please enable location services in your device settings to view nearby results.",
             () => Geolocator.openLocationSettings(),
           );
           if (!context.mounted) return _getCachedCity();
-          // Recursively try again after they return from settings
-          return await getUserCity(context: context);
+          if (shouldRetry) {
+            // Recursively try again after they return from settings
+            return await getUserCity(context: context);
+          } else {
+            return null; // They chose to skip
+          }
         }
         return _getCachedCity();
       }
@@ -35,14 +39,15 @@ class LocationService {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           if (context != null && context.mounted) {
-            await _showLocationRequiredDialog(
+            bool shouldRetry = await _showLocationRequiredDialog(
               context,
               "Permission Denied",
               "Location permission is required to find nearby doctors and clinics.",
               () => Geolocator.requestPermission(),
             );
             if (!context.mounted) return _getCachedCity();
-            return await getUserCity(context: context);
+            if (shouldRetry) return await getUserCity(context: context);
+            return null; // They chose to skip
           }
           return _getCachedCity();
         }
@@ -50,14 +55,15 @@ class LocationService {
 
       if (permission == LocationPermission.deniedForever) {
         if (context != null && context.mounted) {
-          await _showLocationRequiredDialog(
+          bool shouldRetry = await _showLocationRequiredDialog(
             context,
             "Permission Denied Forever",
             "Please open app settings and grant location permissions to continue.",
             () => Geolocator.openAppSettings(),
           );
           if (!context.mounted) return _getCachedCity();
-          return await getUserCity(context: context);
+          if (shouldRetry) return await getUserCity(context: context);
+          return null; // They chose to skip
         }
         return _getCachedCity();
       }
@@ -91,13 +97,13 @@ class LocationService {
     return _getCachedCity();
   }
 
-  static Future<void> _showLocationRequiredDialog(
+  static Future<bool> _showLocationRequiredDialog(
     BuildContext context,
     String title,
     String content,
     Future<void> Function() onAction,
   ) async {
-    return showDialog(
+    final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
@@ -106,16 +112,27 @@ class LocationService {
           content: Text(content),
           actions: [
             TextButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext); // Close dialog
-                await onAction();
+              onPressed: () {
+                Navigator.pop(dialogContext, false); // Cancel/Skip
               },
-              child: const Text("Open Settings"),
+              child: const Text("Skip"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext, true); // Try action
+              },
+              child: const Text("Open Settings", style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         );
       },
     );
+    
+    if (result == true) {
+      await onAction();
+      return true;
+    }
+    return false;
   }
 
   static Future<void> _cacheCity(String city) async {
