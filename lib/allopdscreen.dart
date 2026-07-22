@@ -28,6 +28,12 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   @override
   void initState() {
     super.initState();
+    _initData();
+  }
+
+  Future<void> _initData() async {
+    final val = await LocationService.getIsNearMe();
+    if (mounted) setState(() => _isNearMe = val);
     _fetchInitialClinics();
   }
 
@@ -212,8 +218,10 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               GestureDetector(
-                onTap: () {
-                  setState(() => _isNearMe = !_isNearMe);
+                onTap: () async {
+                  final newValue = !_isNearMe;
+                  setState(() => _isNearMe = newValue);
+                  await LocationService.setIsNearMe(newValue);
                   _fetchInitialClinics();
                 },
                 child: AnimatedContainer(

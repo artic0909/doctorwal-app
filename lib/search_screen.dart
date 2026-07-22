@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:demoapp/search_results_screen.dart';
+import 'package:demoapp/services/location_service.dart';
 
 class SearchScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -13,6 +14,19 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'all';
   bool _isNearMe = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initData();
+  }
+
+  Future<void> _initData() async {
+    final val = await LocationService.getIsNearMe();
+    if (mounted) {
+      setState(() => _isNearMe = val);
+    }
+  }
 
   final List<Map<String, String>> _categories = [
     {'id': 'all', 'name': 'All'},
@@ -101,8 +115,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      setState(() => _isNearMe = !_isNearMe);
+                    onTap: () async {
+                      final newValue = !_isNearMe;
+                      setState(() => _isNearMe = newValue);
+                      await LocationService.setIsNearMe(newValue);
                     },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),

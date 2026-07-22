@@ -157,8 +157,10 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               GestureDetector(
-                onTap: () {
-                  setState(() => _isNearMe = !_isNearMe);
+                onTap: () async {
+                  final newValue = !_isNearMe;
+                  setState(() => _isNearMe = newValue);
+                  await LocationService.setIsNearMe(newValue);
                   _initLocationAndSearch();
                 },
                 child: AnimatedContainer(

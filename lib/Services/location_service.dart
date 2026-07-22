@@ -5,6 +5,25 @@ import 'package:flutter/material.dart';
 
 class LocationService {
   static const String _cityCacheKey = 'user_city';
+  static const String _isNearMeCacheKey = 'is_near_me';
+
+  /// Synchronous memory cache for fast access
+  static bool? _isNearMeMemCache;
+
+  /// Gets the Near Me toggle state
+  static Future<bool> getIsNearMe() async {
+    if (_isNearMeMemCache != null) return _isNearMeMemCache!;
+    final prefs = await SharedPreferences.getInstance();
+    _isNearMeMemCache = prefs.getBool(_isNearMeCacheKey) ?? true; // default to true
+    return _isNearMeMemCache!;
+  }
+
+  /// Sets the Near Me toggle state
+  static Future<void> setIsNearMe(bool value) async {
+    _isNearMeMemCache = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isNearMeCacheKey, value);
+  }
 
   /// Requests location permission, gets current position, and extracts city.
   /// If [context] is provided, it will enforce location permissions by showing dialogs.
