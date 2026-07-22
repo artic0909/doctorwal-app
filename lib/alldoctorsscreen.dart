@@ -4,6 +4,7 @@ import 'package:demoapp/Models/all_available_doctors_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async'; // Added for Timer
+import 'package:demoapp/services/location_service.dart';
 
 class AllDoctorsScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -58,7 +59,11 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
 
   Future<void> _fetchDoctors(int page) async {
     try {
-      final queryParam = _searchQuery.isNotEmpty ? '&query=${Uri.encodeComponent(_searchQuery)}' : '';
+      final city = await LocationService.getUserCity(context: context);
+      String queryParam = _searchQuery.isNotEmpty ? '&query=${Uri.encodeComponent(_searchQuery)}' : '';
+      if (city != null && city.isNotEmpty) {
+        queryParam += '&user_city=${Uri.encodeComponent(city)}';
+      }
       final response = await http.get(
         Uri.parse('https://doctorwala.info/api/api/all-doctors-contacts?page=$page$queryParam'),
       );

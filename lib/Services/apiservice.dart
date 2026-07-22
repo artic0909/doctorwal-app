@@ -395,12 +395,16 @@ class ApiService {
   }
 
   // --- GLOBAL SEARCH ---
-  Future<Map<String, dynamic>> getSearchResult(String query, {String category = 'all'}) async {
+  Future<Map<String, dynamic>> getSearchResult(String query, {String category = 'all', String userCity = ''}) async {
     try {
       await _setAuthHeader();
       final response = await _dio.get(
         '/api/search',
-        queryParameters: {'query': query, 'category': category},
+        queryParameters: {
+          'query': query,
+          'category': category,
+          if (userCity.isNotEmpty) 'user_city': userCity,
+        },
       );
       return response.data;
     } on DioException catch (e) {

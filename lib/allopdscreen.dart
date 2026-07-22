@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:demoapp/opddetailsscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:demoapp/services/location_service.dart';
 
 import 'Models/all_available_opd_model.dart';
 
@@ -58,7 +59,11 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   }
 
   Future<void> _fetchClinics(int page) async {
-    final queryParam = _searchQuery.isNotEmpty ? '&query=${Uri.encodeComponent(_searchQuery)}' : '';
+    final city = await LocationService.getUserCity(context: context);
+    String queryParam = _searchQuery.isNotEmpty ? '&query=${Uri.encodeComponent(_searchQuery)}' : '';
+    if (city != null && city.isNotEmpty) {
+      queryParam += '&user_city=${Uri.encodeComponent(city)}';
+    }
     final url = Uri.parse(
       "https://doctorwala.info/api/api/all-opd-contacts?page=$page$queryParam",
     );

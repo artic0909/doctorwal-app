@@ -56,5 +56,9 @@
 		<string>http</string>
 		<string>https</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app requires access to your location to show you nearby doctors, clinics, and labs.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app requires access to your location to show you nearby doctors, clinics, and labs.</string>
 </dict>
 </plist>

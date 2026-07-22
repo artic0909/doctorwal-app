@@ -6,6 +6,7 @@ import 'package:demoapp/doctordetailsscreen.dart';
 import 'package:demoapp/Models/all_available_opd_model.dart';
 import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:demoapp/Models/all_available_doctors_model.dart';
+import 'package:demoapp/services/location_service.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
@@ -29,6 +30,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   
   String _currentCategory = 'all';
   bool _isLoading = true;
+  String _userCity = '';
   Map<String, dynamic> _results = {
     'opds': [],
     'pathologies': [],
@@ -41,6 +43,14 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     super.initState();
     _searchController.text = widget.initialQuery;
     _currentCategory = widget.initialCategory;
+    _initLocationAndSearch();
+  }
+
+  Future<void> _initLocationAndSearch() async {
+    final city = await LocationService.getUserCity(context: context);
+    if (city != null) {
+      _userCity = city;
+    }
     _performSearch();
   }
 
@@ -50,6 +60,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       final response = await _apiService.getSearchResult(
         _searchController.text,
         category: _currentCategory,
+        userCity: _userCity,
       );
       if (response['status'] == true) {
         setState(() {
