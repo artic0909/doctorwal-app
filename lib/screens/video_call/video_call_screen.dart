@@ -96,8 +96,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       // 2. Initialize RtcEngine
       _engine = createAgoraRtcEngine();
       await _engine.initialize(RtcEngineContext(
-        appId: widget.appId,
-        channelProfile: ChannelProfileType.channelProfileCommunication,
+        appId: widget.appId.trim(),
+        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
       ));
 
       // 3. Register Callbacks
@@ -176,12 +176,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
       // 5. Join Channel
       await _engine.joinChannel(
-        token: _currentToken,
-        channelId: widget.channelName,
+        token: _currentToken.trim(),
+        channelId: widget.channelName.trim(),
         uid: widget.uid,
         options: const ChannelMediaOptions(
           clientRoleType: ClientRoleType.clientRoleBroadcaster,
-          channelProfile: ChannelProfileType.channelProfileCommunication,
+          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
           publishCameraTrack: true,
           publishMicrophoneTrack: true,
           autoSubscribeAudio: true,

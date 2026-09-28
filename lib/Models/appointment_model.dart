@@ -49,7 +49,13 @@ class AppointmentModel {
     this.doctorContact,
   });
 
-  bool get isVideoCall => isVideo || visitMode?.toLowerCase() == 'online' || visitMode?.toLowerCase() == 'video';
+  bool get isVideoCall {
+    final mode = visitMode?.toLowerCase().trim() ?? '';
+    if (mode == 'offline' || mode == 'physical' || mode == 'in_person') {
+      return false;
+    }
+    return isVideo || mode == 'online' || mode == 'video' || mode == 'video call';
+  }
 
   bool isWindowOpen() {
     if (bookingDate == null || bookingTime == null) return true;
