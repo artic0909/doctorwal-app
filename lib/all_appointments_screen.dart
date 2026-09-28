@@ -291,7 +291,7 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
 
   Widget _buildAppointmentCard(AppointmentModel item) {
     final statusColor = _getStatusColor(item.status);
-    final bool isUpcoming = item.status == 'Upcoming';
+    final bool isUpcoming = item.status == 'Upcoming' || item.status == 'Confirmed' || item.status == 'Pending' || item.status == null || item.status == '';
     final bool isVideo = item.isVideoCall;
     final bool windowOpen = item.isWindowOpen();
     
@@ -538,9 +538,16 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
 
   Color _getStatusColor(String? status) {
     switch (status) {
-      case 'Upcoming': return Colors.orange[700]!;
-      case 'Completed': return Colors.green[700]!;
-      case 'Cancelled': return Colors.red[700]!;
+      case 'Confirmed':
+      case 'confirmed': return const Color(0xFF0D9488);
+      case 'Upcoming':
+      case 'upcoming':
+      case 'Pending':
+      case 'pending': return Colors.orange[700]!;
+      case 'Completed':
+      case 'completed': return Colors.green[700]!;
+      case 'Cancelled':
+      case 'cancelled': return Colors.red[700]!;
       default: return Colors.blueGrey;
     }
   }
