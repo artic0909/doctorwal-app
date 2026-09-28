@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/Models/appointment_model.dart';
 import 'package:demoapp/screens/video_call/video_call_screen.dart';
-import 'package:lottie/lottie.dart';
 
 class AllAppointmentsScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -411,7 +410,7 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF0D9488).withOpacity(0.35),
+                                color: const Color(0xFF0D9488).withValues(alpha: 0.35),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
                               ),
@@ -433,9 +432,9 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
                     : Container(
                         padding: const EdgeInsets.symmetric(vertical: 11),
                         decoration: BoxDecoration(
-                          color: Colors.blueGrey.withOpacity(0.08),
+                          color: Colors.blueGrey.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.blueGrey.withOpacity(0.2)),
+                          border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.2)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
