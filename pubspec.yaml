@@ -51,7 +51,7 @@ dependencies:
   geolocator: ^14.0.2
   geocoding: ^5.0.0
   agora_rtc_engine: ^6.6.4
-  permission_handler: ^13.0.2
+  permission_handler: ^11.3.1
   wakelock_plus: ^1.5.2
 
 dev_dependencies:
