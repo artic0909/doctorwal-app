@@ -537,4 +537,47 @@ class ApiService {
       return {'status': false, 'message': 'Network error occurred'};
     }
   }
+
+  // --- VIDEO CALL RTC ---
+  Future<Map<String, dynamic>> getVideoCallToken(int appointmentId) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post("/api/appointments/$appointmentId/video-token");
+      if (response.data is Map<String, dynamic>) {
+        return response.data;
+      }
+      return {"status": true, "data": response.data};
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          return data;
+        }
+        return {"status": false, "message": data.toString()};
+      }
+      return {"status": false, "message": "Failed to connect to video service. Please check your internet connection."};
+    }
+  }
+
+  Future<Map<String, dynamic>> updateVideoStatus(int appointmentId, String videoStatus) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post("/api/appointments/$appointmentId/video-status", data: {
+        "video_status": videoStatus,
+      });
+      if (response.data is Map<String, dynamic>) {
+        return response.data;
+      }
+      return {"status": true, "data": response.data};
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          return data;
+        }
+        return {"status": false, "message": data.toString()};
+      }
+      return {"status": false, "message": "Failed to update video status."};
+    }
+  }
 }

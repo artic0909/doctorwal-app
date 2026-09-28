@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/Models/appointment_model.dart';
+import 'package:demoapp/screens/video_call/video_call_screen.dart';
 import 'package:lottie/lottie.dart';
 
 class AllAppointmentsScreen extends StatefulWidget {
@@ -90,7 +91,6 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
       } else if (action == 'Cancel') {
         response = await _apiService.cancelAppointment(id);
       } else {
-        // Edit/Delete placeholders
         _showSnackBar("Feature coming soon!");
         setState(() => _isLoading = false);
         return;
@@ -109,6 +109,59 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
     }
   }
 
+  Future<void> _startVideoCall(AppointmentModel item) async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF1B9AAA)),
+      ),
+    );
+
+    try {
+      final response = await _apiService.getVideoCallToken(item.id);
+      if (mounted) Navigator.pop(context); // Dismiss loading
+
+      if (response['status'] == true && response['data'] != null) {
+        final data = response['data'];
+        final appId = data['app_id']?.toString() ?? '';
+        final channel = data['channel']?.toString() ?? '';
+        final token = data['token']?.toString() ?? '';
+        final uid = int.tryParse(data['uid'].toString()) ?? 0;
+        final doctorName = data['doctor_name']?.toString() ?? item.clinicName ?? 'Doctor';
+
+        if (appId.isEmpty || channel.isEmpty || token.isEmpty) {
+          _showSnackBar('Invalid video call credentials received from server.');
+          return;
+        }
+
+        if (mounted) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VideoCallScreen(
+                appId: appId,
+                channelName: channel,
+                token: token,
+                uid: uid,
+                appointmentId: item.id,
+                participantName: doctorName,
+                role: 'patient',
+              ),
+            ),
+          );
+          _fetchAppointments(); // Refresh on return
+        }
+      } else {
+        _showSnackBar(response['message'] ?? 'Unable to join video call at this time.');
+      }
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      _showSnackBar('Failed to connect to video session.');
+    }
+  }
+
   Future<bool> _showConfirmationDialog(String action) async {
     return await showDialog<bool>(
       context: context,
@@ -119,67 +172,90 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text("Keep", style: TextStyle(color: Colors.grey)),
+            child: const Text("No", style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: action == 'Cancel' ? Colors.red : Colors.green,
+              backgroundColor: action == 'Complete' ? Colors.green : Colors.red,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text("Yes, $action", style: const TextStyle(color: Colors.white)),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Yes"),
           ),
         ],
       ),
     ) ?? false;
   }
 
-  void _showSnackBar(String msg) {
+  void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFF),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text("My Appointments", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFF1565C0),
+        title: const Text(
+          "My Appointments",
+          style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 20),
+        ),
         centerTitle: true,
+        backgroundColor: const Color(0xFF1565C0),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
           indicatorWeight: 3,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          tabs: _statuses.map((status) => Tab(text: status)).toList(),
+          labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+          tabs: const [
+            Tab(text: "Upcoming"),
+            Tab(text: "Completed"),
+            Tab(text: "Cancelled"),
+          ],
         ),
       ),
-      body: _isLoading 
-        ? Center(child: Lottie.asset('assets/animations/success.json', width: 100, height: 100)) 
-        : _errorMessage.isNotEmpty
-          ? _buildErrorView()
-          : _appointments.isEmpty
-            ? _buildEmptyView()
-            : _buildAppointmentList(),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage.isNotEmpty
+              ? _buildErrorView()
+              : _appointments.isEmpty
+                  ? _buildEmptyView()
+                  : _buildAppointmentList(),
     );
   }
 
   Widget _buildErrorView() {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 60),
-          const SizedBox(height: 16),
-          Text(_errorMessage, style: const TextStyle(color: Colors.blueGrey)),
-          TextButton(onPressed: _fetchAppointments, child: const Text("Try Again")),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 60),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.blueGrey, fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _fetchAppointments,
+              icon: const Icon(Icons.refresh),
+              label: const Text("Try Again"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1565C0),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -191,7 +267,10 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
         children: [
           const Icon(Icons.calendar_today_outlined, color: Colors.blueGrey, size: 60),
           const SizedBox(height: 16),
-          Text("No ${_statuses[_tabController.index].toLowerCase()} appointments found.", style: const TextStyle(color: Colors.blueGrey)),
+          Text(
+            "No ${_statuses[_tabController.index].toLowerCase()} appointments found.",
+            style: const TextStyle(color: Colors.blueGrey),
+          ),
         ],
       ),
     );
@@ -214,6 +293,8 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
   Widget _buildAppointmentCard(AppointmentModel item) {
     final statusColor = _getStatusColor(item.status);
     final bool isUpcoming = item.status == 'Upcoming';
+    final bool isVideo = item.isVideoCall;
+    final bool windowOpen = item.isWindowOpen();
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -232,39 +313,39 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
             // 1. Highlighted Header (Date & Time) at Top
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: statusColor.withAlpha(15),
-                border: Border(bottom: BorderSide(color: statusColor.withAlpha(20), width: 1)),
-              ),
+              color: statusColor.withAlpha(15),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today_rounded, size: 14, color: statusColor),
+                  Icon(Icons.calendar_today_outlined, size: 14, color: statusColor),
                   const SizedBox(width: 6),
                   Text(
                     item.bookingDate ?? "N/A",
-                    style: TextStyle(color: statusColor, fontWeight: FontWeight.w900, fontSize: 13),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: statusColor),
                   ),
                   const Spacer(),
                   Icon(Icons.access_time_rounded, size: 14, color: statusColor),
                   const SizedBox(width: 6),
                   Text(
                     _formatTime(item.bookingTime),
-                    style: TextStyle(color: statusColor, fontWeight: FontWeight.w900, fontSize: 13),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: statusColor),
                   ),
                 ],
               ),
             ),
             
-            // 2. Main Content
+            // 2. Main Details
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Icon
                   Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: statusColor.withAlpha(20), borderRadius: BorderRadius.circular(15)),
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: statusColor.withAlpha(20),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                     child: Icon(_getTypeIcon(item.clinicType), color: statusColor, size: 28),
                   ),
                   const SizedBox(width: 16),
@@ -312,8 +393,65 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
                 ],
               ),
             ),
+
+            // Video Consultation Action (If video call and upcoming)
+            if (isUpcoming && isVideo)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: windowOpen
+                    ? InkWell(
+                        onTap: () => _startVideoCall(item),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0D9488).withOpacity(0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.videocam_rounded, color: Colors.white, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                "Join Video Consultation",
+                                style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        decoration: BoxDecoration(
+                          color: Colors.blueGrey.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.blueGrey.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.videocam_outlined, color: Colors.blueGrey[400], size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              "Video Call: ${item.getWindowStartFormatted()}",
+                              style: TextStyle(color: Colors.blueGrey[700], fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
             
-            // 3. Action Area (No Divider)
+            // 3. Complete / Cancel Action Buttons
             if (isUpcoming)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
@@ -387,8 +525,6 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
     );
   }
 
-
-
   Widget _buildStatusBadge(String? status) {
     final color = _getStatusColor(status);
     return Container(
@@ -437,7 +573,7 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
     if (item.clinicType == 'OPD') {
       address = item.opdContact?['clinic_address'];
     } else if (item.clinicType == 'Pathology') {
-      address = item.pathologyContact?['clinic_address']; // If address missing, name is better than null
+      address = item.pathologyContact?['clinic_address'];
     } else if (item.clinicType == 'Doctor') {
       address = item.doctorContact?['partner_doctor_address'];
     }
