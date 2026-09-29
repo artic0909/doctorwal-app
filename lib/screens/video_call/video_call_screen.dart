@@ -325,13 +325,14 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   Future<void> _endCall() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      useRootNavigator: true,
+      builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('End Consultation', style: TextStyle(fontWeight: FontWeight.bold)),
         content: const Text('Are you sure you want to end this video call?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.of(dialogCtx, rootNavigator: true).pop(false),
             child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
@@ -340,7 +341,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.of(dialogCtx, rootNavigator: true).pop(true),
             child: const Text('End Call'),
           ),
         ],
@@ -353,7 +354,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         await _apiService.updateVideoStatus(widget.appointmentId, 'completed');
       } catch (_) {}
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.of(context).pop();
       }
     }
   }
@@ -362,7 +363,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      useRootNavigator: true,
+      builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Permissions Required'),
         content: const Text(
@@ -371,17 +373,16 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.of(dialogCtx, rootNavigator: true).pop();
+              if (mounted) Navigator.of(context).pop();
             },
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
-              final nav = Navigator.of(this.context);
+              Navigator.of(dialogCtx, rootNavigator: true).pop();
               await openAppSettings();
-              if (mounted) nav.pop();
+              if (mounted) Navigator.of(context).pop();
             },
             child: const Text('Open Settings'),
           ),
@@ -393,15 +394,16 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      useRootNavigator: true,
+      builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Video Call Error'),
         content: Text(message),
         actions: [
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.of(dialogCtx, rootNavigator: true).pop();
+              if (mounted) Navigator.of(context).pop();
             },
             child: const Text('OK'),
           ),
@@ -414,15 +416,21 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        top: false,
-        bottom: false,
-        child: Stack(
-          children: [
-            // 1. Remote Fullscreen Video (Doctor) or Waiting Screen
-            Positioned.fill(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _endCall();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          top: false,
+          bottom: false,
+          child: Stack(
+            children: [
+              // 1. Remote Fullscreen Video (Doctor) or Waiting Screen
+              Positioned.fill(
               child: _buildRemoteVideoView(),
             ),
 
@@ -491,8 +499,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTopHeader() {
     return Container(

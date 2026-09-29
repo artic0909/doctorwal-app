@@ -113,51 +113,61 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
     showDialog(
       context: context,
       barrierDismissible: false,
+      useRootNavigator: true,
       builder: (context) => const Center(
         child: CircularProgressIndicator(color: Color(0xFF1B9AAA)),
       ),
     );
 
+    Map<String, dynamic>? response;
     try {
-      final response = await _apiService.getVideoCallToken(item.id);
-      if (mounted) Navigator.pop(context); // Dismiss loading
+      response = await _apiService.getVideoCallToken(item.id);
+    } catch (e) {
+      debugPrint("Error fetching video call token: $e");
+    } finally {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Safely dismiss only the loading dialog
+      }
+    }
 
-      if (response['status'] == true && response['data'] != null) {
-        final data = response['data'];
-        final appId = data['app_id']?.toString() ?? '';
-        final channel = data['channel']?.toString() ?? '';
-        final token = data['token']?.toString() ?? '';
-        final uid = int.tryParse(data['uid'].toString()) ?? 0;
-        final doctorName = data['doctor_name']?.toString() ?? item.clinicName ?? 'Doctor';
+    if (response == null) {
+      _showSnackBar('Failed to connect to video session.');
+      return;
+    }
 
-        if (appId.isEmpty || channel.isEmpty || token.isEmpty) {
-          _showSnackBar('Invalid video call credentials received from server.');
-          return;
-        }
+    if (response['status'] == true && response['data'] != null) {
+      final data = response['data'];
+      final appId = data['app_id']?.toString() ?? '';
+      final channel = data['channel']?.toString() ?? '';
+      final token = data['token']?.toString() ?? '';
+      final uid = int.tryParse(data['uid'].toString()) ?? 0;
+      final doctorName = data['doctor_name']?.toString() ?? item.clinicName ?? 'Doctor';
 
-        if (mounted) {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VideoCallScreen(
-                appId: appId,
-                channelName: channel,
-                token: token,
-                uid: uid,
-                appointmentId: item.id,
-                participantName: doctorName,
-                role: 'patient',
-              ),
+      if (appId.isEmpty || channel.isEmpty || token.isEmpty) {
+        _showSnackBar('Invalid video call credentials received from server.');
+        return;
+      }
+
+      if (mounted) {
+        await Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (context) => VideoCallScreen(
+              appId: appId,
+              channelName: channel,
+              token: token,
+              uid: uid,
+              appointmentId: item.id,
+              participantName: doctorName,
+              role: 'patient',
             ),
-          );
+          ),
+        );
+        if (mounted) {
           _fetchAppointments(); // Refresh on return
         }
-      } else {
-        _showSnackBar(response['message'] ?? 'Unable to join video call at this time.');
       }
-    } catch (e) {
-      if (mounted) Navigator.pop(context);
-      _showSnackBar('Failed to connect to video session.');
+    } else {
+      _showSnackBar(response['message'] ?? 'Unable to join video call at this time.');
     }
   }
 
