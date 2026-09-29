@@ -7,6 +7,7 @@ import 'package:demoapp/Models/all_available_opd_model.dart';
 import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:demoapp/Models/all_available_doctors_model.dart';
 import 'package:demoapp/services/location_service.dart';
+import 'package:demoapp/widgets/skeleton_loader.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
@@ -93,7 +94,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             _buildCategoryTabs(),
             Expanded(
               child: _isLoading 
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
+                ? const SearchResultsSkeleton()
                 : _buildResultsList(),
             ),
           ],

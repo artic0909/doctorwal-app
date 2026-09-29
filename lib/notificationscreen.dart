@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:demoapp/widgets/skeleton_loader.dart';
 import 'Models/notification_model.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -116,7 +117,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           _buildSearchBar(),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const NotificationListSkeleton()
                 : filteredList.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(

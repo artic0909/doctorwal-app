@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:demoapp/pathologydetailsscreen.dart';
+import 'package:demoapp/widgets/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:demoapp/services/location_service.dart';
@@ -125,7 +126,7 @@ class _AllAvailablePathologyScreenState
           _buildHeader(),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF2E7D32)))
+                ? const PathologyListSkeleton()
                 : RefreshIndicator(
                     onRefresh: _fetchInitialClinics,
                     color: const Color(0xFF2E7D32),

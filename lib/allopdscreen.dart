@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:demoapp/opddetailsscreen.dart';
+import 'package:demoapp/widgets/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:demoapp/services/location_service.dart';
@@ -125,7 +126,7 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
           _buildHeader(),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
+                ? const OpdListSkeleton()
                 : RefreshIndicator(
                     onRefresh: _fetchInitialClinics,
                     color: const Color(0xFF1565C0),

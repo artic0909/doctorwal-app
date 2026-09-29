@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:demoapp/widgets/skeleton_loader.dart';
 import 'models/all_coupons_model.dart'; // Import your model
 
 class AllCouponsScreen extends StatefulWidget {
@@ -72,7 +73,7 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
       ),
       body:
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const CouponListSkeleton()
               : ListView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: _coupons.length,

@@ -1,5 +1,6 @@
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/addvitalscreen.dart';
+import 'package:demoapp/widgets/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -143,7 +144,7 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
           _buildFilterBar(),
           Expanded(
             child: _isLoading 
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
+              ? const HealthParametersSkeleton()
               : filteredVitals.isEmpty 
                 ? _buildEmptyState(isFiltered)
                 : RefreshIndicator(

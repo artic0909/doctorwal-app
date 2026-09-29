@@ -1,6 +1,7 @@
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/addmedicalrecordscreen.dart';
 import 'package:demoapp/viewmedicalrecordscreen.dart';
+import 'package:demoapp/widgets/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -173,7 +174,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
           _buildFilterBar(),
           Expanded(
             child: _isLoading 
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
+              ? const MedicalHistorySkeleton()
               : TabBarView(
                   controller: _tabController,
                   children: [

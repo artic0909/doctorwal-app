@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:demoapp/doctordetailsscreen.dart';
 import 'package:demoapp/Models/all_available_doctors_model.dart';
+import 'package:demoapp/widgets/skeleton_loader.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async'; // Added for Timer
@@ -124,7 +125,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
           _buildHeader(),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
+                ? const DoctorsListSkeleton()
                 : RefreshIndicator(
                     onRefresh: _fetchInitialDoctors,
                     color: const Color(0xFF1565C0),

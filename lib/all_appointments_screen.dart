@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/Models/appointment_model.dart';
 import 'package:demoapp/screens/video_call/video_call_screen.dart';
+import 'package:demoapp/widgets/skeleton_loader.dart';
 
 class AllAppointmentsScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -230,7 +231,7 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppointmentsSkeleton()
           : _errorMessage.isNotEmpty
               ? _buildErrorView()
               : _appointments.isEmpty

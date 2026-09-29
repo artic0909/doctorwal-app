@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:demoapp/Models/blog_model.dart';
 import 'package:demoapp/singleblogdetailsscreen.dart';
+import 'package:demoapp/widgets/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -66,7 +67,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
           future: blogsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const BlogListSkeleton();
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
