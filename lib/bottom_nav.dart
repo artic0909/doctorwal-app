@@ -47,26 +47,89 @@ class TabNavigator extends StatelessWidget {
 
 class _BottomNavScreenState extends State<BottomNavScreen> {
   int _currentIndex = 0;
-  late final List<Widget> _pages;
-  late final List<GlobalKey<NavigatorState>> _navigatorKeys;
+  final List<int> _tabKeys = [0, 0, 0, 0, 0];
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _navigatorKeys = [
-      GlobalKey<NavigatorState>(),
-      GlobalKey<NavigatorState>(),
-      GlobalKey<NavigatorState>(),
-      GlobalKey<NavigatorState>(),
-      GlobalKey<NavigatorState>(),
-    ];
-    _pages = [
-      TabNavigator(navigatorKey: _navigatorKeys[0], child: CategoryHomeScreen(userData: widget.userData)),
-      TabNavigator(navigatorKey: _navigatorKeys[1], child: AllAppointmentsScreen(userData: widget.userData)),
-      TabNavigator(navigatorKey: _navigatorKeys[2], child: SearchScreen(userData: widget.userData)),
-      TabNavigator(navigatorKey: _navigatorKeys[3], child: const MedicalHistoryScreen(initialTabIndex: 1, isTab: true)), // Prescriptions
-      TabNavigator(navigatorKey: _navigatorKeys[4], child: const MedicalHistoryScreen(initialTabIndex: 0, isTab: true)), // Reports
-    ];
+  void _onTabSelected(int index) {
+    if (index == 5) {
+      BottomNavScreen.globalScaffoldKey.currentState?.openDrawer();
+      return;
+    }
+    setState(() {
+      if (_currentIndex != index) {
+        _tabKeys[index]++;
+        _navigatorKeys[index] = GlobalKey<NavigatorState>();
+        _currentIndex = index;
+      } else {
+        final navState = _navigatorKeys[index].currentState;
+        if (navState != null && navState.canPop()) {
+          navState.popUntil((route) => route.isFirst);
+        } else {
+          _tabKeys[index]++;
+          _navigatorKeys[index] = GlobalKey<NavigatorState>();
+        }
+      }
+    });
+  }
+
+  Widget _buildTab(int index) {
+    switch (index) {
+      case 0:
+        return TabNavigator(
+          key: ValueKey('tab_0_${_tabKeys[0]}'),
+          navigatorKey: _navigatorKeys[0],
+          child: CategoryHomeScreen(
+            key: ValueKey('home_${_tabKeys[0]}'),
+            userData: widget.userData,
+          ),
+        );
+      case 1:
+        return TabNavigator(
+          key: ValueKey('tab_1_${_tabKeys[1]}'),
+          navigatorKey: _navigatorKeys[1],
+          child: AllAppointmentsScreen(
+            key: ValueKey('appts_${_tabKeys[1]}'),
+            userData: widget.userData,
+          ),
+        );
+      case 2:
+        return TabNavigator(
+          key: ValueKey('tab_2_${_tabKeys[2]}'),
+          navigatorKey: _navigatorKeys[2],
+          child: SearchScreen(
+            key: ValueKey('search_${_tabKeys[2]}'),
+            userData: widget.userData,
+          ),
+        );
+      case 3:
+        return TabNavigator(
+          key: ValueKey('tab_3_${_tabKeys[3]}'),
+          navigatorKey: _navigatorKeys[3],
+          child: MedicalHistoryScreen(
+            key: ValueKey('prescriptions_${_tabKeys[3]}'),
+            initialTabIndex: 1,
+            isTab: true,
+          ),
+        );
+      case 4:
+        return TabNavigator(
+          key: ValueKey('tab_4_${_tabKeys[4]}'),
+          navigatorKey: _navigatorKeys[4],
+          child: MedicalHistoryScreen(
+            key: ValueKey('reports_${_tabKeys[4]}'),
+            initialTabIndex: 0,
+            isTab: true,
+          ),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
   }
 
   Future<void> logout() async {
@@ -289,17 +352,17 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                   "Home",
                   () {
                     Navigator.pop(context);
-                    setState(() => _currentIndex = 0);
+                    _onTabSelected(0);
                   },
                   isSelected: _currentIndex == 0,
                 ),
                 _drawerItem(Icons.medication_rounded, "Prescriptions", () {
                   Navigator.pop(context);
-                  setState(() => _currentIndex = 3);
+                  _onTabSelected(3);
                 }, isSelected: _currentIndex == 3),
                 _drawerItem(Icons.assignment_rounded, "Test & Lab Reports", () {
                   Navigator.pop(context);
-                  setState(() => _currentIndex = 4);
+                  _onTabSelected(4);
                 }, isSelected: _currentIndex == 4),
                 _drawerItem(Icons.calculate, "BMR Calculator", () {
                   Navigator.pop(context);
@@ -313,7 +376,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                 _drawerSectionTitle("appointments & notifications"),
                 _drawerItem(Icons.calendar_month_rounded, "Appointments", () {
                   Navigator.pop(context);
-                  setState(() => _currentIndex = 1);
+                  _onTabSelected(1);
                 }, isSelected: _currentIndex == 1),
                 _drawerItem(Icons.notifications_active_rounded, "Notifications", () {
                   Navigator.pop(context);
@@ -403,9 +466,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
         }
 
         if (_currentIndex != 0) {
-          setState(() {
-            _currentIndex = 0;
-          });
+          _onTabSelected(0);
         } else {
           // If we are on the Home tab and cannot pop the inner navigator, exit the app
           import_services.SystemNavigator.pop();
@@ -417,7 +478,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
         drawer: _buildPremiumDrawer(context, currentName, dispMemberId, currentProfileImg),
         body: IndexedStack(
           index: _currentIndex,
-          children: _pages,
+          children: List.generate(5, _buildTab),
         ),
         bottomNavigationBar: ClipRRect(
           borderRadius: const BorderRadius.only(
@@ -468,15 +529,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     bool isMore = index == 5;
     
     return GestureDetector(
-      onTap: () {
-        if (isMore) {
-          BottomNavScreen.globalScaffoldKey.currentState?.openDrawer();
-        } else {
-          setState(() {
-            _currentIndex = index;
-          });
-        }
-      },
+      onTap: () => _onTabSelected(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
