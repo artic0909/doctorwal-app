@@ -23,11 +23,9 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController cityController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController gpCodeController = TextEditingController();
 
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
   Future<void> registerUser() async {
@@ -45,9 +43,9 @@ class _SignupScreenState extends State<SignupScreen> {
           'user_name': nameController.text.trim(),
           'user_email': emailController.text.trim(),
           'user_password': passwordController.text.trim(),
-          'user_password_confirmation': confirmPasswordController.text.trim(),
           'user_mobile': phoneController.text.trim(),
           'user_city': cityController.text.trim(),
+          'gp_code': gpCodeController.text.trim(),
         }),
       );
 
@@ -188,7 +186,7 @@ class _SignupScreenState extends State<SignupScreen> {
     cityController.dispose();
     emailController.dispose();
     passwordController.dispose();
-    confirmPasswordController.dispose();
+    gpCodeController.dispose();
     super.dispose();
   }
 
@@ -329,12 +327,10 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                               const SizedBox(height: 12),
                               buildElegantInput(
-                                controller: confirmPasswordController,
-                                label: "Re-enter Password",
-                                icon: Icons.verified_user_rounded,
-                                obscure: _obscureConfirmPassword,
-                                toggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-                                validator: (value) => value != passwordController.text ? "Mismatch" : null,
+                                controller: gpCodeController,
+                                label: "GP Code (Optional)",
+                                icon: Icons.card_membership_rounded,
+                                validator: (value) => null,
                               ),
                               const SizedBox(height: 25),
                               _isLoading
