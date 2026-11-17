@@ -1,20 +1,23 @@
-import 'dart:math' as math;
+import 'dart:async';
+import 'dart:convert';
 import 'package:demoapp/allopdscreen.dart';
 import 'package:demoapp/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'alldoctorsscreen.dart';
 import 'allavailablepathologyscreen.dart';
+import 'package:demoapp/pathologydetailsscreen.dart';
+import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:demoapp/notificationscreen.dart';
 import 'profileeditscreen.dart';
-import 'package:demoapp/healthparametersscreen.dart';
 import 'package:demoapp/medicalhistoryscreen.dart';
-import 'package:demoapp/bmr.dart';
+import 'package:demoapp/allcouponsscreen.dart';
 import 'package:demoapp/search_screen.dart';
+import 'package:demoapp/search_results_screen.dart';
+import 'package:demoapp/addmedicalrecordscreen.dart';
 import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:http/http.dart' as http;
-import 'package:share_plus/share_plus.dart';
 import 'package:demoapp/bottom_nav.dart';
 import 'package:demoapp/services/location_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -38,9 +41,16 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   final ScrollController _scrollController = ScrollController();
   final ScrollController _horizontalScrollController = ScrollController();
   String? _userCity;
+  List<AllAvailablePathModel> _pathologyPartners = [];
+  bool _isLoadingPathology = true;
+  late PageController _pathologyPageController;
+  int _currentPathologyIndex = 0;
+  Timer? _pathologyAutoScrollTimer;
 
   @override
   void dispose() {
+    _pathologyAutoScrollTimer?.cancel();
+    _pathologyPageController.dispose();
     _scrollController.dispose();
     _horizontalScrollController.dispose();
     super.dispose();
@@ -49,9 +59,11 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   @override
   void initState() {
     super.initState();
+    _pathologyPageController = PageController(viewportFraction: 0.90);
     loadUserData();
     _syncUserId(); // Background sync
     _fetchCity();
+    _fetchPathologyPartners();
     
     // Discovery Animation: Peek at scrollable content
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -151,6 +163,85 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         // Also update local state if needed (though userData is final in widget)
         debugPrint("User ID synced successfully: $fetchedId");
       }
+    }
+  }
+
+  Future<void> _fetchPathologyPartners() async {
+    try {
+      // Query clinics with tests first to show real available diagnostic tests
+      final url = Uri.parse("https://doctorwala.info/api/api/all-pathology-contacts?query=test");
+      final response = await http.get(url).timeout(const Duration(seconds: 8));
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final List data = jsonData['data'] ?? [];
+        final List<AllAvailablePathModel> parsed = data.map((e) => AllAvailablePathModel.fromJson(e)).toList();
+
+        // Filter to real clinics that actually have tests
+        final withTests = parsed.where((c) => c.tests.isNotEmpty).toList();
+        withTests.shuffle();
+
+        List<AllAvailablePathModel> selected = withTests.take(10).toList();
+        if (selected.length < 10) {
+          final remaining = parsed.where((c) => c.tests.isEmpty).toList();
+          remaining.shuffle();
+          selected.addAll(remaining.take(10 - selected.length));
+        }
+
+        if (selected.isNotEmpty && mounted) {
+          setState(() {
+            _pathologyPartners = selected;
+            _isLoadingPathology = false;
+          });
+          _startPathologyAutoScroll();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Pathology partners fetch note: $e");
+    }
+
+    // Fallback: standard page 1 without static/fake data
+    try {
+      final fallbackUrl = Uri.parse("https://doctorwala.info/api/api/all-pathology-contacts?page=1");
+      final fallbackResponse = await http.get(fallbackUrl).timeout(const Duration(seconds: 8));
+      if (fallbackResponse.statusCode == 200) {
+        final jsonData = jsonDecode(fallbackResponse.body);
+        final List data = jsonData['data'] ?? [];
+        final List<AllAvailablePathModel> parsed = data.map((e) => AllAvailablePathModel.fromJson(e)).toList();
+        parsed.shuffle();
+        if (parsed.isNotEmpty && mounted) {
+          setState(() {
+            _pathologyPartners = parsed.take(10).toList();
+            _isLoadingPathology = false;
+          });
+          _startPathologyAutoScroll();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Pathology partners fallback note: $e");
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoadingPathology = false;
+      });
+    }
+  }
+
+  void _startPathologyAutoScroll() {
+    _pathologyAutoScrollTimer?.cancel();
+    if (_pathologyPartners.length > 1) {
+      _pathologyAutoScrollTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+        if (_pathologyPageController.hasClients && mounted) {
+          final nextIndex = (_currentPathologyIndex + 1) % _pathologyPartners.length;
+          _pathologyPageController.animateToPage(
+            nextIndex,
+            duration: const Duration(milliseconds: 700),
+            curve: Curves.easeInOutCubic,
+          );
+        }
+      });
     }
   }
 
@@ -1037,107 +1128,34 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             const SizedBox(height: 24),
           ],
 
-          // 7. Quick Services Slider (BMR, Health Vitals, etc.)
+          // 7. Popular Health Checkups Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Health & Vitals Trackers",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SingleChildScrollView(
-                  controller: _horizontalScrollController,
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: [
-                      _eyeCatchyBox(
-                        title: "BMR Calculator",
-                        subtitle: "Daily calories",
-                        icon: Icons.monitor_weight_rounded,
-                        gradient: [
-                          const Color(0xFFFF8A65),
-                          const Color(0xFFD84315),
-                        ],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const BMRCalculatorScreen(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      _eyeCatchyBox(
-                        title: "Health Vitals",
-                        subtitle: "Track metrics",
-                        icon: Icons.monitor_heart_rounded,
-                        gradient: [
-                          const Color(0xFF5C6BC0),
-                          const Color(0xFF3949AB),
-                        ],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const HealthParametersScreen(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      _eyeCatchyBox(
-                        title: "Digital Prescriptions",
-                        subtitle: "View records",
-                        icon: Icons.medication_rounded,
-                        gradient: [
-                          const Color(0xFF26A69A),
-                          const Color(0xFF00796B),
-                        ],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MedicalHistoryScreen(
-                              initialTabIndex: 1,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      _eyeCatchyBox(
-                        title: "My Appointments",
-                        subtitle: "Track visits",
-                        icon: Icons.calendar_today_rounded,
-                        gradient: [
-                          const Color(0xFFF06292),
-                          const Color(0xFFC2185B),
-                        ],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AllAppointmentsScreen(
-                              userData: widget.userData,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            child: _buildHealthCheckupsSection(),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
-          // 8. Wellness Hub (Invite & Tips)
+          // 8. Find Doctor by Health Concern Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildWellnessHub(),
+            child: _buildHealthConcernSection(),
+          ),
+
+          const SizedBox(height: 22),
+
+          // 9. Digital Health Locker (Upload & View Prescriptions)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildHealthVaultSection(),
+          ),
+
+          const SizedBox(height: 20),
+
+          // 10. Exclusive Health Discounts & Coupons
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildCouponsBanner(),
           ),
         ],
       ),
@@ -1314,102 +1332,323 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   }
 
   Widget _buildNeedHelpBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0277BD), Color(0xFF00897B)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0277BD).withAlpha(60),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
+    return GestureDetector(
+      onTap: () => launchUrl(Uri.parse('tel:+916292237207')),
+      child: Container(
+        width: double.infinity,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF0D47A1), Color(0xFF00695C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0D47A1).withAlpha(50),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Decorative background watermark
+            Positioned(
+              right: -12,
+              bottom: -15,
+              child: Icon(
+                Icons.support_agent_rounded,
+                size: 85,
+                color: Colors.white.withAlpha(20),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  // Agent / Headset Avatar
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(35),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withAlpha(60),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.support_agent_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Content Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF4ADE80),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Text(
+                              "24/7 HELPLINE",
+                              style: TextStyle(
+                                color: Color(0xFF86EFAC),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          "Need Medical Help?",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        const Text(
+                          "Call our care team for instant support",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Sleek Call Now Action Button
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(25),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.call_rounded, size: 13, color: Color(0xFF0D47A1)),
+                        SizedBox(width: 4),
+                        Text(
+                          "Call Now",
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0D47A1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          const Expanded(
-            child: Column(
+    );
+  }
+
+  // 1. Featured Pathology Partners (Auto-Scrolling 10 Data with tests & minimal details)
+  Widget _buildHealthCheckupsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Need Help?",
+                  "Verified Pathology Partners",
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
+                    color: Color(0xFF1E293B),
+                    letterSpacing: -0.3,
                   ),
                 ),
-                SizedBox(height: 3),
+                SizedBox(height: 2),
                 Text(
-                  "If you have any queries or need support",
+                  "Top diagnostic centres & available tests",
                   style: TextStyle(
-                    color: Colors.white70,
                     fontSize: 11,
+                    color: Color(0xFF64748B),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: () => launchUrl(Uri.parse('tel:+916292237207')),
-            icon: const Icon(Icons.call_rounded, size: 15, color: Color(0xFF0277BD)),
-            label: const Text(
-              "Call Now",
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0277BD),
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AllAvailablePathologyScreen(userData: widget.userData),
+                ),
+              ),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text(
+                "View All →",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1565C0),
+                ),
               ),
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_isLoadingPathology && _pathologyPartners.isEmpty)
+          Container(
+            height: 190,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.blueGrey.withAlpha(20)),
             ),
+            child: const Center(
+              child: CircularProgressIndicator(color: Color(0xFF00897B), strokeWidth: 2.5),
+            ),
+          )
+        else
+          Column(
+            children: [
+              SizedBox(
+                height: 195,
+                child: PageView.builder(
+                  controller: _pathologyPageController,
+                  physics: const BouncingScrollPhysics(),
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentPathologyIndex = index;
+                    });
+                  },
+                  itemCount: _pathologyPartners.length,
+                  itemBuilder: (context, index) {
+                    final partner = _pathologyPartners[index];
+                    return _buildPathologyPartnerCard(partner, index);
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Auto-Scroll Progress Dots
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _pathologyPartners.length,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                    width: _currentPathologyIndex == index ? 16 : 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: _currentPathologyIndex == index
+                          ? const Color(0xFF00897B)
+                          : Colors.blueGrey.withAlpha(45),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+      ],
     );
   }
 
-  Widget _eyeCatchyBox({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required List<Color> gradient,
-    required VoidCallback onTap,
-  }) {
-    // Peek effect: show roughly 3.1 cards to hint at more content, min 105 width
-    final double cardWidth = math.max(105.0, (MediaQuery.of(context).size.width - 48) / 3.1);
+  Widget _buildPathologyPartnerCard(AllAvailablePathModel partner, int index) {
+    // Extract ONLY actual real tests from the API
+    final List<String> testsList = [];
+    if (partner.tests.isNotEmpty) {
+      for (var t in partner.tests) {
+        if (t is Map && t['test_name'] != null) {
+          final tName = t['test_name'].toString().trim();
+          if (tName.isNotEmpty && !testsList.contains(tName)) {
+            testsList.add(tName);
+          }
+        }
+      }
+    }
+
+    final List<String> servicesList = [];
+    if (partner.services.isNotEmpty) {
+      for (var s in partner.services) {
+        if (s is Map && s['service_name'] != null) {
+          final sName = s['service_name'].toString().trim();
+          if (sName.isNotEmpty && !servicesList.contains(sName)) {
+            servicesList.add(sName);
+          }
+        } else if (s is String && s.trim().isNotEmpty) {
+          servicesList.add(s.trim());
+        }
+      }
+    }
+
+    final clinicDisplayName = partner.clinicName.trim().isNotEmpty
+        ? partner.clinicName.trim()
+        : 'Certified Diagnostic Centre';
+    final locationText = partner.clinicAddress.trim().isNotEmpty
+        ? partner.clinicAddress.trim()
+        : (partner.clinicCity.trim().isNotEmpty ? partner.clinicCity.trim() : 'Verified Pathology Lab');
+
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: cardWidth,
-        height: 120,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradient,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PathologyDetailsScreen(
+            pathology: partner,
+            userData: widget.userData,
           ),
+        ),
+      ),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.blueGrey.withAlpha(25)),
           boxShadow: [
             BoxShadow(
-              color: gradient.last.withAlpha(50),
-              blurRadius: 6,
+              color: Colors.black.withAlpha(6),
+              blurRadius: 10,
               offset: const Offset(0, 3),
             ),
           ],
@@ -1418,36 +1657,290 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(50),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: Colors.white, size: 22),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Top Row: Lab Avatar + Clinic Name & Location + Partner Badge
+            Row(
               children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00897B).withAlpha(15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.biotech_rounded,
+                    color: Color(0xFF00897B),
+                    size: 22,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        clinicDisplayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF1E293B),
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on_rounded,
+                            size: 11,
+                            color: Color(0xFFE53935),
+                          ),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              locationText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                color: Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00897B).withAlpha(15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.verified_rounded, size: 10, color: Color(0xFF00897B)),
+                      const SizedBox(width: 3),
+                      Text(
+                        testsList.isNotEmpty ? "${testsList.length} Tests" : "Verified Lab",
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF00897B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            // Middle: Tests Provided (or Services if tests not populated)
+            if (testsList.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.science_rounded, size: 12, color: Color(0xFF00897B)),
+                      const SizedBox(width: 4),
+                      Text(
+                        "Available Tests (${testsList.length}):",
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      ...testsList.take(3).map((test) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.blueGrey.withAlpha(30)),
+                            ),
+                            child: Text(
+                              test,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF334155),
+                              ),
+                            ),
+                          )),
+                      if (testsList.length > 3)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00897B).withAlpha(12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            "+${testsList.length - 3} more",
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF00897B),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              )
+            else if (servicesList.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.medical_services_rounded, size: 12, color: Color(0xFF00897B)),
+                      const SizedBox(width: 4),
+                      Text(
+                        "Services (${servicesList.length}):",
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      ...servicesList.take(3).map((svc) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.blueGrey.withAlpha(30)),
+                            ),
+                            child: Text(
+                              svc,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF334155),
+                              ),
+                            ),
+                          )),
+                      if (servicesList.length > 3)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00897B).withAlpha(12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            "+${servicesList.length - 3} more",
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF00897B),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blueGrey.withAlpha(20)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, size: 13, color: Color(0xFF64748B)),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        "Tap below to view full lab schedule & book tests",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 8),
+
+            // Bottom Row: Minimal Details & Action Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.home_work_outlined, size: 12, color: Color(0xFF2E7D32)),
+                    SizedBox(width: 4),
+                    Text(
+                      "Home Sample Available",
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2E7D32),
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00897B),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF00897B).withAlpha(40),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Book Test",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 3),
+                      Icon(Icons.arrow_forward_rounded, size: 11, color: Colors.white),
+                    ],
                   ),
                 ),
               ],
@@ -1458,190 +1951,354 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     );
   }
 
-  Widget _buildWellnessHub() {
+  // 2. Consult Doctor by Health Concern
+  Widget _buildHealthConcernSection() {
+    final concerns = [
+      {'label': 'Fever & Infection', 'query': 'General Physician', 'icon': Icons.thermostat_rounded, 'color': const Color(0xFFE53935)},
+      {'label': 'Bone & Joint Pain', 'query': 'Orthopedic', 'icon': Icons.accessibility_new_rounded, 'color': const Color(0xFF1565C0)},
+      {'label': 'Child Health', 'query': 'Pediatrician', 'icon': Icons.child_care_rounded, 'color': const Color(0xFF00897B)},
+      {'label': "Women's Health", 'query': 'Gynecologist', 'icon': Icons.pregnant_woman_rounded, 'color': const Color(0xFFD81B60)},
+      {'label': 'Dental Pain', 'query': 'Dentist', 'icon': Icons.sentiment_satisfied_alt_rounded, 'color': const Color(0xFFF57C00)},
+      {'label': 'Heart & Chest', 'query': 'Cardiologist', 'icon': Icons.favorite_rounded, 'color': const Color(0xFFC2185B)},
+      {'label': 'Eye Problems', 'query': 'Eye Specialist', 'icon': Icons.visibility_rounded, 'color': const Color(0xFF0288D1)},
+      {'label': 'Skin & Hair', 'query': 'Dermatologist', 'icon': Icons.face_retouching_natural_rounded, 'color': const Color(0xFF6A1B9A)},
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 5),
-          child: Text(
-            "Wellness Hub",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: Color(0xFF263238),
-              letterSpacing: 0.5,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Find Doctor by Concern",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1E293B),
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  "Connect with verified specialists by symptom",
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ),
-        const SizedBox(height: 15),
-        
-        // Promo Banner
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFFF5722), Color(0xFFFF9800)],
-            ),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF5722).withAlpha(76),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -10,
-                bottom: -10,
-                child: Icon(
-                  Icons.card_giftcard_rounded,
-                  size: 80,
-                  color: Colors.white.withAlpha(25),
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AllDoctorsScreen(userData: widget.userData),
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Invite & Earn Rewards",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    "Share Doctorwala with your friends and explore premium benefits together.",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  ElevatedButton(
-                    onPressed: () {
-                      SharePlus.instance.share(ShareParams(
-                        text: 'Download the Doctorwala app for your health needs: https://play.google.com/store/apps/details?id=com.doctorwala.dochealth&hl=en_IN',
-                        subject: 'Join Doctorwala',
-                      ));
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFFFF5722),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    ),
-                    child: const Text(
-                      "Invite Now",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-            ],
-          ),
-        ),
-        
-        const SizedBox(height: 25),
-        
-        // Health Tips Horizontal
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 5),
-          child: Text(
-            "Quick Health Insights",
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF455A64),
+              child: const Text(
+                "All Doctors →",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1565C0),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
         const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
           child: Row(
-            children: [
-              _buildTipCard(
-                "STAY HYDRATED",
-                "Drink 8 glasses of water daily for better energy.",
-                Icons.water_drop_rounded,
-                const Color(0xFF03A9F4),
-              ),
-              const SizedBox(width: 12),
-              _buildTipCard(
-                "DAILY WALK",
-                "A 30-min walk can boost your heart health significantly.",
-                Icons.directions_walk_rounded,
-                const Color(0xFF4CAF50),
-              ),
-              const SizedBox(width: 12),
-              _buildTipCard(
-                "BETTER SLEEP",
-                "Aim for 7-9 hours of restful sleep every night.",
-                Icons.bedtime_rounded,
-                const Color(0xFF673AB7),
-              ),
-            ],
+            children: concerns.map((item) {
+              final color = item['color'] as Color;
+              return GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SearchResultsScreen(
+                      initialQuery: item['query'] as String,
+                      initialCategory: 'doctor',
+                      userData: widget.userData,
+                    ),
+                  ),
+                ),
+                child: Container(
+                  width: 118,
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.blueGrey.withAlpha(25)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(5),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: color.withAlpha(18),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(item['icon'] as IconData, color: color, size: 22),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        item['label'] as String,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1E293B),
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item['query'] as String,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTipCard(String title, String desc, IconData icon, Color color) {
+  // 3. Digital Health Locker (Upload Prescription & Medical Records)
+  Widget _buildHealthVaultSection() {
     return Container(
-      width: 220,
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withAlpha(30), width: 1.5),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.blueGrey.withAlpha(25)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(6),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withAlpha(40),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1,
-            ),
+          const Row(
+            children: [
+              Icon(Icons.folder_shared_rounded, color: Color(0xFF1565C0), size: 19),
+              SizedBox(width: 6),
+              Text(
+                "Digital Health Locker",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
-          Text(
-            desc,
-            style: const TextStyle(
-              color: Color(0xFF37474F),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              height: 1.4,
+          const Text(
+            "Access past test reports, handwritten doctor slips & bills anytime",
+            style: TextStyle(
+              fontSize: 11,
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.w500,
             ),
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              // Upload Prescription button
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AddMedicalRecordScreen(initialType: 'prescription'),
+                    ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1565C0).withAlpha(12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF1565C0).withAlpha(30)),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_photo_alternate_rounded, size: 16, color: Color(0xFF1565C0)),
+                        SizedBox(width: 6),
+                        Text(
+                          "Upload Rx",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1565C0),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // View My Records button
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MedicalHistoryScreen(),
+                    ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00897B).withAlpha(12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF00897B).withAlpha(30)),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inventory_2_rounded, size: 16, color: Color(0xFF00897B)),
+                        SizedBox(width: 6),
+                        Text(
+                          "View Records",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF00897B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  // 4. Exclusive Coupons & Discounts Banner
+  Widget _buildCouponsBanner() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const AllCouponsScreen()),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFFF9800).withAlpha(45)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF9800).withAlpha(12),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF3E0),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.local_offer_rounded,
+                color: Color(0xFFE65100),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Doctorwala Health Offers",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    "Save up to 30% on pathology tests & care",
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE65100),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                "View Offers",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
