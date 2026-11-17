@@ -116,6 +116,23 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
     }
   }
 
+  Color _getTabColor(int index) {
+    switch (index) {
+      case 0:
+        return const Color(0xFF1565C0); // Home: Royal Blue
+      case 1:
+        return const Color(0xFF00897B); // Appts: Medical Teal
+      case 2:
+        return const Color(0xFFEA580C); // Search: Vibrant Sunset Orange
+      case 3:
+        return const Color(0xFF7C3AED); // Records: Clinical Violet / Purple
+      case 4:
+        return const Color(0xFFE11D48); // More: Rose Pink
+      default:
+        return const Color(0xFF1565C0);
+    }
+  }
+
   Widget _buildTab(int index) {
     switch (index) {
       case 0:
@@ -506,6 +523,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
       child: Scaffold(
         key: BottomNavScreen.globalScaffoldKey,
         extendBody: false,
+        backgroundColor: const Color(0xFFF8FAFF),
         drawer: _buildPremiumDrawer(context, currentName, dispMemberId, currentProfileImg),
         body: IndexedStack(
           index: _currentIndex,
@@ -538,6 +556,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
                         painter: CurvedNotchPainter(
                           centerX: cx,
                           color: Colors.white,
+                          canvasBackgroundColor: const Color(0xFFF8FAFF),
                         ),
                         child: SizedBox(
                           width: w,
@@ -572,13 +591,13 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
                               color: Colors.white,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF1565C0).withAlpha(35),
+                                  color: Colors.black.withAlpha(20),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
                                 BoxShadow(
-                                  color: Colors.black.withAlpha(15),
-                                  blurRadius: 6,
+                                  color: _getTabColor(_currentIndex).withAlpha(55),
+                                  blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
                               ],
@@ -587,18 +606,14 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
                               child: Container(
                                 width: 42,
                                 height: 42,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
+                                  color: _getTabColor(_currentIndex).withAlpha(24),
                                 ),
                                 child: Icon(
                                   _getTabIcon(_currentIndex),
-                                  color: const Color(0xFF1565C0),
-                                  size: 22,
+                                  color: _getTabColor(_currentIndex),
+                                  size: 23,
                                 ),
                               ),
                             ),
@@ -618,6 +633,8 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
 
   Widget _buildBarItem(IconData icon, String label, int index) {
     final bool isSelected = _currentIndex == index;
+    final tabColor = _getTabColor(index);
+
     return GestureDetector(
       onTap: () => _onTabSelected(index),
       behavior: HitTestBehavior.opaque,
@@ -631,7 +648,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
               opacity: isSelected ? 0.0 : 1.0,
               child: Icon(
                 icon,
-                color: const Color(0xFF64748B),
+                color: const Color(0xFF94A3B8),
                 size: 20,
               ),
             ),
@@ -640,7 +657,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
               label,
               maxLines: 1,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF1565C0) : const Color(0xFF64748B),
+                color: isSelected ? tabColor : const Color(0xFF64748B),
                 fontSize: 9.5,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
               ),
@@ -655,12 +672,12 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
 class CurvedNotchPainter extends CustomPainter {
   final double centerX;
   final Color color;
-  final Color shadowColor;
+  final Color canvasBackgroundColor;
 
   CurvedNotchPainter({
     required this.centerX,
     this.color = Colors.white,
-    this.shadowColor = const Color(0x18000000),
+    this.canvasBackgroundColor = const Color(0xFFF8FAFF),
   });
 
   @override
@@ -672,6 +689,12 @@ class CurvedNotchPainter extends CustomPainter {
     const notchRadius = 30.0;
     const shoulderRadius = 14.0;
     const depth = 22.0;
+
+    // Fill the background of the notch area with the exact screen background
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, w, h),
+      Paint()..color = canvasBackgroundColor,
+    );
 
     final path = Path();
     path.moveTo(0, topRadius);
@@ -711,10 +734,13 @@ class CurvedNotchPainter extends CustomPainter {
     path.lineTo(0, h);
     path.close();
 
-    // Soft drop shadow
-    canvas.drawShadow(path, shadowColor, 10, true);
+    // Pure neutral soft shadow without Material 3 purple/pink ambient tint
+    final shadowPaint = Paint()
+      ..color = Colors.black.withAlpha(12)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+    canvas.drawPath(path.shift(const Offset(0, -1.5)), shadowPaint);
 
-    // Paint fill
+    // Paint white bar
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
@@ -723,5 +749,7 @@ class CurvedNotchPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CurvedNotchPainter oldDelegate) =>
-      oldDelegate.centerX != centerX || oldDelegate.color != color;
+      oldDelegate.centerX != centerX ||
+      oldDelegate.color != color ||
+      oldDelegate.canvasBackgroundColor != canvasBackgroundColor;
 }
