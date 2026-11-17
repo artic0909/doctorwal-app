@@ -699,36 +699,44 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             ),
             const SizedBox(width: 8),
             // --- Notification Bell ---
-            Stack(
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.notifications_none_rounded,
-                    color: Colors.blueGrey[600],
-                    size: 24,
-                  ),
-                  padding: const EdgeInsets.all(6),
-                  constraints: const BoxConstraints(),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const NotificationScreen(),
-                    ),
-                  ),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationScreen(),
                 ),
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    width: 7,
-                    height: 7,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFE53935),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+              ),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFF3E0),
+                  shape: BoxShape.circle,
                 ),
-              ],
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(
+                      Icons.notifications_active_rounded,
+                      color: Color(0xFFE65100),
+                      size: 20,
+                    ),
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE53935),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(width: 8),
             Hero(
@@ -1576,7 +1584,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         const SizedBox(height: 12),
         if (_isLoadingPathology && _pathologyPartners.isEmpty)
           Container(
-            height: 218,
+            height: 146,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
@@ -1590,7 +1598,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           Column(
             children: [
               SizedBox(
-                height: 218,
+                height: 146,
                 child: PageView.builder(
                   controller: _pathologyPageController,
                   physics: const BouncingScrollPhysics(),
@@ -1680,40 +1688,40 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       behavior: HitTestBehavior.opaque,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-        padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.blueGrey.withAlpha(25)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(6),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+              color: Colors.black.withAlpha(5),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Top Row: Lab Avatar + Clinic Name & Location + Partner Badge
             Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: const Color(0xFF00897B).withAlpha(15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
                     Icons.biotech_rounded,
                     color: Color(0xFF00897B),
-                    size: 22,
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 9),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1723,13 +1731,13 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFF1E293B),
                           letterSpacing: -0.2,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 1.5),
                       Row(
                         children: [
                           const Icon(
@@ -1744,7 +1752,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 10.5,
+                                fontSize: 10,
                                 color: Color(0xFF64748B),
                                 fontWeight: FontWeight.w500,
                               ),
@@ -1757,7 +1765,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 ),
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
                     color: const Color(0xFF00897B).withAlpha(15),
                     borderRadius: BorderRadius.circular(6),
@@ -1770,7 +1778,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                       Text(
                         testsList.isNotEmpty ? "${testsList.length} Tests" : "Verified Lab",
                         style: const TextStyle(
-                          fontSize: 9.5,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF00897B),
                         ),
@@ -1781,68 +1789,68 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               ],
             ),
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 7),
 
-            // Middle: Tests Provided (or Services if tests not populated)
+            // Middle: Tests Provided
             if (testsList.isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.science_rounded, size: 12, color: Color(0xFF00897B)),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.science_rounded, size: 11, color: Color(0xFF00897B)),
+                      const SizedBox(width: 3),
                       Text(
                         "Available Tests (${testsList.length}):",
                         style: const TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF475569),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: [
-                      ...testsList.take(3).map((test) => Container(
-                            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.65),
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                  const SizedBox(height: 4),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        ...testsList.take(4).map((test) => Container(
+                              margin: const EdgeInsets.only(right: 5),
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(5),
+                                border: Border.all(color: Colors.blueGrey.withAlpha(25)),
+                              ),
+                              child: Text(
+                                test,
+                                style: const TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF334155),
+                                ),
+                              ),
+                            )),
+                        if (testsList.length > 4)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.blueGrey.withAlpha(30)),
+                              color: const Color(0xFF00897B).withAlpha(12),
+                              borderRadius: BorderRadius.circular(5),
                             ),
                             child: Text(
-                              test,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              "+${testsList.length - 4} more",
                               style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF334155),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF00897B),
                               ),
                             ),
-                          )),
-                      if (testsList.length > 3)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00897B).withAlpha(12),
-                            borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(
-                            "+${testsList.length - 3} more",
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF00897B),
-                            ),
-                          ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               )
@@ -1852,80 +1860,81 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.medical_services_rounded, size: 12, color: Color(0xFF00897B)),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.medical_services_rounded, size: 11, color: Color(0xFF00897B)),
+                      const SizedBox(width: 3),
                       Text(
                         "Services (${servicesList.length}):",
                         style: const TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF475569),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: [
-                      ...servicesList.take(3).map((svc) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                  const SizedBox(height: 4),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        ...servicesList.take(4).map((svc) => Container(
+                              margin: const EdgeInsets.only(right: 5),
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(5),
+                                border: Border.all(color: Colors.blueGrey.withAlpha(25)),
+                              ),
+                              child: Text(
+                                svc,
+                                style: const TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF334155),
+                                ),
+                              ),
+                            )),
+                        if (servicesList.length > 4)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.blueGrey.withAlpha(30)),
+                              color: const Color(0xFF00897B).withAlpha(12),
+                              borderRadius: BorderRadius.circular(5),
                             ),
                             child: Text(
-                              svc,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              "+${servicesList.length - 4} more",
                               style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF334155),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF00897B),
                               ),
                             ),
-                          )),
-                      if (servicesList.length > 3)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00897B).withAlpha(12),
-                            borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(
-                            "+${servicesList.length - 3} more",
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF00897B),
-                            ),
-                          ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               )
             else
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: Colors.blueGrey.withAlpha(20)),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.info_outline_rounded, size: 13, color: Color(0xFF64748B)),
-                    SizedBox(width: 6),
+                    Icon(Icons.info_outline_rounded, size: 12, color: Color(0xFF64748B)),
+                    SizedBox(width: 5),
                     Expanded(
                       child: Text(
                         "Tap below to view full lab schedule & book tests",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 10,
                           color: Color(0xFF64748B),
                           fontWeight: FontWeight.w500,
                         ),
@@ -1935,56 +1944,40 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 ),
               ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 7),
 
-            // Bottom Row: Minimal Details & Action Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.home_work_outlined, size: 12, color: Color(0xFF2E7D32)),
-                    SizedBox(width: 4),
-                    Text(
-                      "Home Sample Available",
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF2E7D32),
-                      ),
+            // Bottom Row: Action Button aligned right
+            Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5.5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00897B),
+                  borderRadius: BorderRadius.circular(7),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF00897B).withAlpha(35),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1.5),
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF00897B),
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF00897B).withAlpha(40),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Book Test",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "Book Test",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(width: 3),
-                      Icon(Icons.arrow_forward_rounded, size: 11, color: Colors.white),
-                    ],
-                  ),
+                    ),
+                    SizedBox(width: 3),
+                    Icon(Icons.arrow_forward_rounded, size: 10.5, color: Colors.white),
+                  ],
                 ),
-              ],
+              ),
             ),
           ],
         ),
