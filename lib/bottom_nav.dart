@@ -76,10 +76,6 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
   }
 
   void _onTabSelected(int index) {
-    if (index == 4) {
-      BottomNavScreen.globalScaffoldKey.currentState?.openDrawer();
-      return;
-    }
     if (_currentIndex != index) {
       _notchAnim = Tween<double>(
         begin: _notchAnim.value,
@@ -104,13 +100,11 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
       case 0:
         return Icons.home_rounded;
       case 1:
-        return Icons.calendar_today_rounded;
-      case 2:
         return Icons.search_rounded;
+      case 2:
+        return Icons.volunteer_activism_rounded;
       case 3:
-        return Icons.assignment_rounded;
-      case 4:
-        return Icons.menu_rounded;
+        return Icons.person_rounded;
       default:
         return Icons.home_rounded;
     }
@@ -121,13 +115,11 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
       case 0:
         return const Color(0xFF1565C0); // Home: Royal Blue
       case 1:
-        return const Color(0xFF00897B); // Appts: Medical Teal
-      case 2:
         return const Color(0xFFEA580C); // Search: Vibrant Sunset Orange
+      case 2:
+        return const Color(0xFF00897B); // My Health: Medical Teal
       case 3:
-        return const Color(0xFF7C3AED); // Records: Clinical Violet / Purple
-      case 4:
-        return const Color(0xFFE11D48); // More: Rose Pink
+        return const Color(0xFF7C3AED); // Account: Clinical Violet / Purple
       default:
         return const Color(0xFF1565C0);
     }
@@ -148,8 +140,8 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
         return TabNavigator(
           key: ValueKey('tab_1_${_tabKeys[1]}'),
           navigatorKey: _navigatorKeys[1],
-          child: AllAppointmentsScreen(
-            key: ValueKey('appts_${_tabKeys[1]}'),
+          child: SearchScreen(
+            key: ValueKey('search_${_tabKeys[1]}'),
             userData: widget.userData,
           ),
         );
@@ -157,8 +149,8 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
         return TabNavigator(
           key: ValueKey('tab_2_${_tabKeys[2]}'),
           navigatorKey: _navigatorKeys[2],
-          child: SearchScreen(
-            key: ValueKey('search_${_tabKeys[2]}'),
+          child: MyHealthScreen(
+            key: ValueKey('health_${_tabKeys[2]}'),
             userData: widget.userData,
           ),
         );
@@ -166,10 +158,10 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
         return TabNavigator(
           key: ValueKey('tab_3_${_tabKeys[3]}'),
           navigatorKey: _navigatorKeys[3],
-          child: MedicalHistoryScreen(
-            key: ValueKey('records_${_tabKeys[3]}'),
-            initialTabIndex: 0,
-            isTab: true,
+          child: AccountTabScreen(
+            key: ValueKey('account_${_tabKeys[3]}'),
+            userData: widget.userData,
+            onLogout: logout,
           ),
         );
       default:
@@ -532,10 +524,27 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
         bottomNavigationBar: LayoutBuilder(
           builder: (context, constraints) {
             final w = constraints.maxWidth;
-            final itemWidth = w / 5;
+            // Responsive scale factor based on standard mobile width 375dp (iPhone / standard Android)
+            final scale = (w / 375.0).clamp(0.92, 1.25);
+
+            final itemWidth = w / 4;
             final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
-            const barHeight = 58.0;
+            final barHeight = (60.0 * scale).clamp(58.0, 68.0);
             final totalHeight = barHeight + bottomPadding;
+
+            // Responsive dimensions for active button and notch
+            final activeBtnSize = (52.0 * scale).clamp(50.0, 58.0);
+            final activeInnerSize = activeBtnSize - 8.0;
+            final activeIconSize = (24.0 * scale).clamp(23.0, 28.0);
+
+            final notchRadius = (activeBtnSize / 2) + 5.5;
+            final shoulderRadius = (14.0 * scale).clamp(13.0, 17.0);
+            final depth = (22.0 * scale).clamp(21.0, 26.0);
+            final topRadius = (22.0 * scale).clamp(20.0, 26.0);
+
+            // Responsive dimensions for inactive bar items
+            final inactiveIconSize = (23.5 * scale).clamp(22.5, 27.0);
+            final inactiveFontSize = (10.5 * scale).clamp(10.5, 12.5);
 
             return AnimatedBuilder(
               animation: _notchController,
@@ -557,6 +566,10 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
                           centerX: cx,
                           color: Colors.white,
                           canvasBackgroundColor: const Color(0xFFF8FAFF),
+                          notchRadius: notchRadius,
+                          shoulderRadius: shoulderRadius,
+                          depth: depth,
+                          topRadius: topRadius,
                         ),
                         child: SizedBox(
                           width: w,
@@ -565,11 +578,42 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
                             padding: EdgeInsets.only(bottom: bottomPadding, top: 4),
                             child: Row(
                               children: [
-                                Expanded(child: _buildBarItem(Icons.home_rounded, "Home", 0)),
-                                Expanded(child: _buildBarItem(Icons.calendar_today_rounded, "Appts", 1)),
-                                Expanded(child: _buildBarItem(Icons.search_rounded, "Search", 2)),
-                                Expanded(child: _buildBarItem(Icons.assignment_rounded, "Records", 3)),
-                                Expanded(child: _buildBarItem(Icons.menu_rounded, "More", 4)),
+                                Expanded(
+                                  child: _buildBarItem(
+                                    Icons.home_outlined,
+                                    "Home",
+                                    0,
+                                    iconSize: inactiveIconSize,
+                                    fontSize: inactiveFontSize,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _buildBarItem(
+                                    Icons.search_rounded,
+                                    "Search",
+                                    1,
+                                    iconSize: inactiveIconSize,
+                                    fontSize: inactiveFontSize,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _buildBarItem(
+                                    Icons.volunteer_activism_outlined,
+                                    "My Health",
+                                    2,
+                                    iconSize: inactiveIconSize,
+                                    fontSize: inactiveFontSize,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _buildBarItem(
+                                    Icons.person_outline_rounded,
+                                    "Account",
+                                    3,
+                                    iconSize: inactiveIconSize,
+                                    fontSize: inactiveFontSize,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -578,14 +622,14 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
 
                       // Raised Active Circular Floating Button
                       Positioned(
-                        left: cx - 25.0,
-                        top: -15.0,
+                        left: cx - (activeBtnSize / 2),
+                        top: -(activeBtnSize * 0.3),
                         child: GestureDetector(
                           onTap: () => _onTabSelected(_currentIndex),
                           behavior: HitTestBehavior.opaque,
                           child: Container(
-                            width: 50,
-                            height: 50,
+                            width: activeBtnSize,
+                            height: activeBtnSize,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.white,
@@ -604,8 +648,8 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
                             ),
                             child: Center(
                               child: Container(
-                                width: 42,
-                                height: 42,
+                                width: activeInnerSize,
+                                height: activeInnerSize,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: _getTabColor(_currentIndex).withAlpha(24),
@@ -613,7 +657,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
                                 child: Icon(
                                   _getTabIcon(_currentIndex),
                                   color: _getTabColor(_currentIndex),
-                                  size: 23,
+                                  size: activeIconSize,
                                 ),
                               ),
                             ),
@@ -631,7 +675,13 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildBarItem(IconData icon, String label, int index) {
+  Widget _buildBarItem(
+    IconData icon,
+    String label,
+    int index, {
+    required double iconSize,
+    required double fontSize,
+  }) {
     final bool isSelected = _currentIndex == index;
     final tabColor = _getTabColor(index);
 
@@ -649,17 +699,18 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
               child: Icon(
                 icon,
                 color: const Color(0xFF94A3B8),
-                size: 20,
+                size: iconSize,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
               label,
               maxLines: 1,
               style: TextStyle(
                 color: isSelected ? tabColor : const Color(0xFF64748B),
-                fontSize: 9.5,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                fontSize: fontSize,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                letterSpacing: 0.1,
               ),
             ),
           ],
@@ -673,11 +724,19 @@ class CurvedNotchPainter extends CustomPainter {
   final double centerX;
   final Color color;
   final Color canvasBackgroundColor;
+  final double notchRadius;
+  final double shoulderRadius;
+  final double depth;
+  final double topRadius;
 
   CurvedNotchPainter({
     required this.centerX,
     this.color = Colors.white,
     this.canvasBackgroundColor = const Color(0xFFF8FAFF),
+    this.notchRadius = 31.0,
+    this.shoulderRadius = 14.0,
+    this.depth = 22.0,
+    this.topRadius = 22.0,
   });
 
   @override
@@ -685,10 +744,6 @@ class CurvedNotchPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
     final cx = centerX;
-    const topRadius = 22.0;
-    const notchRadius = 30.0;
-    const shoulderRadius = 14.0;
-    const depth = 22.0;
 
     // Fill the background of the notch area with the exact screen background
     canvas.drawRect(
@@ -699,8 +754,8 @@ class CurvedNotchPainter extends CustomPainter {
     final path = Path();
     path.moveTo(0, topRadius);
     path.arcToPoint(
-      const Offset(topRadius, 0),
-      radius: const Radius.circular(topRadius),
+      Offset(topRadius, 0),
+      radius: Radius.circular(topRadius),
     );
 
     // Left flat edge up to notch entry
@@ -726,7 +781,7 @@ class CurvedNotchPainter extends CustomPainter {
     path.lineTo(w - topRadius, 0);
     path.arcToPoint(
       Offset(w, topRadius),
-      radius: const Radius.circular(topRadius),
+      radius: Radius.circular(topRadius),
     );
 
     // Right, bottom, and left
@@ -751,5 +806,404 @@ class CurvedNotchPainter extends CustomPainter {
   bool shouldRepaint(covariant CurvedNotchPainter oldDelegate) =>
       oldDelegate.centerX != centerX ||
       oldDelegate.color != color ||
-      oldDelegate.canvasBackgroundColor != canvasBackgroundColor;
+      oldDelegate.canvasBackgroundColor != canvasBackgroundColor ||
+      oldDelegate.notchRadius != notchRadius ||
+      oldDelegate.shoulderRadius != shoulderRadius ||
+      oldDelegate.depth != depth ||
+      oldDelegate.topRadius != topRadius;
+}
+
+class MyHealthScreen extends StatelessWidget {
+  final Map<String, dynamic> userData;
+
+  const MyHealthScreen({super.key, required this.userData});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFF),
+      appBar: AppBar(
+        title: const Text(
+          "My Health",
+          style: TextStyle(
+            color: Color(0xFF1E293B),
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 84,
+                height: 84,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00897B).withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.volunteer_activism_rounded,
+                  color: Color(0xFF00897B),
+                  size: 42,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "My Health",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1E293B),
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Your personalized health hub is coming soon.\nStay tuned for updates!",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF64748B),
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AccountTabScreen extends StatelessWidget {
+  final Map<String, dynamic> userData;
+  final VoidCallback onLogout;
+
+  const AccountTabScreen({
+    super.key,
+    required this.userData,
+    required this.onLogout,
+  });
+
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return "";
+    if (path.startsWith('http')) return path;
+
+    const String domain = "https://doctorwala.info/";
+    String cleanPath = path.startsWith('/') ? path.substring(1) : path;
+
+    if (!cleanPath.startsWith('storage/')) {
+      cleanPath = 'storage/$cleanPath';
+    }
+
+    return domain + cleanPath;
+  }
+
+  Widget _buildSection(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+      child: Text(
+        title.toUpperCase(),
+        style: const TextStyle(
+          color: Color(0xFF94A3B8),
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color iconColor = const Color(0xFF1565C0),
+    Color textColor = const Color(0xFF1E293B),
+    bool isDestructive = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: (isDestructive ? Colors.red : iconColor).withAlpha(20),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon,
+            color: isDestructive ? Colors.red : iconColor,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: isDestructive ? Colors.red : textColor,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        trailing: isDestructive
+            ? null
+            : const Icon(
+                Icons.chevron_right_rounded,
+                color: Color(0xFFCBD5E1),
+                size: 22,
+              ),
+        onTap: onTap,
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String currentName = userData['name'] ?? userData['user_name'] ?? 'User';
+    final String dispMemberId = userData['member_id']?.toString() ?? 'DW-2026-CARD';
+    final String currentProfileImg = userData['image']?.toString() ?? '';
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFF),
+      appBar: AppBar(
+        title: const Text(
+          "Account",
+          style: TextStyle(
+            color: Color(0xFF1E293B),
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 40),
+        children: [
+          // Profile Card
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1565C0).withAlpha(50),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Colors.white,
+                    backgroundImage: currentProfileImg.isNotEmpty
+                        ? NetworkImage(_getImageUrl(currentProfileImg))
+                        : null,
+                    child: currentProfileImg.isEmpty
+                        ? const Icon(Icons.person, size: 28, color: Color(0xFF1565C0))
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        currentName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(45),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          dispMemberId,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProfileEditScreen(userData: userData),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      "Edit",
+                      style: TextStyle(
+                        color: Color(0xFF1565C0),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Medical Hub
+          _buildSection("Medical & Health"),
+          _buildTile(
+            icon: Icons.calendar_month_rounded,
+            title: "My Appointments",
+            iconColor: const Color(0xFF00897B),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AllAppointmentsScreen(userData: userData),
+                ),
+              );
+            },
+          ),
+          _buildTile(
+            icon: Icons.assignment_rounded,
+            title: "Medical Records & Prescriptions",
+            iconColor: const Color(0xFF7C3AED),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const MedicalHistoryScreen(initialTabIndex: 0),
+                ),
+              );
+            },
+          ),
+          _buildTile(
+            icon: Icons.analytics_rounded,
+            title: "Health Parameters & Vitals",
+            iconColor: const Color(0xFF059669),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const HealthParametersScreen(),
+                ),
+              );
+            },
+          ),
+          _buildTile(
+            icon: Icons.calculate_rounded,
+            title: "BMR Calculator",
+            iconColor: const Color(0xFFEA580C),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const BMRCalculatorScreen(),
+                ),
+              );
+            },
+          ),
+
+          // App & Support
+          _buildSection("Support & Settings"),
+          _buildTile(
+            icon: Icons.notifications_active_rounded,
+            title: "Notifications",
+            iconColor: const Color(0xFFF59E0B),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const NotificationScreen(),
+                ),
+              );
+            },
+          ),
+          _buildTile(
+            icon: Icons.support_agent_rounded,
+            title: "24/7 Support",
+            iconColor: const Color(0xFF0284C7),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ContactScreen(),
+                ),
+              );
+            },
+          ),
+          _buildTile(
+            icon: Icons.policy_rounded,
+            title: "Privacy & Policy",
+            iconColor: const Color(0xFF64748B),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const PrivacyPolicyScreen(),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 12),
+          _buildTile(
+            icon: Icons.logout_rounded,
+            title: "Logout",
+            isDestructive: true,
+            onTap: onLogout,
+          ),
+        ],
+      ),
+    );
+  }
 }
