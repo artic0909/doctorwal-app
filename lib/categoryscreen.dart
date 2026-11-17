@@ -672,7 +672,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                             style: const TextStyle(
                               color: Color(0xFF1E293B),
                               fontSize: 12.5,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.normal,
                             ),
                           ),
                         ),
@@ -690,8 +690,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Color(0xFF1565C0),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.normal,
                     ),
                   ),
                 ],
