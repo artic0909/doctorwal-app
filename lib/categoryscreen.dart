@@ -10,7 +10,6 @@ import 'profileeditscreen.dart';
 import 'package:demoapp/healthparametersscreen.dart';
 import 'package:demoapp/medicalhistoryscreen.dart';
 import 'package:demoapp/bmr.dart';
-import 'package:demoapp/aboutscreen.dart';
 import 'package:demoapp/search_screen.dart';
 import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
@@ -538,63 +537,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(width: 6),
-            // App Guide Pill
-            GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AboutScreen()),
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF00796B), Color(0xFF009688)],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF00796B).withAlpha(40),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "App Guide",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(width: 3),
-                    Icon(Icons.help_outline_rounded, color: Colors.white, size: 12),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            // Emergency Ambulance Quick Button
-            GestureDetector(
-              onTap: _callAmbulance,
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE53935).withAlpha(15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.emergency_rounded,
-                  color: Color(0xFFE53935),
-                  size: 20,
-                ),
-              ),
-            ),
-            const SizedBox(width: 2),
+            const SizedBox(width: 8),
             // --- Notification Bell ---
             Stack(
               children: [
@@ -627,7 +570,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 ),
               ],
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: 8),
             Hero(
               tag: 'profile',
               child: GestureDetector(
@@ -1271,101 +1214,98 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   Widget _buildInstantVideoConsultCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.blueGrey.withAlpha(25)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(6),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Instant Video Consult",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF1565C0),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 6, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Instant Video Consult",
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1565C0),
+                      letterSpacing: -0.2,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                RichText(
-                  text: const TextSpan(
-                    style: TextStyle(fontSize: 12, color: Color(0xFF546E7A)),
-                    children: [
-                      TextSpan(text: "Consult a general physician in "),
-                      TextSpan(
-                        text: "10mins",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF1565C0),
-                        ),
+                  const SizedBox(height: 3),
+                  const Text(
+                    "Connect with top verified doctors",
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: Color(0xFF546E7A),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AllDoctorsScreen(userData: widget.userData),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                ElevatedButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AllDoctorsScreen(userData: widget.userData),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00796B),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      "Consult Now",
+                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00796B),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    "Consult Now",
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: 12),
-          Container(
-            width: 72,
-            height: 85,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1565C0).withAlpha(12),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF1565C0).withAlpha(30)),
-            ),
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
+          SizedBox(
+            width: 108,
+            height: 98,
+            child: Image.asset(
+              "assets/images/video-consult.png",
+              fit: BoxFit.cover,
+              alignment: Alignment.centerRight,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: 75,
+                height: 85,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1565C0).withAlpha(12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
                   Icons.video_camera_front_rounded,
                   color: Color(0xFF1565C0),
-                  size: 34,
+                  size: 32,
                 ),
-                SizedBox(height: 4),
-                Text(
-                  "24x7 Live",
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF1565C0),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
