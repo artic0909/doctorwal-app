@@ -12,9 +12,7 @@ import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:demoapp/notificationscreen.dart';
 import 'profileeditscreen.dart';
 import 'package:demoapp/medicalhistoryscreen.dart';
-import 'package:demoapp/allcouponsscreen.dart';
 import 'package:demoapp/search_screen.dart';
-import 'package:demoapp/addmedicalrecordscreen.dart';
 import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:http/http.dart' as http;
@@ -777,13 +775,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       ),
       body: ListView(
         controller: _scrollController,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(
-          0,
-          0,
-          0,
-          MediaQuery.of(context).viewPadding.bottom + 25,
-        ),
+        physics: const ClampingScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 14),
         children: [
           // 1. Search Bar (Matching reference screenshot)
           Padding(
@@ -1211,22 +1204,6 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _buildHealthConcernSection(),
-          ),
-
-          const SizedBox(height: 22),
-
-          // 9. Digital Health Locker (Upload & View Prescriptions)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildHealthVaultSection(),
-          ),
-
-          const SizedBox(height: 20),
-
-          // 10. Exclusive Health Discounts & Coupons
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildCouponsBanner(),
           ),
         ],
       ),
@@ -2140,212 +2117,6 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             ),
           ),
       ],
-    );
-  }
-
-  // 3. Digital Health Locker (Upload Prescription & Medical Records)
-  Widget _buildHealthVaultSection() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.blueGrey.withAlpha(25)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(6),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.folder_shared_rounded, color: Color(0xFF1565C0), size: 19),
-              SizedBox(width: 6),
-              Text(
-                "Digital Health Locker",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            "Access past test reports, handwritten doctor slips & bills anytime",
-            style: TextStyle(
-              fontSize: 11,
-              color: Color(0xFF64748B),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              // Upload Prescription button
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AddMedicalRecordScreen(initialType: 'prescription'),
-                    ),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1565C0).withAlpha(12),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF1565C0).withAlpha(30)),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_photo_alternate_rounded, size: 16, color: Color(0xFF1565C0)),
-                        SizedBox(width: 6),
-                        Text(
-                          "Upload Rx",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1565C0),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              // View My Records button
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const MedicalHistoryScreen(),
-                    ),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF00897B).withAlpha(12),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF00897B).withAlpha(30)),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.inventory_2_rounded, size: 16, color: Color(0xFF00897B)),
-                        SizedBox(width: 6),
-                        Text(
-                          "View Records",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF00897B),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 4. Exclusive Coupons & Discounts Banner
-  Widget _buildCouponsBanner() {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AllCouponsScreen()),
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFFF9800).withAlpha(45)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFFF9800).withAlpha(12),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E0),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.local_offer_rounded,
-                color: Color(0xFFE65100),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Doctorwala Health Offers",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    "Save up to 30% on pathology tests & care",
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF64748B),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE65100),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                "View Offers",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
