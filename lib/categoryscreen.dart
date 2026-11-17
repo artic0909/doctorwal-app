@@ -1562,7 +1562,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Verified Pathology Partners",
+                  "Lab Tests",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -1570,15 +1570,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     letterSpacing: -0.3,
                   ),
                 ),
-                SizedBox(height: 2),
-                Text(
-                  "Top diagnostic centres & available tests",
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF64748B),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                
               ],
             ),
             TextButton(
@@ -2035,7 +2027,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Doctor Specialties",
+                  "Departments",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
