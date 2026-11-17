@@ -784,7 +784,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       body: ListView(
         controller: _scrollController,
         physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.only(bottom: 24),
         children: [
           // 1. Search Bar (Matching reference screenshot)
           Padding(
@@ -1213,6 +1213,9 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _buildHealthConcernSection(),
           ),
+
+          // Generous bottom spacing so bottom nav bar floating button doesn't overlap
+          const SizedBox(height: 36),
         ],
       ),
     );
