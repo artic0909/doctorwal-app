@@ -19,6 +19,7 @@ class AllAvailablePathologyScreen extends StatefulWidget {
 
 class _AllAvailablePathologyScreenState
     extends State<AllAvailablePathologyScreen> {
+  static List<AllAvailablePathModel> _cachedClinics = [];
   List<AllAvailablePathModel> _clinics = [];
   String _searchQuery = '';
   bool _isLoading = true;
@@ -31,6 +32,10 @@ class _AllAvailablePathologyScreenState
   @override
   void initState() {
     super.initState();
+    if (_cachedClinics.isNotEmpty) {
+      _clinics = List.from(_cachedClinics);
+      _isLoading = false;
+    }
     _initData();
   }
 
@@ -59,13 +64,26 @@ class _AllAvailablePathologyScreenState
   }
 
   Future<void> _fetchInitialClinics() async {
-    setState(() {
-      _isLoading = true;
-      _currentPage = 1;
-      _clinics = [];
-    });
-    await _fetchClinics(1);
-    setState(() => _isLoading = false);
+    if (_searchQuery.isEmpty && _cachedClinics.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _clinics = List.from(_cachedClinics);
+          _isLoading = false;
+          _currentPage = 1;
+        });
+      }
+      await _fetchClinics(1);
+    } else {
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _currentPage = 1;
+          _clinics = [];
+        });
+      }
+      await _fetchClinics(1);
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _fetchClinics(int page) async {
@@ -84,22 +102,28 @@ class _AllAvailablePathologyScreenState
         final List data = jsonData['data'] ?? [];
         final bool isSearch = jsonData['is_search'] ?? false;
 
-        setState(() {
-          final newClinics = data.map((json) => AllAvailablePathModel.fromJson(json)).toList();
-          if (page == 1) {
-            _clinics = newClinics;
-          } else {
-            _clinics.addAll(newClinics);
-          }
-          
-          if (isSearch) {
-            _currentPage = 1;
-            _lastPage = 1;
-          } else {
-            _currentPage = jsonData['current_page'] ?? 1;
-            _lastPage = jsonData['last_page'] ?? 1;
-          }
-        });
+        final newClinics = data.map((json) => AllAvailablePathModel.fromJson(json)).toList();
+        if (page == 1 && _searchQuery.isEmpty) {
+          _cachedClinics = List.from(newClinics);
+        }
+
+        if (mounted) {
+          setState(() {
+            if (page == 1) {
+              _clinics = newClinics;
+            } else {
+              _clinics.addAll(newClinics);
+            }
+            
+            if (isSearch) {
+              _currentPage = 1;
+              _lastPage = 1;
+            } else {
+              _currentPage = jsonData['current_page'] ?? 1;
+              _lastPage = jsonData['last_page'] ?? 1;
+            }
+          });
+        }
       }
     } catch (e) {
       debugPrint("Error fetching pathology clinics: $e");

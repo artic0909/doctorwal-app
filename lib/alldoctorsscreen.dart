@@ -16,6 +16,7 @@ class AllDoctorsScreen extends StatefulWidget {
 }
 
 class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
+  static List<AllAvailableDoctorsModel> _cachedDoctors = [];
   List<AllAvailableDoctorsModel> _doctors = [];
   String _searchQuery = '';
   bool _isLoading = true;
@@ -23,11 +24,15 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   int _currentPage = 1;
   int _lastPage = 1;
   bool _isNearMe = true;
-  Timer? _debounce; // Added for debouncing
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
+    if (_cachedDoctors.isNotEmpty) {
+      _doctors = List.from(_cachedDoctors);
+      _isLoading = false;
+    }
     _initData();
   }
 
@@ -39,7 +44,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
 
   @override
   void dispose() {
-    _debounce?.cancel(); // Cancel timer on dispose
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -56,13 +61,26 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   }
 
   Future<void> _fetchInitialDoctors() async {
-    setState(() {
-      _isLoading = true;
-      _currentPage = 1;
-      _doctors = [];
-    });
-    await _fetchDoctors(1);
-    setState(() => _isLoading = false);
+    if (_searchQuery.isEmpty && _cachedDoctors.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _doctors = List.from(_cachedDoctors);
+          _isLoading = false;
+          _currentPage = 1;
+        });
+      }
+      await _fetchDoctors(1);
+    } else {
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _currentPage = 1;
+          _doctors = [];
+        });
+      }
+      await _fetchDoctors(1);
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _fetchDoctors(int page) async {
@@ -83,22 +101,28 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
         final List<dynamic> data = jsonData['data'] ?? [];
         final bool isSearch = jsonData['is_search'] ?? false;
         
-        setState(() {
-          final newDoctors = data.map((json) => AllAvailableDoctorsModel.fromJson(json)).toList();
-          if (page == 1) {
-            _doctors = newDoctors;
-          } else {
-            _doctors.addAll(newDoctors);
-          }
-          
-          if (isSearch) {
-            _currentPage = 1;
-            _lastPage = 1;
-          } else {
-            _currentPage = jsonData['current_page'] ?? 1;
-            _lastPage = jsonData['last_page'] ?? 1;
-          }
-        });
+        final newDoctors = data.map((json) => AllAvailableDoctorsModel.fromJson(json)).toList();
+        if (page == 1 && _searchQuery.isEmpty) {
+          _cachedDoctors = List.from(newDoctors);
+        }
+
+        if (mounted) {
+          setState(() {
+            if (page == 1) {
+              _doctors = newDoctors;
+            } else {
+              _doctors.addAll(newDoctors);
+            }
+            
+            if (isSearch) {
+              _currentPage = 1;
+              _lastPage = 1;
+            } else {
+              _currentPage = jsonData['current_page'] ?? 1;
+              _lastPage = jsonData['last_page'] ?? 1;
+            }
+          });
+        }
       }
     } catch (e) {
       debugPrint("Error fetching doctors: $e");

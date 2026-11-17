@@ -63,16 +63,13 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     }
     setState(() {
       if (_currentIndex != index) {
-        _tabKeys[index]++;
-        _navigatorKeys[index] = GlobalKey<NavigatorState>();
+        // Switch tab smoothly without destroying IndexedStack pages
         _currentIndex = index;
       } else {
+        // When tapping the already-active tab, pop to root if deep in navigation
         final navState = _navigatorKeys[index].currentState;
         if (navState != null && navState.canPop()) {
           navState.popUntil((route) => route.isFirst);
-        } else {
-          _tabKeys[index]++;
-          _navigatorKeys[index] = GlobalKey<NavigatorState>();
         }
       }
     });

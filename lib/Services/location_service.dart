@@ -9,6 +9,7 @@ class LocationService {
 
   /// Synchronous memory cache for fast access
   static bool? _isNearMeMemCache;
+  static String? _cityMemCache;
 
   /// Gets the Near Me toggle state
   static Future<bool> getIsNearMe() async {
@@ -25,15 +26,25 @@ class LocationService {
     await prefs.setBool(_isNearMeCacheKey, value);
   }
 
-  /// Requests location permission, gets current position, and extracts city.
-  /// If [context] is provided, it will enforce location permissions by showing dialogs.
-  static Future<String?> getUserCity({BuildContext? context}) async {
-    try {
-      bool serviceEnabled;
-      LocationPermission permission;
+  /// Requests location permission, gets position, and extracts city.
+  /// Uses memory and persistent cache first for instant response.
+  static Future<String?> getUserCity({BuildContext? context, bool forceRefresh = false}) async {
+    // 1. Instant return from memory cache
+    if (!forceRefresh && _cityMemCache != null && _cityMemCache!.isNotEmpty) {
+      return _cityMemCache;
+    }
 
-      // Test if location services are enabled.
-      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    // 2. Instant return from SharedPreferences cache
+    if (!forceRefresh) {
+      final cached = await _getCachedCity();
+      if (cached != null && cached.isNotEmpty) {
+        _cityMemCache = cached;
+        return cached;
+      }
+    }
+
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         if (context != null && context.mounted) {
           bool shouldRetry = await _showLocationRequiredDialog(
@@ -44,16 +55,15 @@ class LocationService {
           );
           if (!context.mounted) return _getCachedCity();
           if (shouldRetry) {
-            // Recursively try again after they return from settings
-            return await getUserCity(context: context);
+            return await getUserCity(context: context, forceRefresh: forceRefresh);
           } else {
-            return null; // They chose to skip
+            return null;
           }
         }
         return _getCachedCity();
       }
 
-      permission = await Geolocator.checkPermission();
+      LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
@@ -65,8 +75,8 @@ class LocationService {
               () => Geolocator.requestPermission(),
             );
             if (!context.mounted) return _getCachedCity();
-            if (shouldRetry) return await getUserCity(context: context);
-            return null; // They chose to skip
+            if (shouldRetry) return await getUserCity(context: context, forceRefresh: forceRefresh);
+            return null;
           }
           return _getCachedCity();
         }
@@ -81,17 +91,20 @@ class LocationService {
             () => Geolocator.openAppSettings(),
           );
           if (!context.mounted) return _getCachedCity();
-          if (shouldRetry) return await getUserCity(context: context);
-          return null; // They chose to skip
+          if (shouldRetry) return await getUserCity(context: context, forceRefresh: forceRefresh);
+          return null;
         }
         return _getCachedCity();
       }
 
-      // When we reach here, permissions are granted and we can continue
-      // accessing the position of the device.
-      Position position = await Geolocator.getCurrentPosition(
+      // Fast check: Try last known position first (instant, no GPS hardware wait)
+      Position? position = await Geolocator.getLastKnownPosition();
+
+      // If no last known position, get current position with 4-second timeout
+      position ??= await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 4),
         ),
       );
 
@@ -101,10 +114,9 @@ class LocationService {
       );
 
       if (placemarks.isNotEmpty) {
-        // Locality usually represents the city
         String? city = placemarks.first.locality ?? placemarks.first.subAdministrativeArea;
-        
         if (city != null && city.isNotEmpty) {
+          _cityMemCache = city;
           await _cacheCity(city);
           return city;
         }
@@ -166,6 +178,7 @@ class LocationService {
   
   /// Clears the cached city
   static Future<void> clearCachedCity() async {
+    _cityMemCache = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_cityCacheKey);
   }
