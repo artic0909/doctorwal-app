@@ -9,7 +9,8 @@ import 'package:demoapp/services/location_service.dart';
 
 class AllDoctorsScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
-  const AllDoctorsScreen({super.key, required this.userData});
+  final String? initialSearchQuery;
+  const AllDoctorsScreen({super.key, required this.userData, this.initialSearchQuery});
 
   @override
   State<AllDoctorsScreen> createState() => _AllDoctorsScreenState();
@@ -19,6 +20,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   static List<AllAvailableDoctorsModel> _cachedDoctors = [];
   List<AllAvailableDoctorsModel> _doctors = [];
   String _searchQuery = '';
+  late TextEditingController _searchController;
   bool _isLoading = true;
   bool _isLoadMoreLoading = false;
   int _currentPage = 1;
@@ -29,7 +31,9 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   @override
   void initState() {
     super.initState();
-    if (_cachedDoctors.isNotEmpty) {
+    _searchQuery = widget.initialSearchQuery ?? '';
+    _searchController = TextEditingController(text: _searchQuery);
+    if (_searchQuery.isEmpty && _cachedDoctors.isNotEmpty) {
       _doctors = List.from(_cachedDoctors);
       _isLoading = false;
     }
@@ -45,6 +49,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -274,6 +279,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
+                          controller: _searchController,
                           onChanged: _onSearchChanged,
                           style: const TextStyle(fontSize: 13, color: Colors.black87),
                           decoration: InputDecoration(
@@ -282,6 +288,15 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                             hintStyle: TextStyle(color: Colors.blueGrey[300], fontSize: 13),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? GestureDetector(
+                                    onTap: () {
+                                      _searchController.clear();
+                                      _onSearchChanged('');
+                                    },
+                                    child: const Icon(Icons.close_rounded, size: 16, color: Colors.blueGrey),
+                                  )
+                                : null,
                           ),
                         ),
                       ),

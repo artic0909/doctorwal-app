@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:demoapp/allopdscreen.dart';
 import 'package:demoapp/main.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,6 @@ import 'profileeditscreen.dart';
 import 'package:demoapp/medicalhistoryscreen.dart';
 import 'package:demoapp/allcouponsscreen.dart';
 import 'package:demoapp/search_screen.dart';
-import 'package:demoapp/search_results_screen.dart';
 import 'package:demoapp/addmedicalrecordscreen.dart';
 import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
@@ -46,6 +46,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   late PageController _pathologyPageController;
   int _currentPathologyIndex = 0;
   Timer? _pathologyAutoScrollTimer;
+  List<String> _doctorSpecialties = [];
+  bool _isLoadingSpecialties = true;
 
   @override
   void dispose() {
@@ -64,6 +66,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     _syncUserId(); // Background sync
     _fetchCity();
     _fetchPathologyPartners();
+    _fetchDoctorSpecialties();
     
     // Discovery Animation: Peek at scrollable content
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -241,6 +244,74 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             curve: Curves.easeInOutCubic,
           );
         }
+      });
+    }
+  }
+
+  Future<void> _fetchDoctorSpecialties() async {
+    final defaultSpecialties = [
+      'General Physician',
+      'Dentist',
+      'Dermatologist',
+      'Orthopedic',
+      'Gynecologist',
+      'Pediatrician',
+      'Neurologist',
+      'Ophthalmologist',
+      'Cardiologist',
+      'Ent surgeon',
+      'Psychiatrist',
+      'Physiotherapist',
+      'Ayurvedic',
+      'Homeopath',
+      'Medicine',
+    ];
+
+    try {
+      final randomPage = math.Random().nextInt(8) + 1;
+      final url = Uri.parse("https://doctorwala.info/api/api/all-doctors-contacts?page=$randomPage");
+      final response = await http.get(url).timeout(const Duration(seconds: 8));
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final List data = jsonData['data'] ?? [];
+        final Set<String> uniqueSpecialties = {};
+        for (var doc in data) {
+          final spec = doc['partner_doctor_specialist'];
+          if (spec != null && spec != 'null' && spec != 'NA' && spec.toString().trim().isNotEmpty) {
+            final cleaned = spec.toString().trim();
+            if (cleaned.length > 2) {
+              uniqueSpecialties.add(cleaned);
+            }
+          }
+        }
+
+        final List<String> list = uniqueSpecialties.toList();
+        for (var d in defaultSpecialties) {
+          if (!list.any((s) => s.toLowerCase() == d.toLowerCase())) {
+            list.add(d);
+          }
+        }
+
+        list.shuffle(math.Random());
+        final selected = list.take(10).toList();
+        if (mounted && selected.isNotEmpty) {
+          setState(() {
+            _doctorSpecialties = selected;
+            _isLoadingSpecialties = false;
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Doctor specialties dynamic fetch note: $e");
+    }
+
+    final fallback = List<String>.from(defaultSpecialties);
+    fallback.shuffle(math.Random());
+    if (mounted) {
+      setState(() {
+        _doctorSpecialties = fallback.take(10).toList();
+        _isLoadingSpecialties = false;
       });
     }
   }
@@ -1536,7 +1607,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         const SizedBox(height: 12),
         if (_isLoadingPathology && _pathologyPartners.isEmpty)
           Container(
-            height: 190,
+            height: 218,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
@@ -1550,7 +1621,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           Column(
             children: [
               SizedBox(
-                height: 195,
+                height: 218,
                 child: PageView.builder(
                   controller: _pathologyPageController,
                   physics: const BouncingScrollPhysics(),
@@ -1640,7 +1711,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       behavior: HitTestBehavior.opaque,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
@@ -1741,7 +1812,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               ],
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
 
             // Middle: Tests Provided (or Services if tests not populated)
             if (testsList.isNotEmpty)
@@ -1762,12 +1833,13 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 5),
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
                     children: [
                       ...testsList.take(3).map((test) => Container(
+                            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.65),
                             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F5F9),
@@ -1951,19 +2023,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     );
   }
 
-  // 2. Consult Doctor by Health Concern
+  // 2. Consult Doctor by Dynamic Specialties (Random 10, manual scroll)
   Widget _buildHealthConcernSection() {
-    final concerns = [
-      {'label': 'Fever & Infection', 'query': 'General Physician', 'icon': Icons.thermostat_rounded, 'color': const Color(0xFFE53935)},
-      {'label': 'Bone & Joint Pain', 'query': 'Orthopedic', 'icon': Icons.accessibility_new_rounded, 'color': const Color(0xFF1565C0)},
-      {'label': 'Child Health', 'query': 'Pediatrician', 'icon': Icons.child_care_rounded, 'color': const Color(0xFF00897B)},
-      {'label': "Women's Health", 'query': 'Gynecologist', 'icon': Icons.pregnant_woman_rounded, 'color': const Color(0xFFD81B60)},
-      {'label': 'Dental Pain', 'query': 'Dentist', 'icon': Icons.sentiment_satisfied_alt_rounded, 'color': const Color(0xFFF57C00)},
-      {'label': 'Heart & Chest', 'query': 'Cardiologist', 'icon': Icons.favorite_rounded, 'color': const Color(0xFFC2185B)},
-      {'label': 'Eye Problems', 'query': 'Eye Specialist', 'icon': Icons.visibility_rounded, 'color': const Color(0xFF0288D1)},
-      {'label': 'Skin & Hair', 'query': 'Dermatologist', 'icon': Icons.face_retouching_natural_rounded, 'color': const Color(0xFF6A1B9A)},
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1974,7 +2035,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Find Doctor by Concern",
+                  "Doctor Specialties",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -1984,7 +2045,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  "Connect with verified specialists by symptom",
+                  "Find & consult verified specialists",
                   style: TextStyle(
                     fontSize: 11,
                     color: Color(0xFF64748B),
@@ -2017,82 +2078,75 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: concerns.map((item) {
-              final color = item['color'] as Color;
-              return GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SearchResultsScreen(
-                      initialQuery: item['query'] as String,
-                      initialCategory: 'doctor',
-                      userData: widget.userData,
+        if (_isLoadingSpecialties)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            child: Row(
+              children: List.generate(4, (index) => Container(
+                width: 90,
+                height: 38,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blueGrey.withAlpha(25)),
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blueGrey.withAlpha(70)),
+                  ),
+                ),
+              )),
+            ),
+          )
+        else
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: _doctorSpecialties.map((specialtyName) {
+                return GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AllDoctorsScreen(
+                        userData: widget.userData,
+                        initialSearchQuery: specialtyName,
+                      ),
                     ),
                   ),
-                ),
-                child: Container(
-                  width: 118,
-                  margin: const EdgeInsets.only(right: 10),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.blueGrey.withAlpha(25)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(5),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(4),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1.5),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      specialtyName,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                        letterSpacing: -0.2,
                       ),
-                    ],
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: color.withAlpha(18),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(item['icon'] as IconData, color: color, size: 22),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        item['label'] as String,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E293B),
-                          height: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item['query'] as String,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w600,
-                          color: color,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
-        ),
       ],
     );
   }
