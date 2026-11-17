@@ -44,34 +44,76 @@ class TabNavigator extends StatelessWidget {
   }
 }
 
-class _BottomNavScreenState extends State<BottomNavScreen> {
+class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
-  final List<int> _tabKeys = [0, 0, 0, 0, 0];
+  final List<int> _tabKeys = [0, 0, 0, 0];
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
-    GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
   ];
 
+  late AnimationController _notchController;
+  late Animation<double> _notchAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _notchController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _notchAnim = Tween<double>(begin: 0.0, end: 0.0).animate(
+      CurvedAnimation(parent: _notchController, curve: Curves.easeInOutCubic),
+    );
+  }
+
+  @override
+  void dispose() {
+    _notchController.dispose();
+    super.dispose();
+  }
+
   void _onTabSelected(int index) {
-    if (index == 5) {
+    if (index == 4) {
       BottomNavScreen.globalScaffoldKey.currentState?.openDrawer();
       return;
     }
-    setState(() {
-      if (_currentIndex != index) {
-        // Switch tab smoothly without destroying IndexedStack pages
+    if (_currentIndex != index) {
+      _notchAnim = Tween<double>(
+        begin: _notchAnim.value,
+        end: index.toDouble(),
+      ).animate(
+        CurvedAnimation(parent: _notchController, curve: Curves.easeInOutCubic),
+      );
+      _notchController.forward(from: 0.0);
+      setState(() {
         _currentIndex = index;
-      } else {
-        // When tapping the already-active tab, pop to root if deep in navigation
-        final navState = _navigatorKeys[index].currentState;
-        if (navState != null && navState.canPop()) {
-          navState.popUntil((route) => route.isFirst);
-        }
+      });
+    } else {
+      final navState = _navigatorKeys[index].currentState;
+      if (navState != null && navState.canPop()) {
+        navState.popUntil((route) => route.isFirst);
       }
-    });
+    }
+  }
+
+  IconData _getTabIcon(int index) {
+    switch (index) {
+      case 0:
+        return Icons.home_rounded;
+      case 1:
+        return Icons.calendar_today_rounded;
+      case 2:
+        return Icons.search_rounded;
+      case 3:
+        return Icons.assignment_rounded;
+      case 4:
+        return Icons.menu_rounded;
+      default:
+        return Icons.home_rounded;
+    }
   }
 
   Widget _buildTab(int index) {
@@ -108,17 +150,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
           key: ValueKey('tab_3_${_tabKeys[3]}'),
           navigatorKey: _navigatorKeys[3],
           child: MedicalHistoryScreen(
-            key: ValueKey('prescriptions_${_tabKeys[3]}'),
-            initialTabIndex: 1,
-            isTab: true,
-          ),
-        );
-      case 4:
-        return TabNavigator(
-          key: ValueKey('tab_4_${_tabKeys[4]}'),
-          navigatorKey: _navigatorKeys[4],
-          child: MedicalHistoryScreen(
-            key: ValueKey('reports_${_tabKeys[4]}'),
+            key: ValueKey('records_${_tabKeys[3]}'),
             initialTabIndex: 0,
             isTab: true,
           ),
@@ -477,94 +509,219 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
         drawer: _buildPremiumDrawer(context, currentName, dispMemberId, currentProfileImg),
         body: IndexedStack(
           index: _currentIndex,
-          children: List.generate(5, _buildTab),
+          children: List.generate(4, _buildTab),
         ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(22),
-              topRight: Radius.circular(22),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(15),
-                blurRadius: 15,
-                offset: const Offset(0, -4),
-              ),
-            ],
-            border: Border(
-              top: BorderSide(
-                color: Colors.blueGrey.withAlpha(25),
-                width: 1,
-              ),
-            ),
-          ),
-          child: Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewPadding.bottom,
-            ),
-            child: SizedBox(
-              height: 58,
-              child: Row(
-                children: [
-                  Expanded(child: _buildNavItem(Icons.home_rounded, "Home", 0, context)),
-                  Expanded(child: _buildNavItem(Icons.calendar_today_rounded, "Appts", 1, context)),
-                  Expanded(child: _buildNavItem(Icons.search_rounded, "Search", 2, context)),
-                  Expanded(child: _buildNavItem(Icons.medication_rounded, "Prescribe", 3, context)),
-                  Expanded(child: _buildNavItem(Icons.assignment_rounded, "Reports", 4, context)),
-                  Expanded(child: _buildNavItem(Icons.menu_rounded, "More", 5, context)),
-                ],
-              ),
-            ),
-          ),
+        bottomNavigationBar: LayoutBuilder(
+          builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final itemWidth = w / 5;
+            final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+            const barHeight = 58.0;
+            final totalHeight = barHeight + bottomPadding;
+
+            return AnimatedBuilder(
+              animation: _notchController,
+              builder: (context, child) {
+                final currentPos = _notchAnim.value;
+                final cx = (currentPos + 0.5) * itemWidth;
+
+                return SizedBox(
+                  width: w,
+                  height: totalHeight,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      // Smooth Custom Curved Notched Background
+                      CustomPaint(
+                        size: Size(w, totalHeight),
+                        painter: CurvedNotchPainter(
+                          centerX: cx,
+                          color: Colors.white,
+                        ),
+                        child: SizedBox(
+                          width: w,
+                          height: totalHeight,
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: bottomPadding, top: 4),
+                            child: Row(
+                              children: [
+                                Expanded(child: _buildBarItem(Icons.home_rounded, "Home", 0)),
+                                Expanded(child: _buildBarItem(Icons.calendar_today_rounded, "Appts", 1)),
+                                Expanded(child: _buildBarItem(Icons.search_rounded, "Search", 2)),
+                                Expanded(child: _buildBarItem(Icons.assignment_rounded, "Records", 3)),
+                                Expanded(child: _buildBarItem(Icons.menu_rounded, "More", 4)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Raised Active Circular Floating Button
+                      Positioned(
+                        left: cx - 25.0,
+                        top: -15.0,
+                        child: GestureDetector(
+                          onTap: () => _onTabSelected(_currentIndex),
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF1565C0).withAlpha(35),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(15),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: 42,
+                                height: 42,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                                child: Icon(
+                                  _getTabIcon(_currentIndex),
+                                  color: const Color(0xFF1565C0),
+                                  size: 22,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index, BuildContext context) {
-    bool isSelected = _currentIndex == index;
-    bool isMore = index == 5;
-    
+  Widget _buildBarItem(IconData icon, String label, int index) {
+    final bool isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () => _onTabSelected(index),
       behavior: HitTestBehavior.opaque,
       child: Center(
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-          decoration: BoxDecoration(
-            color: isSelected && !isMore ? const Color(0xFF1565C0).withAlpha(25) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 180),
+              opacity: isSelected ? 0.0 : 1.0,
+              child: Icon(
                 icon,
-                color: isSelected && !isMore ? const Color(0xFF1565C0) : Colors.blueGrey.withAlpha(180),
-                size: isSelected && !isMore ? 22 : 20,
+                color: const Color(0xFF64748B),
+                size: 20,
               ),
-              const SizedBox(height: 2),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  style: TextStyle(
-                    color: isSelected && !isMore ? const Color(0xFF1565C0) : Colors.blueGrey.withAlpha(180),
-                    fontSize: 9.5,
-                    fontWeight: isSelected && !isMore ? FontWeight.bold : FontWeight.w600,
-                  ),
-                ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              style: TextStyle(
+                color: isSelected ? const Color(0xFF1565C0) : const Color(0xFF64748B),
+                fontSize: 9.5,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+class CurvedNotchPainter extends CustomPainter {
+  final double centerX;
+  final Color color;
+  final Color shadowColor;
+
+  CurvedNotchPainter({
+    required this.centerX,
+    this.color = Colors.white,
+    this.shadowColor = const Color(0x18000000),
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = centerX;
+    const topRadius = 22.0;
+    const notchRadius = 30.0;
+    const shoulderRadius = 14.0;
+    const depth = 22.0;
+
+    final path = Path();
+    path.moveTo(0, topRadius);
+    path.arcToPoint(
+      const Offset(topRadius, 0),
+      radius: const Radius.circular(topRadius),
+    );
+
+    // Left flat edge up to notch entry
+    final entryX = (cx - notchRadius - shoulderRadius).clamp(topRadius, w - topRadius);
+    path.lineTo(entryX, 0);
+
+    // Smooth concave dip into notch
+    path.cubicTo(
+      cx - notchRadius, 0,
+      cx - notchRadius * 0.72, depth,
+      cx, depth,
+    );
+
+    // Smooth exit from notch
+    final exitX = (cx + notchRadius + shoulderRadius).clamp(topRadius, w - topRadius);
+    path.cubicTo(
+      cx + notchRadius * 0.72, depth,
+      cx + notchRadius, 0,
+      exitX, 0,
+    );
+
+    // Right flat edge
+    path.lineTo(w - topRadius, 0);
+    path.arcToPoint(
+      Offset(w, topRadius),
+      radius: const Radius.circular(topRadius),
+    );
+
+    // Right, bottom, and left
+    path.lineTo(w, h);
+    path.lineTo(0, h);
+    path.close();
+
+    // Soft drop shadow
+    canvas.drawShadow(path, shadowColor, 10, true);
+
+    // Paint fill
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CurvedNotchPainter oldDelegate) =>
+      oldDelegate.centerX != centerX || oldDelegate.color != color;
 }
