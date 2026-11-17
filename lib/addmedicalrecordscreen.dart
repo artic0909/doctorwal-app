@@ -112,14 +112,23 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   Future<void> _getImage(ImageSource source) async {
     try {
       if (source == ImageSource.gallery) {
-        final List<XFile> images = await _picker.pickMultiImage();
+        final List<XFile> images = await _picker.pickMultiImage(
+          imageQuality: 80,
+          maxWidth: 1920,
+          maxHeight: 1920,
+        );
         if (images.isNotEmpty) {
           setState(() {
             _newImages.addAll(images.map((x) => File(x.path)));
           });
         }
       } else {
-        final XFile? image = await _picker.pickImage(source: source, imageQuality: 70);
+        final XFile? image = await _picker.pickImage(
+          source: source,
+          imageQuality: 80,
+          maxWidth: 1920,
+          maxHeight: 1920,
+        );
         if (image != null) {
           setState(() {
             _newImages.add(File(image.path));

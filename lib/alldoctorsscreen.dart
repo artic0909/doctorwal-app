@@ -215,10 +215,10 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       "Specialist Doctors",
                       style: TextStyle(
