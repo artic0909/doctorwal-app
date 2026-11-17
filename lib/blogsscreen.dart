@@ -76,6 +76,9 @@ class _BlogsScreenState extends State<BlogsScreen> {
 
             final blogs = snapshot.data!;
             return ListView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewPadding.bottom + 20,
+              ),
               children: [
                 Wrap(
                   spacing: 12,

@@ -146,7 +146,12 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.fromLTRB(
+              24,
+              24,
+              24,
+              MediaQuery.of(context).viewPadding.bottom + 25,
+            ),
             child: Form(
               key: _formKey,
               child: Column(

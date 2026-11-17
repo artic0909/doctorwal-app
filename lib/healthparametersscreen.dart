@@ -150,7 +150,12 @@ class _HealthParametersScreenState extends State<HealthParametersScreen> {
                 : RefreshIndicator(
                     onRefresh: _fetchVitals,
                     child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        10,
+                        20,
+                        MediaQuery.of(context).viewPadding.bottom + 25,
+                      ),
                       itemCount: filteredVitals.length,
                       itemBuilder: (context, index) {
                         final vital = filteredVitals[index];

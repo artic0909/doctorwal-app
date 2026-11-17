@@ -157,7 +157,12 @@ class _AllAvailablePathologyScreenState
                     child: displayClinics.isEmpty
                       ? _buildEmptyState()
                       : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                          padding: EdgeInsets.fromLTRB(
+                            20,
+                            10,
+                            20,
+                            MediaQuery.of(context).viewPadding.bottom + 25,
+                          ),
                           itemCount: displayClinics.length + (_currentPage < _lastPage ? 1 : 0),
                           itemBuilder: (context, index) {
                             if (index < displayClinics.length) {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:demoapp/categoryscreen.dart';
 import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/search_screen.dart';
@@ -429,14 +428,17 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
             ),
           ),
 
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Text(
-              "Doctorwala Patient",
-              style: TextStyle(
-                color: Colors.blueGrey[200],
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+          SafeArea(
+            top: false,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                "Doctorwala Patient",
+                style: TextStyle(
+                  color: Colors.blueGrey[200],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
@@ -477,41 +479,41 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
           index: _currentIndex,
           children: List.generate(5, _buildTab),
         ),
-        bottomNavigationBar: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(25),
-            topRight: Radius.circular(25),
-          ),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5), // Lighter blur
-            child: Container(
-              height: 65, // Sufficient touch area
-              padding: const EdgeInsets.only(bottom: 2),
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(245), // More solid white, less glass
-                border: Border(
-                  top: BorderSide(
-                    color: Colors.blueGrey.withAlpha(30),
-                    width: 1,
-                  ),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(15),
-                    blurRadius: 15,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(22),
+              topRight: Radius.circular(22),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(15),
+                blurRadius: 15,
+                offset: const Offset(0, -4),
               ),
+            ],
+            border: Border(
+              top: BorderSide(
+                color: Colors.blueGrey.withAlpha(25),
+                width: 1,
+              ),
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewPadding.bottom,
+            ),
+            child: SizedBox(
+              height: 58,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(Icons.home_rounded, "Home", 0, context),
-                  _buildNavItem(Icons.calendar_today_rounded, "Appts", 1, context),
-                  _buildNavItem(Icons.search_rounded, "Search", 2, context),
-                  _buildNavItem(Icons.medication_rounded, "Prescribe", 3, context),
-                  _buildNavItem(Icons.assignment_rounded, "Reports", 4, context),
-                  _buildNavItem(Icons.menu_rounded, "More", 5, context), // More opens drawer
+                  Expanded(child: _buildNavItem(Icons.home_rounded, "Home", 0, context)),
+                  Expanded(child: _buildNavItem(Icons.calendar_today_rounded, "Appts", 1, context)),
+                  Expanded(child: _buildNavItem(Icons.search_rounded, "Search", 2, context)),
+                  Expanded(child: _buildNavItem(Icons.medication_rounded, "Prescribe", 3, context)),
+                  Expanded(child: _buildNavItem(Icons.assignment_rounded, "Reports", 4, context)),
+                  Expanded(child: _buildNavItem(Icons.menu_rounded, "More", 5, context)),
                 ],
               ),
             ),
@@ -528,32 +530,39 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     return GestureDetector(
       onTap: () => _onTabSelected(index),
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          color: isSelected && !isMore ? const Color(0xFF1565C0).withAlpha(30) : Colors.transparent,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected && !isMore ? const Color(0xFF1565C0) : Colors.blueGrey.withAlpha(180),
-              size: isSelected && !isMore ? 24 : 22,
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
+      child: Center(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+          decoration: BoxDecoration(
+            color: isSelected && !isMore ? const Color(0xFF1565C0).withAlpha(25) : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
                 color: isSelected && !isMore ? const Color(0xFF1565C0) : Colors.blueGrey.withAlpha(180),
-                fontSize: 9,
-                fontWeight: isSelected && !isMore ? FontWeight.bold : FontWeight.w600,
+                size: isSelected && !isMore ? 22 : 20,
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: isSelected && !isMore ? const Color(0xFF1565C0) : Colors.blueGrey.withAlpha(180),
+                    fontSize: 9.5,
+                    fontWeight: isSelected && !isMore ? FontWeight.bold : FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

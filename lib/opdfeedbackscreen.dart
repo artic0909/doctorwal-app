@@ -77,7 +77,9 @@ class _OPDFeedbackScreenState extends State<OPDFeedbackScreen> {
                     _buildFeedbackField(),
                     const SizedBox(height: 40),
                     _buildSubmitButton(),
-                    const SizedBox(height: 40),
+                    SizedBox(
+                      height: MediaQuery.of(context).viewPadding.bottom + 25,
+                    ),
                   ],
                 ),
               ),

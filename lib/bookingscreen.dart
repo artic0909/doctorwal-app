@@ -248,7 +248,12 @@ class _BookingScreenState extends State<BookingScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              20,
+              20,
+              MediaQuery.of(context).viewPadding.bottom + 95,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -288,7 +293,9 @@ class _BookingScreenState extends State<BookingScreen> {
             ),
           ),
           Positioned(
-            bottom: 20, left: 20, right: 20,
+            bottom: MediaQuery.of(context).viewPadding.bottom + 15,
+            left: 20,
+            right: 20,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _submitBooking,
               style: ElevatedButton.styleFrom(

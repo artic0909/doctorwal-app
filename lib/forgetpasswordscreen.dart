@@ -175,7 +175,12 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           SliverFillRemaining(
             hasScrollBody: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              padding: EdgeInsets.fromLTRB(
+                24,
+                20,
+                24,
+                MediaQuery.of(context).viewPadding.bottom + 25,
+              ),
               child: Column(
                 children: [
                   const SizedBox(height: 10),

@@ -142,7 +142,12 @@ class _ViewMedicalRecordScreenState extends State<ViewMedicalRecordScreen> {
           children: [
             _buildHeader(dateStr),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                MediaQuery.of(context).viewPadding.bottom + 25,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

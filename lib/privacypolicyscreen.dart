@@ -352,7 +352,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 60),
+                    SizedBox(
+                      height: MediaQuery.of(context).viewPadding.bottom + 40,
+                    ),
                   ]),
                 ),
               ),

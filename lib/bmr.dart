@@ -66,7 +66,12 @@ class _BMRCalculatorScreenState extends State<BMRCalculatorScreen> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          20,
+          20,
+          MediaQuery.of(context).viewPadding.bottom + 25,
+        ),
         child: Column(
           children: [
             const Text(

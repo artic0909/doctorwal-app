@@ -290,7 +290,12 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
     return RefreshIndicator(
       onRefresh: _fetchAppointments,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          MediaQuery.of(context).viewPadding.bottom + 20,
+        ),
         itemCount: _appointments.length,
         itemBuilder: (context, index) {
           final item = _appointments[index];

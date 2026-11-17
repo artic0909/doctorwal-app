@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:demoapp/allopdscreen.dart';
 import 'package:demoapp/main.dart';
 import 'package:flutter/material.dart';
@@ -319,49 +320,59 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     ),
                   ),
             ),
-            const SizedBox(width: 15),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    final city = await LocationService.getUserCity(context: context);
-                    if (mounted && city != null) {
-                      setState(() {
-                        _userCity = city;
-                      });
-                    }
-                  },
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_rounded,
-                        color: _userCity != null ? const Color(0xFF1565C0) : Colors.redAccent,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _userCity ?? "Enable Location",
-                        style: TextStyle(
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final city = await LocationService.getUserCity(context: context);
+                      if (mounted && city != null) {
+                        setState(() {
+                          _userCity = city;
+                        });
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.location_on_rounded,
                           color: _userCity != null ? const Color(0xFF1565C0) : Colors.redAccent,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          size: 13,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 3),
+                        Flexible(
+                          child: Text(
+                            _userCity ?? "Enable Location",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: _userCity != null ? const Color(0xFF1565C0) : Colors.redAccent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  currentName,
-                  style: const TextStyle(
-                    color: Color(0xFF263238),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
+                  Text(
+                    currentName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF263238),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const Spacer(),
+            const SizedBox(width: 6),
             // --- Notification Bell ---
             Stack(
               children: [
@@ -474,15 +485,19 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                             size: 22,
                           ),
                           const SizedBox(width: 12),
-                          Text(
-                            "Search doctor, clinic, test...",
-                            style: TextStyle(
-                              color: Colors.blueGrey[200],
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                          Expanded(
+                            child: Text(
+                              "Search doctor, clinic, test...",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.blueGrey[200],
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 8),
                           const Icon(
                             Icons.location_on_rounded,
                             color: Color(0xFFE53935),
@@ -523,7 +538,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           if (!hasCard) ...[
             Container(
               width: double.infinity,
-              height: 200,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
               margin: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
@@ -542,6 +557,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(
                     Icons.credit_card_off_rounded,
@@ -843,8 +859,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     required List<Color> gradient,
     required VoidCallback onTap,
   }) {
-    // Peek effect: show roughly 3.1 cards to hint at more content
-    final double cardWidth = (MediaQuery.of(context).size.width - 48) / 3.1;
+    // Peek effect: show roughly 3.1 cards to hint at more content, min 105 width
+    final double cardWidth = math.max(105.0, (MediaQuery.of(context).size.width - 48) / 3.1);
     return GestureDetector(
       onTap: onTap,
       child: Container(

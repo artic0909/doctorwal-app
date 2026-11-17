@@ -362,7 +362,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               : Stack(
                 children: [
                   SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      20,
+                      20,
+                      MediaQuery.of(context).viewPadding.bottom + 30,
+                    ),
                     child: Form(
                       key: _formKey,
                       child: Column(

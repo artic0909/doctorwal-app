@@ -121,7 +121,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 : filteredList.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: EdgeInsets.fromLTRB(
+                          16,
+                          8,
+                          16,
+                          MediaQuery.of(context).viewPadding.bottom + 20,
+                        ),
                         itemCount: filteredList.length,
                         itemBuilder: (context, index) => _buildNotificationCard(filteredList[index]),
                       ),
@@ -142,7 +147,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
         ),
         borderRadius: BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 40),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        MediaQuery.of(context).padding.top + 12,
+        20,
+        30,
+      ),
       child: Column(
         children: [
           Row(

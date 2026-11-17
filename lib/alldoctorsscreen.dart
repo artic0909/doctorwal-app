@@ -156,7 +156,12 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                     child: displayDoctors.isEmpty 
                       ? _buildEmptyState()
                       : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                          padding: EdgeInsets.fromLTRB(
+                            20,
+                            10,
+                            20,
+                            MediaQuery.of(context).viewPadding.bottom + 25,
+                          ),
                           itemCount: displayDoctors.length + (_currentPage < _lastPage ? 1 : 0),
                           itemBuilder: (context, index) {
                             if (index < displayDoctors.length) {

@@ -206,7 +206,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
     return RefreshIndicator(
       onRefresh: _fetchData,
       child: ListView.builder(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          20,
+          20,
+          MediaQuery.of(context).viewPadding.bottom + 80,
+        ),
         itemCount: items.length,
         itemBuilder: (context, index) => _buildRecordCard(items[index]),
       ),
@@ -356,7 +361,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> with Single
     return RefreshIndicator(
       onRefresh: _fetchData,
       child: ListView.builder(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          20,
+          20,
+          MediaQuery.of(context).viewPadding.bottom + 80,
+        ),
         itemCount: items.length,
         itemBuilder: (context, index) {
           String dateStr = "";

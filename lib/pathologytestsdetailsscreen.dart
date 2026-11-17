@@ -166,11 +166,17 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                   ),
                 ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.of(context).viewPadding.bottom + 95,
+                ),
+              ),
             ],
           ),
           Positioned(
-            bottom: 40, left: 20, right: 20,
+            bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+            left: 20,
+            right: 20,
             child: ElevatedButton(
               onPressed: () {
                 Navigator.push(

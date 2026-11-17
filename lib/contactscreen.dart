@@ -232,7 +232,9 @@ class ContactScreen extends StatelessWidget {
                         style: TextStyle(fontSize: 11, color: Colors.blueGrey[300], fontWeight: FontWeight.w900, letterSpacing: 1),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 40),
+                      SizedBox(
+                        height: MediaQuery.of(context).viewPadding.bottom + 25,
+                      ),
                     ],
                   ),
                 ),

@@ -200,7 +200,12 @@ class _LoginWithScreenState extends State<LoginWithScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              20,
+              20,
+              MediaQuery.of(context).viewPadding.bottom + 25,
+            ),
             child: ListView(
               children: [
                 const Text(

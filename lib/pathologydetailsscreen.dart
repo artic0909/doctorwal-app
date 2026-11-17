@@ -178,7 +178,11 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
               ),
             ),
           ],
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: MediaQuery.of(context).viewPadding.bottom + 30,
+            ),
+          ),
         ],
       ),
     );

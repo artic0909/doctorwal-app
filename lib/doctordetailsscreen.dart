@@ -51,16 +51,14 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
 
               // 3. Availability List
               Expanded(
-                child: _buildAvailabilityList(d.visitDayTime),
+                child: _buildAvailabilityList(context, d.visitDayTime),
               ),
-              
-              const SizedBox(height: 120), // Bottom spacing
             ],
           ),
 
           // 4. Sticky Booking Button
           Positioned(
-            bottom: 40,
+            bottom: MediaQuery.of(context).viewPadding.bottom + 16,
             left: 20,
             right: 20,
             child: _buildBookingButton(),
@@ -209,7 +207,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
     );
   }
 
-  Widget _buildAvailabilityList(List<dynamic>? visitTime) {
+  Widget _buildAvailabilityList(BuildContext context, List<dynamic>? visitTime) {
     if (visitTime == null || visitTime.isEmpty) {
       return Center(
         child: Padding(
@@ -220,7 +218,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      padding: EdgeInsets.fromLTRB(20, 5, 20, MediaQuery.of(context).viewPadding.bottom + 90),
       itemCount: visitTime.length,
       itemBuilder: (context, index) {
         final item = visitTime[index];

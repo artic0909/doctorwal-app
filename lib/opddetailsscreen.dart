@@ -97,7 +97,11 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
               child: _buildServicesSection(),
             ),
           
-          const SliverToBoxAdapter(child: SizedBox(height: 40)),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: MediaQuery.of(context).viewPadding.bottom + 30,
+            ),
+          ),
         ],
       ),
     );

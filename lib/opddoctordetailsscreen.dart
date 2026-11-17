@@ -46,7 +46,9 @@ class ODPDoctorDetailScreen extends StatelessWidget {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 120),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewPadding.bottom + 95,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -57,7 +59,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: 40,
+            bottom: MediaQuery.of(context).viewPadding.bottom + 16,
             left: 20,
             right: 20,
             child: ElevatedButton(

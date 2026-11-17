@@ -75,7 +75,12 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
           _isLoading
               ? const CouponListSkeleton()
               : ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  MediaQuery.of(context).viewPadding.bottom + 20,
+                ),
                 itemCount: _coupons.length,
                 itemBuilder: (context, index) {
                   final coupon = _coupons[index];
