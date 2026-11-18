@@ -10,6 +10,7 @@ import 'package:demoapp/contactscreen.dart';
 import 'package:demoapp/healthparametersscreen.dart';
 import 'package:demoapp/addvitalscreen.dart';
 import 'package:demoapp/privacypolicyscreen.dart';
+import 'package:demoapp/my_health_screen.dart';
 import 'package:demoapp/main.dart'; // For LoginScreen
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -811,75 +812,6 @@ class CurvedNotchPainter extends CustomPainter {
       oldDelegate.shoulderRadius != shoulderRadius ||
       oldDelegate.depth != depth ||
       oldDelegate.topRadius != topRadius;
-}
-
-class MyHealthScreen extends StatelessWidget {
-  final Map<String, dynamic> userData;
-
-  const MyHealthScreen({super.key, required this.userData});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFF),
-      appBar: AppBar(
-        title: const Text(
-          "My Health",
-          style: TextStyle(
-            color: Color(0xFF1E293B),
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 84,
-                height: 84,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00897B).withAlpha(25),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.volunteer_activism_rounded,
-                  color: Color(0xFF00897B),
-                  size: 42,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "My Health",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1E293B),
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                "Your personalized health hub is coming soon.\nStay tuned for updates!",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF64748B),
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class AccountTabScreen extends StatelessWidget {
