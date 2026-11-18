@@ -203,9 +203,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   Widget _buildCategoryTabs() {
     final categories = [
       {'id': 'all', 'label': 'All', 'count': _results['total_results']},
-      {'id': 'doctor', 'label': 'Doctors', 'count': (_results['doctors'] as List).length},
-      {'id': 'opd', 'label': 'OPD', 'count': (_results['opds'] as List).length},
-      {'id': 'pathology', 'label': 'Pathology', 'count': (_results['pathologies'] as List).length},
+      {'id': 'doctor', 'label': 'Doctor', 'count': (_results['doctors'] as List).length},
+      {'id': 'opd', 'label': 'Chambers (OPD)', 'count': (_results['opds'] as List).length},
+      {'id': 'pathology', 'label': 'Lab Tests', 'count': (_results['pathologies'] as List).length},
     ];
 
     return Container(
