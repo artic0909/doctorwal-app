@@ -38,8 +38,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   String? _networkImageUrl;
   bool _isLoading = false;
   bool _isFetching = true;
-  String _memberId = '';
-  String _medicalCardNo = '';
 
   final List<String> _genders = ['Male', 'Female', 'Other'];
   final List<String> _bloodGroups = [
@@ -117,32 +115,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         if (_networkImageUrl != null) {
           await prefs.setString('image', _networkImageUrl!);
         }
-
-        await _loadMedicalCardData();
       }
     } catch (e) {
       debugPrint("Error fetching profile: $e");
     } finally {
       setState(() => _isFetching = false);
     }
-  }
-
-  Future<void> _loadMedicalCardData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _memberId =
-          prefs.getString('member_id') ??
-          prefs.getString('memberid') ??
-          widget.userData['member_id']?.toString() ??
-          widget.userData['memberid']?.toString() ??
-          '';
-      _medicalCardNo =
-          prefs.getString('medical_card_no') ??
-          prefs.getString('medicalcardno') ??
-          widget.userData['medical_card_no']?.toString() ??
-          widget.userData['medicalcardno']?.toString() ??
-          '';
-    });
   }
 
 
@@ -374,8 +352,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         children: [
                           _buildProfileImage(),
                           const SizedBox(height: 20),
-
-                          _buildProfileMedicalCard(),
 
                           _buildSectionTitle(
                             "Personal Information",
@@ -796,231 +772,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildProfileMedicalCard() {
-    String currentName =
-        _nameController.text.isNotEmpty
-            ? _nameController.text
-            : (widget.userData['name'] ?? 'User Name').toString();
-
-    // Consistent with CategoryHomeScreen logic
-    String dispMemberId = _memberId;
-    if (dispMemberId.trim().isEmpty ||
-        dispMemberId == 'DW-0000-000' ||
-        dispMemberId == 'DW-2026-CARD') {
-      dispMemberId =
-          (widget.userData['member_id'] ??
-                  widget.userData['memberid'] ??
-                  'DW-2026-CARD')
-              .toString();
-    }
-
-    String dispCardNo = _medicalCardNo;
-    if (dispCardNo.trim().isEmpty ||
-        dispCardNo == 'DW00 0000 00' ||
-        dispCardNo == 'DW01 0001 001' ||
-        dispCardNo == 'DW26 0000 00') {
-      dispCardNo =
-          (widget.userData['medical_card_no'] ??
-                  widget.userData['medicalcardno'] ??
-                  '')
-              .toString();
-    }
-
-    bool hasCard =
-        dispMemberId.isNotEmpty &&
-        dispMemberId != 'DW-0000-000' &&
-        dispMemberId != 'DW-2026-CARD' &&
-        dispCardNo.isNotEmpty &&
-        dispCardNo != 'DW00 0000 00' &&
-        dispCardNo != 'DW01 0001 001' &&
-        dispCardNo != 'DW26 0000 00';
-
-    if (!hasCard) return const SizedBox.shrink();
-
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          height: 200,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1565C0).withAlpha(102),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -20,
-                top: -20,
-                child: Icon(
-                  Icons.health_and_safety_rounded,
-                  size: 150,
-                  color: Colors.white.withAlpha(25),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(25),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          "MEDICAL CARD",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const Spacer(),
-                        // ATM Card Chip Design
-                        Container(
-                          width: 45,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.amber[400]!,
-                                Colors.amber[200]!,
-                                Colors.amber[600]!,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: Colors.amber[800]!.withValues(alpha:0.5),
-                              width: 0.5,
-                            ),
-                          ),
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                top: 8,
-                                bottom: 8,
-                                left: 0,
-                                right: 0,
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                    border: Border(
-                                      top: BorderSide(
-                                        color: Colors.black12,
-                                        width: 0.5,
-                                      ),
-                                      bottom: BorderSide(
-                                        color: Colors.black12,
-                                        width: 0.5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 0,
-                                bottom: 0,
-                                left: 12,
-                                right: 12,
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                    border: Border(
-                                      left: BorderSide(
-                                        color: Colors.black12,
-                                        width: 0.5,
-                                      ),
-                                      right: BorderSide(
-                                        color: Colors.black12,
-                                        width: 0.5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Text(
-                      dispCardNo,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "CARD HOLDER",
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              currentName.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "MEMBER ID",
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              dispMemberId,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 30),
-      ],
     );
   }
 }
