@@ -19,6 +19,7 @@ class AllAvailableOPDScreen extends StatefulWidget {
 class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   static List<AllAvailableOPDModel> _cachedClinics = [];
   List<AllAvailableOPDModel> _clinics = [];
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isLoading = true;
   bool _isLoadMoreLoading = false;
@@ -47,6 +48,7 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -197,8 +199,11 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
   }
 
   Widget _buildHeader() {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 18.0;
+
     return Container(
-      padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 8, 16, 14),
+      padding: EdgeInsets.fromLTRB(16, topPadding, 16, 16),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
@@ -276,14 +281,26 @@ class _AllAvailableOPDScreenState extends State<AllAvailableOPDScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
+                          controller: _searchController,
                           onChanged: _onSearchChanged,
+                          textAlignVertical: TextAlignVertical.center,
                           style: const TextStyle(fontSize: 13, color: Colors.black87),
                           decoration: InputDecoration(
                             isDense: true,
                             hintText: "Search for clinics or doctors...",
                             hintStyle: TextStyle(color: Colors.blueGrey[300], fontSize: 13),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                            suffixIconConstraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? GestureDetector(
+                                    onTap: () {
+                                      _searchController.clear();
+                                      _onSearchChanged('');
+                                    },
+                                    child: const Icon(Icons.close_rounded, size: 16, color: Colors.blueGrey),
+                                  )
+                                : null,
                           ),
                         ),
                       ),

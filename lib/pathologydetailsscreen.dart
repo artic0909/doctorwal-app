@@ -190,9 +190,12 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
 
   Widget _buildImageStyleHeader(BuildContext context) {
     final p = widget.pathology;
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 16.0;
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 25),
+      padding: EdgeInsets.fromLTRB(20, topPadding, 20, 25),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],

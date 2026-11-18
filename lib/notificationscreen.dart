@@ -137,6 +137,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Widget _buildHeader(int unread, int total) {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 16.0;
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -149,7 +152,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       ),
       padding: EdgeInsets.fromLTRB(
         20,
-        MediaQuery.of(context).padding.top + 12,
+        topPadding,
         20,
         30,
       ),

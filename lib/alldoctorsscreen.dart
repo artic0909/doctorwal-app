@@ -200,8 +200,11 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   }
 
   Widget _buildHeader() {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 18.0;
+
     return Container(
-      padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 8, 16, 14),
+      padding: EdgeInsets.fromLTRB(16, topPadding, 16, 16),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF6A1B9A), Color(0xFF4A148C)],
@@ -281,13 +284,15 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                         child: TextField(
                           controller: _searchController,
                           onChanged: _onSearchChanged,
+                          textAlignVertical: TextAlignVertical.center,
                           style: const TextStyle(fontSize: 13, color: Colors.black87),
                           decoration: InputDecoration(
                             isDense: true,
                             hintText: "Search by name, specialty, or city...",
                             hintStyle: TextStyle(color: Colors.blueGrey[300], fontSize: 13),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                            suffixIconConstraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? GestureDetector(
                                     onTap: () {

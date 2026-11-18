@@ -71,10 +71,12 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
   Widget _buildImageStyleHeader(BuildContext context) {
     final d = widget.doctor;
     final String docName = d.partnerDoctorName ?? "Dr. Unknown";
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 16.0;
     
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 20),
+      padding: EdgeInsets.fromLTRB(20, topPadding, 20, 20),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF6A1B9A), Color(0xFF4A148C)],

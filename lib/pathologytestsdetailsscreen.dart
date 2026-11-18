@@ -218,8 +218,11 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 16.0;
+
     return Container(
-      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 30),
+      padding: EdgeInsets.fromLTRB(20, topPadding, 20, 30),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],

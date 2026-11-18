@@ -109,9 +109,12 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
 
   Widget _buildImageStyleHeader(BuildContext context) {
     final o = widget.opd;
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 16.0;
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 25),
+      padding: EdgeInsets.fromLTRB(20, topPadding, 20, 25),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
