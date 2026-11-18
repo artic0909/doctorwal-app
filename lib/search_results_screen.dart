@@ -72,14 +72,20 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   Future<void> _performSearch() async {
     setState(() => _isLoading = true);
     try {
+      // Always fetch with category: 'all' so all tab counts (Doctor, Chambers, Lab Tests) are populated simultaneously
       final response = await _apiService.getSearchResult(
         _searchController.text,
-        category: _currentCategory,
+        category: 'all',
         userCity: _userCity,
       );
       if (response['status'] == true) {
         setState(() {
-          _results = response['data'];
+          _results = response['data'] ?? {
+            'opds': [],
+            'pathologies': [],
+            'doctors': [],
+            'total_results': 0,
+          };
         });
       }
     } catch (e) {
@@ -197,13 +203,20 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      "${_results['total_results']} total results found",
-                      style: TextStyle(
-                        color: Colors.white.withAlpha(190),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final int totalCount = ((_results['doctors'] as List?)?.length ?? 0) +
+                            ((_results['opds'] as List?)?.length ?? 0) +
+                            ((_results['pathologies'] as List?)?.length ?? 0);
+                        return Text(
+                          "$totalCount total results found",
+                          style: TextStyle(
+                            color: Colors.white.withAlpha(190),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -287,30 +300,35 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   }
 
   Widget _buildCategoryTabs() {
+    final allDocs = (_results['doctors'] as List?) ?? [];
+    final allOpds = (_results['opds'] as List?) ?? [];
+    final allPaths = (_results['pathologies'] as List?) ?? [];
+    final int totalCount = allDocs.length + allOpds.length + allPaths.length;
+
     final categories = [
       {
         'id': 'all',
         'label': 'All',
         'icon': Icons.auto_awesome_rounded,
-        'count': _results['total_results'] ?? 0,
+        'count': totalCount,
       },
       {
         'id': 'doctor',
         'label': 'Doctor',
         'icon': Icons.medical_services_rounded,
-        'count': (_results['doctors'] as List?)?.length ?? 0,
+        'count': allDocs.length,
       },
       {
         'id': 'opd',
         'label': 'Chambers (OPD)',
         'icon': Icons.business_rounded,
-        'count': (_results['opds'] as List?)?.length ?? 0,
+        'count': allOpds.length,
       },
       {
         'id': 'pathology',
         'label': 'Lab Tests',
         'icon': Icons.biotech_rounded,
-        'count': (_results['pathologies'] as List?)?.length ?? 0,
+        'count': allPaths.length,
       },
     ];
 
@@ -333,7 +351,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             onTap: () {
               if (_currentCategory != cat['id']) {
                 setState(() => _currentCategory = cat['id'] as String);
-                _performSearch();
               }
             },
             child: AnimatedContainer(
@@ -400,12 +417,58 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     );
   }
 
-  Widget _buildResultsList() {
-    final allDocs = _results['doctors'] as List;
-    final allOpds = _results['opds'] as List;
-    final allPaths = _results['pathologies'] as List;
+  Widget _buildCategoryEmptyState(String categoryName, String alternativeName) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.blueGrey.withAlpha(20),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.search_off_rounded,
+                size: 36,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "No $categoryName found",
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              "Check the $alternativeName tabs for available results.",
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF64748B),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-    if (_results['total_results'] == 0) {
+  Widget _buildResultsList() {
+    final allDocs = (_results['doctors'] as List?) ?? [];
+    final allOpds = (_results['opds'] as List?) ?? [];
+    final allPaths = (_results['pathologies'] as List?) ?? [];
+    final int totalCount = allDocs.length + allOpds.length + allPaths.length;
+
+    if (totalCount == 0) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
@@ -450,6 +513,17 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           ),
         ),
       );
+    }
+
+    // Specific category empty states
+    if (_currentCategory == 'doctor' && allDocs.isEmpty) {
+      return _buildCategoryEmptyState("doctors", "Chambers (OPD) or Lab Tests");
+    }
+    if (_currentCategory == 'opd' && allOpds.isEmpty) {
+      return _buildCategoryEmptyState("chambers or OPDs", "Doctors or Lab Tests");
+    }
+    if (_currentCategory == 'pathology' && allPaths.isEmpty) {
+      return _buildCategoryEmptyState("lab tests", "Doctors or Chambers (OPD)");
     }
 
     return ListView(
