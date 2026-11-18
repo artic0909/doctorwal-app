@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/medicalhistoryscreen.dart';
 import 'package:demoapp/healthparametersscreen.dart';
 import 'package:demoapp/alldoctorsscreen.dart';
-import 'package:demoapp/allavailablepathologyscreen.dart';
+import 'package:demoapp/Models/appointment_model.dart';
+import 'package:demoapp/Services/apiservice.dart';
 
 class MyHealthScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -20,14 +23,28 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
   String _memberId = '';
   String _medicalCardNo = '';
 
+  final ApiService _apiService = ApiService();
+  List<AppointmentModel> _recentAppointments = [];
+  bool _isLoadingAppointments = true;
+
+  Timer? _autoScrollTimer;
+  final ScrollController _appointmentScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     _loadIds();
+    _fetchCompletedAppointments();
+  }
+
+  @override
+  void dispose() {
+    _autoScrollTimer?.cancel();
+    _appointmentScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadIds() async {
-    // 1. Initial check from widget.userData
     String memId = widget.userData['member_id']?.toString() ??
         widget.userData['memberid']?.toString() ??
         '';
@@ -35,7 +52,6 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
         widget.userData['medicalcardno']?.toString() ??
         '';
 
-    // 2. Fetch from SharedPreferences if empty
     try {
       final prefs = await SharedPreferences.getInstance();
       if (memId.isEmpty) {
@@ -58,9 +74,140 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
     }
   }
 
+  Future<void> _fetchCompletedAppointments() async {
+    setState(() => _isLoadingAppointments = true);
+
+    // 1. Try fetching completed appointments
+    try {
+      final response = await _apiService.getAppointmentsByStatus('Completed');
+      if (response['status'] == true && response['data'] != null) {
+        final List<dynamic> data = response['data'];
+        final List<AppointmentModel> list =
+            data.map((json) => AppointmentModel.fromJson(json)).toList();
+
+        if (mounted) {
+          setState(() {
+            _recentAppointments = list.take(10).toList();
+            _isLoadingAppointments = false;
+          });
+          _startAutoScroll();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching completed appointments: $e");
+    }
+
+    // 2. Fallback to general appointments if completed had 0 items
+    try {
+      final allResponse = await _apiService.getAppointments();
+      if (allResponse['status'] == true && allResponse['data'] != null) {
+        final List<dynamic> data = allResponse['data'];
+        final List<AppointmentModel> list =
+            data.map((json) => AppointmentModel.fromJson(json)).toList();
+
+        final completed =
+            list.where((a) => (a.status ?? '').toLowerCase() == 'completed').toList();
+        final toShow = completed.isNotEmpty ? completed : list;
+
+        if (mounted) {
+          setState(() {
+            _recentAppointments = toShow.take(10).toList();
+            _isLoadingAppointments = false;
+          });
+          _startAutoScroll();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching fallback appointments: $e");
+    }
+
+    if (mounted) {
+      setState(() => _isLoadingAppointments = false);
+    }
+  }
+
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel();
+    if (_recentAppointments.length <= 1) return;
+
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (!mounted || !_appointmentScrollController.hasClients) return;
+
+      final maxScroll = _appointmentScrollController.position.maxScrollExtent;
+      final currentScroll = _appointmentScrollController.offset;
+      const itemWidth = 314.0; // 300 card width + 14 separator
+
+      double targetScroll = currentScroll + itemWidth;
+      if (targetScroll >= maxScroll - 5) {
+        targetScroll = 0.0;
+      }
+
+      _appointmentScrollController.animateTo(
+        targetScroll,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeInOutCubic,
+      );
+    });
+  }
+
+  String _getClinicName(AppointmentModel item) {
+    String? name;
+    if (item.clinicType == 'OPD') {
+      name = item.opdContact?['clinic_name'];
+    } else if (item.clinicType == 'Pathology') {
+      name = item.pathologyContact?['clinic_name'];
+    } else if (item.clinicType == 'Doctor') {
+      name = item.doctorContact?['partner_doctor_name'];
+    }
+    return name ?? item.clinicName ?? "Sumatra test";
+  }
+
+  String _getClinicAddress(AppointmentModel item) {
+    String? address;
+    if (item.clinicType == 'OPD') {
+      address = item.opdContact?['clinic_address'];
+    } else if (item.clinicType == 'Pathology') {
+      address = item.pathologyContact?['clinic_address'];
+    } else if (item.clinicType == 'Doctor') {
+      address = item.doctorContact?['partner_doctor_address'];
+    }
+    return address ?? "Address not provided";
+  }
+
+  String _formatTime(String? timeStr) {
+    if (timeStr == null || timeStr.isEmpty) return "N/A";
+    try {
+      final time = DateFormat("HH:mm:ss").parse(timeStr);
+      return DateFormat("h:mm a").format(time);
+    } catch (_) {
+      try {
+        final time = DateFormat("HH:mm").parse(timeStr);
+        return DateFormat("h:mm a").format(time);
+      } catch (_) {
+        return timeStr;
+      }
+    }
+  }
+
+  IconData _getTypeIcon(String? type) {
+    switch (type) {
+      case 'OPD':
+        return Icons.local_hospital_rounded;
+      case 'Pathology':
+        return Icons.biotech_rounded;
+      case 'Doctor':
+        return Icons.person_rounded;
+      default:
+        return Icons.calendar_today_rounded;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final String currentName = widget.userData['name'] ?? widget.userData['user_name'] ?? 'Saklin Mustak';
+    final String currentName =
+        widget.userData['name'] ?? widget.userData['user_name'] ?? 'Saklin Mustak';
     final String? currentImg = widget.userData['image']?.toString();
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 14.0;
@@ -155,7 +302,9 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
                         border: Border.all(color: Colors.white.withAlpha(140), width: 1.5),
                       ),
                       child: ClipOval(
-                        child: (currentImg != null && currentImg.isNotEmpty && currentImg.startsWith('http'))
+                        child: (currentImg != null &&
+                                currentImg.isNotEmpty &&
+                                currentImg.startsWith('http'))
                             ? Image.network(
                                 currentImg,
                                 fit: BoxFit.cover,
@@ -214,7 +363,8 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
                       SnackBar(
                         content: Row(
                           children: [
-                            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                            const Icon(Icons.check_circle_rounded,
+                                color: Colors.white, size: 18),
                             const SizedBox(width: 8),
                             Text("Card number copied: $_medicalCardNo"),
                           ],
@@ -279,7 +429,8 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
                                   ),
                                   const Spacer(),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFF059669).withAlpha(20),
                                       borderRadius: BorderRadius.circular(6),
@@ -356,7 +507,8 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => AllAppointmentsScreen(userData: widget.userData),
+                                builder: (context) =>
+                                    AllAppointmentsScreen(userData: widget.userData),
                               ),
                             );
                           },
@@ -374,7 +526,8 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const MedicalHistoryScreen(initialTabIndex: 0),
+                                builder: (context) =>
+                                    const MedicalHistoryScreen(initialTabIndex: 0),
                               ),
                             );
                           },
@@ -392,7 +545,8 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const MedicalHistoryScreen(initialTabIndex: 1),
+                                builder: (context) =>
+                                    const MedicalHistoryScreen(initialTabIndex: 1),
                               ),
                             );
                           },
@@ -410,7 +564,8 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const HealthParametersScreen(),
+                                builder: (context) =>
+                                    const HealthParametersScreen(),
                               ),
                             );
                           },
@@ -421,42 +576,59 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Section Title for Horizontal Banner
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      "Health Check For You",
-                      style: TextStyle(
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
-                        letterSpacing: -0.2,
-                      ),
+                  // Section Title: Recent Appointments (with View All link)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Recent Appointments",
+                          style: TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    AllAppointmentsScreen(userData: widget.userData),
+                              ),
+                            );
+                          },
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "View All",
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1565C0),
+                                ),
+                              ),
+                              SizedBox(width: 2),
+                              Icon(Icons.arrow_forward_ios_rounded,
+                                  size: 11, color: Color(0xFF1565C0)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
                   const SizedBox(height: 12),
 
-                  // Horizontal Banners (ClampingScrollPhysics - NOT Spring, manual scroll)
+                  // Horizontal Scrollable Cards (Auto-scrolls latest completed appointments with full details)
                   SizedBox(
-                    height: 168,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const ClampingScrollPhysics(), // Solid, non-spring scroll
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      children: [
-                        // Banner 1: Listen to your body / Health Check
-                        _buildHealthCheckBanner(context),
-                        const SizedBox(width: 14),
-
-                        // Banner 2: Online Doctor Consultation
-                        _buildDoctorConsultBanner(context),
-                        const SizedBox(width: 14),
-
-                        // Banner 3: Full Body Screening
-                        _buildFullBodyCheckupBanner(context),
-                      ],
-                    ),
+                    height: 188,
+                    child: _buildAppointmentsSection(context),
                   ),
 
                   // Bottom padding for curved floating nav bar
@@ -540,18 +712,336 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
     );
   }
 
-  Widget _buildHealthCheckBanner(BuildContext context) {
+  Widget _buildAppointmentsSection(BuildContext context) {
+    if (_isLoadingAppointments) {
+      return ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const ClampingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: 2,
+        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        itemBuilder: (_, __) => _buildSkeletonCard(),
+      );
+    }
+
+    if (_recentAppointments.isEmpty) {
+      return ListView(
+        scrollDirection: Axis.horizontal,
+        physics: const ClampingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          _buildEmptyAppointmentCard(context),
+        ],
+      );
+    }
+
+    return ListView.separated(
+      controller: _appointmentScrollController,
+      scrollDirection: Axis.horizontal,
+      physics: const ClampingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: _recentAppointments.length,
+      separatorBuilder: (_, __) => const SizedBox(width: 14),
+      itemBuilder: (context, index) {
+        final item = _recentAppointments[index];
+        return _buildAppointmentCard(context, item);
+      },
+    );
+  }
+
+  // Appointment Card preserving the exact beautiful background design with ALL details matching AllAppointmentsScreen
+  Widget _buildAppointmentCard(BuildContext context, AppointmentModel item) {
+    final String clinicName = _getClinicName(item);
+    final String clinicAddress = _getClinicAddress(item);
+    final String? doctorName =
+        item.doctor?['doctor_name'] ?? item.doctorContact?['partner_doctor_name'];
+    final String? specialist =
+        item.doctor?['doctor_specialist'] ?? item.doctorContact?['partner_doctor_specialist'];
+    final String? testName = item.test?['test_name'];
+    final String formattedTime = _formatTime(item.bookingTime);
+    final String type = item.clinicType?.toUpperCase() ?? "OPD";
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AllAvailablePathologyScreen(userData: widget.userData),
+            builder: (context) =>
+                AllAppointmentsScreen(userData: widget.userData),
           ),
         );
       },
       child: Container(
-        width: 290,
+        width: 300,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE3F2FD), Color(0xFFF0FDF4)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFF90CAF9).withAlpha(120), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1565C0).withAlpha(20),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Decorative background circle watermark
+            Positioned(
+              right: -10,
+              top: -10,
+              child: CircleAvatar(
+                radius: 40,
+                backgroundColor: const Color(0xFF1565C0).withAlpha(15),
+                child: Icon(
+                  _getTypeIcon(item.clinicType),
+                  size: 28,
+                  color: const Color(0xFF1565C0).withAlpha(40),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // 1. Top Row: Type Pill + Status Badge + ID
+                  Row(
+                    children: [
+                      // Type Pill
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1565C0),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          type,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      // Status Badge (COMPLETED)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF059669).withAlpha(20),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color: const Color(0xFF059669).withAlpha(60), width: 0.8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.check_circle_rounded,
+                                color: Color(0xFF059669), size: 10),
+                            const SizedBox(width: 3),
+                            Text(
+                              item.status?.toUpperCase() ?? "COMPLETED",
+                              style: const TextStyle(
+                                color: Color(0xFF059669),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      // ID badge
+                      Text(
+                        "#${item.id}",
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1565C0),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // 2. Main Clinic / OPD / Hospital Name
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, bottom: 2),
+                    child: Text(
+                      clinicName,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF0D47A1),
+                        height: 1.15,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                  // 3. Location Row
+                  _cardDetailRow(
+                    icon: Icons.location_on_outlined,
+                    label: "Location",
+                    value: clinicAddress,
+                  ),
+
+                  // 4. Doctor Row
+                  if (doctorName != null && doctorName.isNotEmpty)
+                    _cardDetailRow(
+                      icon: Icons.person_outline_rounded,
+                      label: "Doctor",
+                      value: doctorName,
+                      isPrimary: true,
+                    ),
+
+                  // 5. Specialist Row
+                  if (specialist != null && specialist.isNotEmpty)
+                    _cardDetailRow(
+                      icon: Icons.medical_services_outlined,
+                      label: "Specialist",
+                      value: specialist,
+                    ),
+
+                  // 6. Test Row (if test present)
+                  if (testName != null && testName.isNotEmpty)
+                    _cardDetailRow(
+                      icon: Icons.biotech_outlined,
+                      label: "Test",
+                      value: testName,
+                    ),
+
+                  // 7. Bottom Date & Time bar (matching Image 2)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D47A1).withAlpha(15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today_rounded,
+                            size: 12, color: Color(0xFF0D47A1)),
+                        const SizedBox(width: 5),
+                        Text(
+                          item.bookingDate ?? "N/A",
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF0D47A1),
+                          ),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.access_time_rounded,
+                            size: 12, color: Color(0xFF0D47A1)),
+                        const SizedBox(width: 4),
+                        Text(
+                          formattedTime,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF0D47A1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _cardDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool isPrimary = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 12.5,
+            color: isPrimary ? const Color(0xFF1565C0) : const Color(0xFF64748B),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            "$label: ",
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isPrimary ? FontWeight.w700 : FontWeight.w600,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isPrimary ? FontWeight.w800 : FontWeight.w600,
+                color: isPrimary ? const Color(0xFF1565C0) : const Color(0xFF1E293B),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Skeleton Card while loading appointments
+  Widget _buildSkeletonCard() {
+    return Container(
+      width: 300,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE3F2FD).withAlpha(120),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF90CAF9).withAlpha(80), width: 1),
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1565C0)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Empty state card preserving the same background design
+  Widget _buildEmptyAppointmentCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AllDoctorsScreen(userData: widget.userData),
+          ),
+        );
+      },
+      child: Container(
+        width: 300,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -561,13 +1051,6 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
           ),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: const Color(0xFF90CAF9).withAlpha(120), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF1565C0).withAlpha(20),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Stack(
           children: [
@@ -580,393 +1063,66 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 14, 10),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0D47A1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 11),
-                            SizedBox(width: 4),
-                            Text(
-                              "HEALTH CHECK",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D47A1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      "APPOINTMENTS",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
                       ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "LISTEN TO YOUR BODY",
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF1565C0),
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                            Text(
-                              "GET A HEALTH CHECK",
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFF0D47A1),
-                                height: 1.15,
-                              ),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              "Starting at just",
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                color: Color(0xFF64748B),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              "₹ 1,699/-*",
-                              style: TextStyle(
-                                fontSize: 16.5,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFF0284C7),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Column(
-                        children: [
-                          Container(
-                            width: 52,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1565C0).withAlpha(20),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.biotech_rounded,
-                              size: 30,
-                              color: Color(0xFF1565C0),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0D47A1),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Text(
-                              "Book Now",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                  const SizedBox(height: 10),
+                  const Text(
+                    "No completed appointments yet",
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF0D47A1),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    "Book appointments with top verified specialists easily.",
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      color: Color(0xFF64748B),
+                    ),
                   ),
                   const Spacer(),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0D47A1).withAlpha(15),
-                      borderRadius: BorderRadius.circular(6),
+                      color: const Color(0xFF0D47A1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      "USE CODE: HEALTH10 • Get extra 10% off",
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF0D47A1),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDoctorConsultBanner(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AllDoctorsScreen(userData: widget.userData),
-          ),
-        );
-      },
-      child: Container(
-        width: 290,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF0D47A1), Color(0xFF0284C7)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0D47A1).withAlpha(40),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Fever, cold & flu?",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(40),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.bolt_rounded, color: Colors.amberAccent, size: 12),
-                        SizedBox(width: 3),
-                        Text(
-                          "Instant",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                "Online Doctor Consultation",
-                style: TextStyle(
-                  color: Color(0xFFB3E5FC),
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Row(
-                children: [
-                  Icon(Icons.check_circle_outline_rounded, color: Colors.white70, size: 13),
-                  SizedBox(width: 5),
-                  Text(
-                    "Consult from the comfort of home",
-                    style: TextStyle(color: Colors.white70, fontSize: 11),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Hello Doctor",
+                    child: const Center(
+                      child: Text(
+                        "Book Doctor Appointment →",
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
                         ),
-                      ),
-                      Text(
-                        "Doctor On Call",
-                        style: TextStyle(
-                          color: Color(0xFF81D4FA),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Text(
-                      "Consult Now",
-                      style: TextStyle(
-                        color: Color(0xFF0D47A1),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFullBodyCheckupBanner(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AllAvailablePathologyScreen(userData: widget.userData),
-          ),
-        );
-      },
-      child: Container(
-        width: 290,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF1E3A8A).withAlpha(40),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
             ),
           ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Full Body Checkup",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.amber,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Text(
-                      "40% OFF",
-                      style: TextStyle(
-                        color: Color(0xFF1E293B),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                "60+ Vital Health Parameters Tested",
-                style: TextStyle(
-                  color: Color(0xFFDBEAFE),
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Row(
-                children: [
-                  Icon(Icons.home_work_outlined, color: Colors.white70, size: 13),
-                  SizedBox(width: 5),
-                  Text(
-                    "Free Sample Collection from Home",
-                    style: TextStyle(color: Colors.white70, fontSize: 11),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Only ₹ 999/-",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Text(
-                      "Book Test",
-                      style: TextStyle(
-                        color: Color(0xFF1E3A8A),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ),
       ),
     );

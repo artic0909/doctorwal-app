@@ -16,7 +16,6 @@ import 'package:demoapp/search_screen.dart';
 import 'package:demoapp/all_appointments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:http/http.dart' as http;
-import 'package:demoapp/bottom_nav.dart';
 import 'package:demoapp/services/location_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -623,24 +622,6 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         titleSpacing: 16,
         title: Row(
           children: [
-            Builder(
-              builder: (context) => GestureDetector(
-                onTap: () => BottomNavScreen.globalScaffoldKey.currentState?.openDrawer(),
-                child: Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1565C0).withAlpha(12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.menu_rounded,
-                    color: Color(0xFF1565C0),
-                    size: 22,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
