@@ -10,7 +10,6 @@ import 'allavailablepathologyscreen.dart';
 import 'package:demoapp/pathologydetailsscreen.dart';
 import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:demoapp/notificationscreen.dart';
-import 'profileeditscreen.dart';
 import 'package:demoapp/medicalhistoryscreen.dart';
 import 'package:demoapp/search_screen.dart';
 import 'package:demoapp/all_appointments_screen.dart';
@@ -18,6 +17,8 @@ import 'package:demoapp/Services/apiservice.dart';
 import 'package:http/http.dart' as http;
 import 'package:demoapp/services/location_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:demoapp/bottom_nav.dart';
+import 'package:demoapp/account_tab_screen.dart';
 
 class CategoryHomeScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -723,15 +724,22 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             Hero(
               tag: 'profile',
               child: GestureDetector(
-                onTap:
-                    () => Navigator.push(
+                onTap: () {
+                  if (BottomNavScreen.switchTab != null) {
+                    BottomNavScreen.switchTab!(3);
+                  } else {
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder:
-                            (context) =>
-                                ProfileEditScreen(userData: widget.userData),
+                            (context) => AccountTabScreen(
+                              userData: widget.userData,
+                              onLogout: () {},
+                            ),
                       ),
-                    ).then((_) => loadUserData()),
+                    ).then((_) => loadUserData());
+                  }
+                },
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,

@@ -13,6 +13,7 @@ import 'package:flutter/services.dart' as import_services;
 class BottomNavScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
   static final GlobalKey<ScaffoldState> globalScaffoldKey = GlobalKey<ScaffoldState>();
+  static void Function(int index)? switchTab;
 
   const BottomNavScreen({super.key, required this.userData});
 
@@ -58,6 +59,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
+    BottomNavScreen.switchTab = _onTabSelected;
     _notchController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 320),
@@ -69,6 +71,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
 
   @override
   void dispose() {
+    if (BottomNavScreen.switchTab == _onTabSelected) {
+      BottomNavScreen.switchTab = null;
+    }
     _skeletonTimer?.cancel();
     _notchController.dispose();
     super.dispose();

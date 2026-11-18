@@ -82,6 +82,18 @@ class _AccountTabScreenState extends State<AccountTabScreen> {
     String emergency = widget.userData['emergency_contact']?.toString() ??
         prefs.getString('emergency_contact') ??
         '';
+    String height = widget.userData['height']?.toString() ??
+        prefs.getString('height') ??
+        '';
+    String weight = widget.userData['weight']?.toString() ??
+        prefs.getString('weight') ??
+        '';
+    String allergies = widget.userData['allergies']?.toString() ??
+        prefs.getString('allergies') ??
+        '';
+    String chronic = widget.userData['chronic_conditions']?.toString() ??
+        prefs.getString('chronic_conditions') ??
+        '';
 
     _updateState(
       name: name,
@@ -96,6 +108,10 @@ class _AccountTabScreenState extends State<AccountTabScreen> {
       gender: gender,
       bloodGroup: bloodGroup,
       emergency: emergency,
+      height: height,
+      weight: weight,
+      allergies: allergies,
+      chronic: chronic,
     );
 
     // 2. Fetch fresh profile data from API for guaranteed accuracy
@@ -116,6 +132,10 @@ class _AccountTabScreenState extends State<AccountTabScreen> {
           gender: user['gender']?.toString() ?? gender,
           bloodGroup: user['blood_group']?.toString() ?? bloodGroup,
           emergency: user['emergency_contact']?.toString() ?? emergency,
+          height: user['height']?.toString() ?? height,
+          weight: user['weight']?.toString() ?? weight,
+          allergies: user['allergies']?.toString() ?? allergies,
+          chronic: user['chronic_conditions']?.toString() ?? chronic,
         );
       }
     } catch (e) {
@@ -136,8 +156,12 @@ class _AccountTabScreenState extends State<AccountTabScreen> {
     required String gender,
     required String bloodGroup,
     required String emergency,
+    required String height,
+    required String weight,
+    required String allergies,
+    required String chronic,
   }) {
-    // 10 Key profile fields for 100% accurate percentage calculation
+    // All 14 profile fields from ProfileEditScreen for 100% accurate percentage calculation
     final keyFields = [
       name,
       email,
@@ -149,6 +173,10 @@ class _AccountTabScreenState extends State<AccountTabScreen> {
       bloodGroup,
       image,
       emergency,
+      height,
+      weight,
+      allergies,
+      chronic,
     ];
 
     int filledCount = 0;

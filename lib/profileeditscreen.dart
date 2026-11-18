@@ -270,11 +270,20 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       );
 
       if (response['status'] == true) {
-        // Update local prefs
+        // Update local prefs with all fields
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('name', _nameController.text);
         await prefs.setString('mobile', _mobileController.text);
         await prefs.setString('city', _cityController.text);
+        await prefs.setString('address', _addressController.text);
+        await prefs.setString('dob', _dobController.text);
+        if (_selectedGender != null) await prefs.setString('gender', _selectedGender!);
+        if (_selectedBloodGroup != null) await prefs.setString('blood_group', _selectedBloodGroup!);
+        await prefs.setString('emergency_contact', _emergencyContactController.text);
+        await prefs.setString('height', _heightController.text);
+        await prefs.setString('weight', _weightController.text);
+        await prefs.setString('allergies', _allergiesController.text);
+        await prefs.setString('chronic_conditions', _chronicConditionsController.text);
         if (response['image'] != null) {
           await prefs.setString('image', response['image']);
         }
