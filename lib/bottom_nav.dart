@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:demoapp/categoryscreen.dart';
 import 'package:demoapp/search_screen.dart';
 import 'package:demoapp/my_health_screen.dart';
 import 'package:demoapp/account_tab_screen.dart';
+import 'package:demoapp/tab_skeleton_view.dart';
 import 'package:demoapp/main.dart'; // For LoginScreen
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -47,6 +49,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
     GlobalKey<NavigatorState>(),
   ];
 
+  Timer? _skeletonTimer;
+  int? _skeletonTabIndex;
+
   late AnimationController _notchController;
   late Animation<double> _notchAnim;
 
@@ -64,8 +69,25 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
 
   @override
   void dispose() {
+    _skeletonTimer?.cancel();
     _notchController.dispose();
     super.dispose();
+  }
+
+  void _triggerTabRefresh(int index) {
+    _skeletonTimer?.cancel();
+    setState(() {
+      _tabKeys[index]++;
+      _skeletonTabIndex = index;
+    });
+
+    _skeletonTimer = Timer(const Duration(milliseconds: 600), () {
+      if (mounted && _skeletonTabIndex == index) {
+        setState(() {
+          _skeletonTabIndex = null;
+        });
+      }
+    });
   }
 
   void _onTabSelected(int index) {
@@ -80,7 +102,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
       setState(() {
         _currentIndex = index;
       });
+      _triggerTabRefresh(index);
     } else {
+      _triggerTabRefresh(index);
       final navState = _navigatorKeys[index].currentState;
       if (navState != null && navState.canPop()) {
         navState.popUntil((route) => route.isFirst);
@@ -119,9 +143,10 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
   }
 
   Widget _buildTab(int index) {
+    final Widget tabChild;
     switch (index) {
       case 0:
-        return TabNavigator(
+        tabChild = TabNavigator(
           key: ValueKey('tab_0_${_tabKeys[0]}'),
           navigatorKey: _navigatorKeys[0],
           child: CategoryHomeScreen(
@@ -129,8 +154,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
             userData: widget.userData,
           ),
         );
+        break;
       case 1:
-        return TabNavigator(
+        tabChild = TabNavigator(
           key: ValueKey('tab_1_${_tabKeys[1]}'),
           navigatorKey: _navigatorKeys[1],
           child: SearchScreen(
@@ -138,8 +164,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
             userData: widget.userData,
           ),
         );
+        break;
       case 2:
-        return TabNavigator(
+        tabChild = TabNavigator(
           key: ValueKey('tab_2_${_tabKeys[2]}'),
           navigatorKey: _navigatorKeys[2],
           child: MyHealthScreen(
@@ -147,8 +174,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
             userData: widget.userData,
           ),
         );
+        break;
       case 3:
-        return TabNavigator(
+        tabChild = TabNavigator(
           key: ValueKey('tab_3_${_tabKeys[3]}'),
           navigatorKey: _navigatorKeys[3],
           child: AccountTabScreen(
@@ -157,9 +185,22 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
             onLogout: logout,
           ),
         );
+        break;
       default:
-        return const SizedBox.shrink();
+        tabChild = const SizedBox.shrink();
     }
+
+    final bool showSkeleton = _skeletonTabIndex == index;
+
+    return Stack(
+      children: [
+        tabChild,
+        if (showSkeleton)
+          Positioned.fill(
+            child: TabSkeletonView(tabIndex: index),
+          ),
+      ],
+    );
   }
 
   Future<void> logout() async {
