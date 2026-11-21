@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
@@ -8,193 +6,91 @@ class PrivacyPolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4FF),
-      body: Stack(
+      backgroundColor: const Color(0xFFF8FAFF),
+      body: Column(
         children: [
-          // Living Background with Animated Blobs
-          _buildAnimatedBackground(),
-
-          // Static Pattern Backdrop
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.1,
-              child: Image.asset(
-                'assets/images/contact_bg.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(),
+          _buildHeader(context),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                MediaQuery.of(context).viewPadding.bottom + 100,
               ),
-            ),
-          ),
+              children: [
+                _buildMetadataCard(),
+                const SizedBox(height: 18),
 
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Glassmorphism Header
-              SliverAppBar(
-                expandedHeight: 200,
-                pinned: true,
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                leading: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(200),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Color(0xFF1565C0),
-                      size: 18,
+                _policySection(
+                  icon: Icons.info_outline_rounded,
+                  title: "1. Introduction",
+                  content: [
+                    _paragraph(
+                      "Sumatra Sales Private Limited ('Company', 'We', 'Us', 'Our') owns and operates the Doctorwala platform accessible via:",
                     ),
-                  ),
+                    _bullet("Website: www.doctorwala.info"),
+                    _bullet("Android Application: available on Google Play Store"),
+                    _paragraph(
+                      "This Privacy Policy governs the collection, use, storage, sharing, and protection of your personal and health data across all platforms. By using Doctorwala, you explicitly agree to these terms.",
+                    ),
+                    _paragraph(
+                      "Complies with: IT Act 2000, DPDP Act 2023, NDHM/ABDM Guidelines, Telemedicine Practice Guidelines 2020, and Play Store Policies.",
+                    ),
+                  ],
                 ),
-                flexibleSpace: FlexibleSpaceBar(
-                  background: ClipRRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFF1565C0).withAlpha(200),
-                              const Color(0xFF0D47A1).withAlpha(220),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(height: 40),
-                            Icon(
-                              Icons.shield_rounded,
-                              color: Colors.white,
-                              size: 48,
-                            ),
-                            SizedBox(height: 12),
-                            Text(
-                              "Privacy Policy",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 26,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              "Effective Date: March 30, 2026",
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+
+                _policySection(
+                  icon: Icons.devices_other_rounded,
+                  title: "2. Scope — Website & Android",
+                  content: [
+                    _subHeading("2.1 Website"),
+                    _bullet("Features: OPD search, Pathology search, Patient/Partner registration."),
+                    _bullet("Uses browser cookies and local storage."),
+                    _bullet("SSL/TLS encrypted connection mandatory."),
+                    _subHeading("2.2 Android Application"),
+                    _bullet("Min Android version: 8.0 (Oreo) and above."),
+                    _bullet("Data transmitted via HTTPS only."),
+                    _bullet("Uses Android Keystore for secure storage."),
+                  ],
                 ),
-              ),
 
-              // Policy Content
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 20,
+                _policySection(
+                  icon: Icons.people_outline_rounded,
+                  title: "3. Who We Are — User Types",
+                  content: [
+                    _subHeading("3.1 Patients (B2C)"),
+                    _paragraph(
+                      "Individuals managing health records, finding nearby doctors/labs, and using the AI Symptom Checker.",
+                    ),
+                    _subHeading("3.2 Partners (B2B)"),
+                    _paragraph(
+                      "Healthcare providers: Clinics/OPDs, Pathology Labs, Medical Shops, and Individual Doctors.",
+                    ),
+                  ],
                 ),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _buildMetadataCard(),
-                    const SizedBox(height: 20),
 
-                    _policySection(
-                      icon: Icons.info_outline_rounded,
-                      title: "1. Introduction",
-                      content: [
-                        _paragraph(
-                          "Sumatra Sales Private Limited ('Company', 'We', 'Us', 'Our') owns and operates the Doctorwala platform accessible via:",
-                        ),
-                        _bullet("Website: www.doctorwala.info"),
-                        _bullet(
-                          "Android Application: available on Google Play Store",
-                        ),
-                        _paragraph(
-                          "This Privacy Policy governs the collection, use, storage, sharing, and protection of your personal and health data across all platforms. By using Doctorwala, you explicitly agree to these terms.",
-                        ),
-                        _paragraph(
-                          "Complies with: IT Act 2000, DPDP Act 2023, NDHM/ABDM Guidelines, Telemedicine Practice Guidelines 2020, and Play Store Policies.",
-                        ),
-                      ],
+                _policySection(
+                  icon: Icons.add_moderator_outlined,
+                  title: "4. Data We Collect",
+                  content: [
+                    _subHeading("4.1 Personal Data"),
+                    _bullet("Name, DOB, Age, Gender, Mobile (OTP verified), Email."),
+                    _bullet("Address, City, PIN, State."),
+                    _subHeading("4.2 Health & Medical Data (Sensitive)"),
+                    _paragraph(
+                      "⚠ Classified as Sensitive Personal Data under Indian Law.",
                     ),
-
-                    _policySection(
-                      icon: Icons.devices_other_rounded,
-                      title: "2. Scope — Website & Android",
-                      content: [
-                        _subHeading("2.1 Website"),
-                        _bullet(
-                          "Features: OPD search, Pathology search, Patient/Partner registration.",
-                        ),
-                        _bullet("Uses browser cookies and local storage."),
-                        _bullet("SSL/TLS encrypted connection mandatory."),
-                        _subHeading("2.2 Android Application"),
-                        _bullet("Min Android version: 8.0 (Oreo) and above."),
-                        _bullet("Data transmitted via HTTPS only."),
-                        _bullet("Uses Android Keystore for secure storage."),
-                      ],
-                    ),
-
-                    _policySection(
-                      icon: Icons.people_outline_rounded,
-                      title: "3. Who We Are — User Types",
-                      content: [
-                        _subHeading("3.1 Patients (B2C)"),
-                        _paragraph(
-                          "Individuals managing health records, finding nearby doctors/labs, and using the AI Symptom Checker.",
-                        ),
-                        _subHeading("3.2 Partners (B2B)"),
-                        _paragraph(
-                          "Healthcare providers: Clinics/OPDs, Pathology Labs, Medical Shops, and Individual Doctors.",
-                        ),
-                      ],
-                    ),
-
-                    _policySection(
-                      icon: Icons.add_moderator_outlined,
-                      title: "4. Data We Collect",
-                      content: [
-                        _subHeading("4.1 Personal Data"),
-                        _bullet(
-                          "Name, DOB, Age, Gender, Mobile (OTP verified), Email.",
-                        ),
-                        _bullet("Address, City, PIN, State."),
-                        _subHeading("4.2 Health & Medical Data (Sensitive)"),
-                        _paragraph(
-                          "⚠ Classified as Sensitive Personal Data under Indian Law.",
-                        ),
-                        _bullet("Symptoms typed in AI Symptom Checker."),
-                        _bullet(
-                          "Uploaded prescriptions and pathology reports.",
-                        ),
-                        _bullet(
-                          "Medical history, Medications, Allergies, Blood group, BMI.",
-                        ),
-                        _subHeading("4.3 Unique Medical ID"),
-                        _bullet("Auto-generated DW-YYYY-STATE-XXXXXX format."),
-                        _subHeading("4.4 Technical Data"),
-                        _bullet(
-                          "Device model, OS version, Anonymized Device ID.",
-                        ),
-                        _bullet(
-                          "GPS location (only for 'Find Nearby', foreground only).",
-                        ),
-                      ],
-                    ),
+                    _bullet("Symptoms typed in AI Symptom Checker."),
+                    _bullet("Uploaded prescriptions and pathology reports."),
+                    _bullet("Medical history, Medications, Allergies, Blood group, BMI."),
+                    _subHeading("4.3 Unique Medical ID"),
+                    _bullet("Auto-generated DW-YYYY-STATE-XXXXXX format."),
+                    _subHeading("4.4 Technical Data"),
+                    _bullet("Device model, OS version, Anonymized Device ID."),
+                    _bullet("GPS location (only for 'Find Nearby', foreground only)."),
+                  ],
+                ),
 
                     _policySection(
                       icon: Icons.security_outlined,
@@ -355,15 +251,13 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     SizedBox(
                       height: MediaQuery.of(context).viewPadding.bottom + 40,
                     ),
-                  ]),
+                  ],
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
+        );
+      }
 
   Widget _buildMetadataCard() {
     return Container(
@@ -462,17 +356,13 @@ class PrivacyPolicyScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -505,13 +395,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 ...content,
               ],
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -615,67 +503,75 @@ class PrivacyPolicyScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAnimatedBackground() {
-    return Stack(
-      children: [
-        _animatedBlob(
-          const Color(0xFF1565C0).withAlpha(15),
-          150,
-          top: 100,
-          left: -50,
-        ),
-        _animatedBlob(
-          const Color(0xFF6A1B9A).withAlpha(12),
-          200,
-          bottom: 300,
-          right: -50,
-        ),
-        _animatedBlob(
-          const Color(0xFF2E7D32).withAlpha(10),
-          120,
-          top: 400,
-          left: 200,
-        ),
-      ],
-    );
-  }
+  Widget _buildHeader(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 8.0;
 
-  Widget _animatedBlob(
-    Color color,
-    double size, {
-    double? top,
-    double? bottom,
-    double? left,
-    double? right,
-  }) {
-    return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
-      child: TweenAnimationBuilder(
-        tween: Tween<double>(begin: 0, end: 1),
-        duration: const Duration(seconds: 10),
-        builder: (context, double value, child) {
-          final double moveX =
-              ui.lerpDouble(-30, 30, math.sin(value * math.pi * 2)) ?? 0;
-          final double moveY =
-              ui.lerpDouble(-30, 30, math.cos(value * math.pi * 2)) ?? 0;
-
-          return Transform.translate(
-            offset: Offset(moveX, moveY),
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(color: color, blurRadius: 60, spreadRadius: 20),
-                ],
-              ),
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(16, topPadding, 16, 16),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Privacy Policy",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  "Effective Date: March 30, 2026",
+                  style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500),
+                ),
+              ],
             ),
-          );
-        },
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(30),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white.withAlpha(40)),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.shield_rounded, color: Colors.white, size: 12),
+                SizedBox(width: 4),
+                Text(
+                  "LEGAL",
+                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
