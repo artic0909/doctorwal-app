@@ -34,26 +34,26 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  final List<Map<String, dynamic>> _categories = [
+  final List<Map<String, String>> _categories = [
     {
       'id': 'all',
       'name': 'All',
-      'icon': Icons.auto_awesome_rounded,
     },
     {
       'id': 'doctor',
       'name': 'Doctor',
-      'icon': Icons.medical_services_rounded,
+    },
+    {
+      'id': 'others',
+      'name': 'Physiotherapist & Allied Care',
     },
     {
       'id': 'opd',
       'name': 'Chambers (OPD)',
-      'icon': Icons.business_rounded,
     },
     {
       'id': 'pathology',
       'name': 'Lab Tests',
-      'icon': Icons.biotech_rounded,
     },
   ];
 
@@ -248,23 +248,19 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        SizedBox(
-          height: 38,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            scrollDirection: Axis.horizontal,
-            itemCount: _categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final cat = _categories[index];
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _categories.map((cat) {
               final bool isSelected = _selectedCategory == cat['id'];
-              final IconData iconData = cat['icon'] as IconData;
 
               return GestureDetector(
                 onTap: () => setState(() => _selectedCategory = cat['id']!),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
                     color: isSelected ? const Color(0xFF1565C0) : Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -282,28 +278,17 @@ class _SearchScreenState extends State<SearchScreen> {
                           ]
                         : null,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        iconData,
-                        size: 15,
-                        color: isSelected ? Colors.white : const Color(0xFF64748B),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        cat['name']!,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : const Color(0xFF1E293B),
-                          fontSize: 12.5,
-                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    cat['name']!,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                      fontSize: 12.5,
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    ),
                   ),
                 ),
               );
-            },
+            }).toList(),
           ),
         ),
       ],

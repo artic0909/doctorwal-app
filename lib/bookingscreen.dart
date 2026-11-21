@@ -72,7 +72,12 @@ class _BookingScreenState extends State<BookingScreen> {
     final regType = (widget.clinicRegistrationType ?? '').toLowerCase().trim();
     final name = (widget.itemName ?? '').toLowerCase();
     final clinic = widget.clinicName.toLowerCase();
-    return regType == 'others' || name.contains('physio') || clinic.contains('physio') || name.contains('allied');
+    return regType == 'others' ||
+        regType.contains('other') ||
+        name.contains('physio') ||
+        clinic.contains('physio') ||
+        name.contains('allied') ||
+        clinic.contains('allied');
   }
 
   bool get _showVisitModeSelector {
@@ -368,11 +373,52 @@ class _BookingScreenState extends State<BookingScreen> {
                   ],
                 ),
               ),
-              if (widget.itemPrice != null)
-                Text("₹${widget.itemPrice}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF2E7D32))),
+              if (widget.itemPrice != null &&
+                  widget.itemPrice!.trim().isNotEmpty &&
+                  widget.itemPrice != 'null')
+                Text(
+                  "₹${widget.itemPrice}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF2E7D32),
+                  ),
+                ),
             ],
           ),
-          if (widget.type == BookingType.doctor && !_isPhysioOrOthers)
+          if (_isPhysioOrOthers)
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6A1B9A).withAlpha(15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _visitMode == 'online'
+                        ? Icons.videocam_rounded
+                        : Icons.apartment_rounded,
+                    color: const Color(0xFF6A1B9A),
+                    size: 15,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _visitMode == 'online'
+                        ? "Online Video Consultation"
+                        : "Offline Chamber / Clinic Visit",
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF6A1B9A),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (widget.type == BookingType.doctor)
             Container(
               margin: const EdgeInsets.only(top: 12),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -486,41 +532,111 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Widget _buildVisitModeSelector() {
-    final modes = ['offline', 'online'];
-      
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Preferred Visit Mode:", 
-          style: TextStyle(color: Colors.blueGrey[400], fontSize: 11, fontWeight: FontWeight.bold)
+        const Text(
+          "VISITING MODE (CHOOSE OFFLINE OR ONLINE)",
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF90A4AE),
+            letterSpacing: 1.0,
+          ),
         ),
         const SizedBox(height: 10),
         Row(
-          children: modes.map((mode) {
-            final isSelected = _visitMode == mode;
-            return Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: ChoiceChip(
-                label: Text(mode.replaceAll('_', ' ').toUpperCase()),
-                selected: isSelected,
-                onSelected: (val) {
-                  if (val) setState(() => _visitMode = mode);
-                },
-                selectedColor: _getBrandColor().withAlpha(20),
-                labelStyle: TextStyle(
-                  color: isSelected ? _getBrandColor() : Colors.blueGrey,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 10
-                ),
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: isSelected ? _getBrandColor() : Colors.blueGrey[50]!)
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _visitMode = 'offline'),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: _visitMode == 'offline'
+                        ? const Color(0xFF1565C0).withAlpha(15)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _visitMode == 'offline'
+                          ? const Color(0xFF1565C0)
+                          : const Color(0xFFE2E8F0),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.apartment_rounded,
+                        color: _visitMode == 'offline'
+                            ? const Color(0xFF1565C0)
+                            : const Color(0xFF64748B),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Offline Visit",
+                        style: TextStyle(
+                          color: _visitMode == 'offline'
+                              ? const Color(0xFF1565C0)
+                              : const Color(0xFF1E293B),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            );
-          }).toList(),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _visitMode = 'online'),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: _visitMode == 'online'
+                        ? const Color(0xFF6A1B9A).withAlpha(15)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _visitMode == 'online'
+                          ? const Color(0xFF6A1B9A)
+                          : const Color(0xFFE2E8F0),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.videocam_rounded,
+                        color: _visitMode == 'online'
+                            ? const Color(0xFF6A1B9A)
+                            : const Color(0xFF64748B),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Online Video",
+                        style: TextStyle(
+                          color: _visitMode == 'online'
+                              ? const Color(0xFF6A1B9A)
+                              : const Color(0xFF1E293B),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

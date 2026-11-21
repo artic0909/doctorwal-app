@@ -19,6 +19,7 @@ import 'package:demoapp/services/location_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:demoapp/bottom_nav.dart';
 import 'package:demoapp/account_tab_screen.dart';
+import 'package:demoapp/profileeditscreen.dart';
 
 class CategoryHomeScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -49,6 +50,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
   @override
   void dispose() {
+    ProfileEditScreen.profileUpdateNotifier.removeListener(loadUserData);
     _pathologyAutoScrollTimer?.cancel();
     _pathologyPageController.dispose();
     _scrollController.dispose();
@@ -59,6 +61,9 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   @override
   void initState() {
     super.initState();
+    name = widget.userData['name'] ?? widget.userData['user_name'] ?? '';
+    email = widget.userData['email'] ?? widget.userData['user_email'] ?? '';
+    ProfileEditScreen.profileUpdateNotifier.addListener(loadUserData);
     _pathologyPageController = PageController(viewportFraction: 0.90);
     loadUserData();
     _syncUserId(); // Background sync
@@ -92,14 +97,17 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       name =
           prefs.getString('name') ??
+          prefs.getString('user_name') ??
           widget.userData['name'] ??
           widget.userData['user_name'] ??
           'User';
       email =
           prefs.getString('email') ??
+          prefs.getString('user_email') ??
           widget.userData['email'] ??
           widget.userData['user_email'] ??
           '';

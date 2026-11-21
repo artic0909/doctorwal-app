@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
+  static final ValueNotifier<int> profileUpdateNotifier = ValueNotifier<int>(0);
 
   const ProfileEditScreen({super.key, required this.userData});
 
@@ -273,8 +274,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         // Update local prefs with all fields
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('name', _nameController.text);
+        await prefs.setString('user_name', _nameController.text);
         await prefs.setString('mobile', _mobileController.text);
+        await prefs.setString('user_mobile', _mobileController.text);
         await prefs.setString('city', _cityController.text);
+        await prefs.setString('user_city', _cityController.text);
         await prefs.setString('address', _addressController.text);
         await prefs.setString('dob', _dobController.text);
         if (_selectedGender != null) await prefs.setString('gender', _selectedGender!);
@@ -287,6 +291,16 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         if (response['image'] != null) {
           await prefs.setString('image', response['image']);
         }
+
+        // Also update widget.userData in-place
+        widget.userData['name'] = _nameController.text;
+        widget.userData['user_name'] = _nameController.text;
+        widget.userData['mobile'] = _mobileController.text;
+        widget.userData['user_mobile'] = _mobileController.text;
+        widget.userData['city'] = _cityController.text;
+        widget.userData['user_city'] = _cityController.text;
+
+        ProfileEditScreen.profileUpdateNotifier.value++;
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

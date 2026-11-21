@@ -300,51 +300,52 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   }
 
   Widget _buildCategoryTabs() {
-    final allDocs = (_results['doctors'] as List?) ?? [];
+    final rawDocs = (_results['doctors'] as List?) ?? [];
+    final onlyDocs = rawDocs
+        .where((d) => (d['clinic_registration_type'] ?? '').toString().toLowerCase() != 'others')
+        .toList();
+    final onlyOthers = rawDocs
+        .where((d) => (d['clinic_registration_type'] ?? '').toString().toLowerCase() == 'others')
+        .toList();
     final allOpds = (_results['opds'] as List?) ?? [];
     final allPaths = (_results['pathologies'] as List?) ?? [];
-    final int totalCount = allDocs.length + allOpds.length + allPaths.length;
+    final int totalCount = onlyDocs.length + onlyOthers.length + allOpds.length + allPaths.length;
 
     final categories = [
       {
         'id': 'all',
         'label': 'All',
-        'icon': Icons.auto_awesome_rounded,
         'count': totalCount,
       },
       {
         'id': 'doctor',
         'label': 'Doctor',
-        'icon': Icons.medical_services_rounded,
-        'count': allDocs.length,
+        'count': onlyDocs.length,
+      },
+      {
+        'id': 'others',
+        'label': 'Physiotherapist & Allied Care',
+        'count': onlyOthers.length,
       },
       {
         'id': 'opd',
         'label': 'Chambers (OPD)',
-        'icon': Icons.business_rounded,
         'count': allOpds.length,
       },
       {
         'id': 'pathology',
         'label': 'Lab Tests',
-        'icon': Icons.biotech_rounded,
         'count': allPaths.length,
       },
     ];
 
-    return Container(
-      height: 54,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      color: Colors.transparent,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final cat = categories[index];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: categories.map((cat) {
           final bool isSelected = _currentCategory == cat['id'];
-          final IconData icon = cat['icon'] as IconData;
           final int count = cat['count'] as int;
 
           return GestureDetector(
@@ -355,7 +356,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
                 color: isSelected ? const Color(0xFF1565C0) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -376,12 +377,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    icon,
-                    size: 14,
-                    color: isSelected ? Colors.white : const Color(0xFF64748B),
-                  ),
-                  const SizedBox(width: 6),
                   Text(
                     cat['label'] as String,
                     style: TextStyle(
@@ -412,7 +407,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               ),
             ),
           );
-        },
+        }).toList(),
       ),
     );
   }
@@ -463,10 +458,16 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   }
 
   Widget _buildResultsList() {
-    final allDocs = (_results['doctors'] as List?) ?? [];
+    final rawDocs = (_results['doctors'] as List?) ?? [];
+    final onlyDocs = rawDocs
+        .where((d) => (d['clinic_registration_type'] ?? '').toString().toLowerCase() != 'others')
+        .toList();
+    final onlyOthers = rawDocs
+        .where((d) => (d['clinic_registration_type'] ?? '').toString().toLowerCase() == 'others')
+        .toList();
     final allOpds = (_results['opds'] as List?) ?? [];
     final allPaths = (_results['pathologies'] as List?) ?? [];
-    final int totalCount = allDocs.length + allOpds.length + allPaths.length;
+    final int totalCount = onlyDocs.length + onlyOthers.length + allOpds.length + allPaths.length;
 
     if (totalCount == 0) {
       return Center(
@@ -516,22 +517,25 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     }
 
     // Specific category empty states
-    if (_currentCategory == 'doctor' && allDocs.isEmpty) {
-      return _buildCategoryEmptyState("doctors", "Chambers (OPD) or Lab Tests");
+    if (_currentCategory == 'doctor' && onlyDocs.isEmpty) {
+      return _buildCategoryEmptyState("doctors", "Physiotherapist, Chambers (OPD) or Lab Tests");
+    }
+    if (_currentCategory == 'others' && onlyOthers.isEmpty) {
+      return _buildCategoryEmptyState("physiotherapists & allied care", "Doctors, Chambers (OPD) or Lab Tests");
     }
     if (_currentCategory == 'opd' && allOpds.isEmpty) {
-      return _buildCategoryEmptyState("chambers or OPDs", "Doctors or Lab Tests");
+      return _buildCategoryEmptyState("chambers or OPDs", "Doctors, Physiotherapist or Lab Tests");
     }
     if (_currentCategory == 'pathology' && allPaths.isEmpty) {
-      return _buildCategoryEmptyState("lab tests", "Doctors or Chambers (OPD)");
+      return _buildCategoryEmptyState("lab tests", "Doctors, Physiotherapist or Chambers (OPD)");
     }
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 30),
       children: [
-        if (allDocs.isNotEmpty && (_currentCategory == 'all' || _currentCategory == 'doctor')) ...[
-          _sectionHeader(Icons.medical_services_rounded, "Doctors (${allDocs.length})", const Color(0xFF1565C0)),
-          ...allDocs.map((d) => _uniformResultCard(
+        if (onlyDocs.isNotEmpty && (_currentCategory == 'all' || _currentCategory == 'doctor')) ...[
+          _sectionHeader(Icons.medical_services_rounded, "Doctors (${onlyDocs.length})", const Color(0xFF1565C0)),
+          ...onlyDocs.map((d) => _uniformResultCard(
             type: 'DOCTOR',
             title: d['partner_doctor_name'] ?? "Unknown Doctor",
             subtitle: d['partner_doctor_specialist'] ?? "Specialist",
@@ -539,6 +543,32 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             icon: Icons.person_rounded,
             actionLabel: "Book Appointment",
             infoLines: [
+              if (d['partner_doctor_fees'] != null && d['partner_doctor_fees'].toString().isNotEmpty && d['partner_doctor_fees'].toString() != 'null')
+                {"icon": Icons.currency_rupee_rounded, "text": "Consultation Fee: ₹${d['partner_doctor_fees']}"},
+              if (d['partner_doctor_designation'] != null && d['partner_doctor_designation'].toString().isNotEmpty)
+                {"icon": Icons.work_outline_rounded, "text": d['partner_doctor_designation'].toString()},
+              if (d['partner_doctor_city'] != null || d['partner_doctor_state'] != null)
+                {
+                  "icon": Icons.location_on_outlined,
+                  "text": "${d['partner_doctor_city'] ?? ''}, ${d['partner_doctor_state'] ?? ''}".replaceAll(RegExp(r'^,\s*|,\s*$'), '')
+                },
+            ],
+            rawData: d,
+          )),
+          const SizedBox(height: 14),
+        ],
+        if (onlyOthers.isNotEmpty && (_currentCategory == 'all' || _currentCategory == 'others')) ...[
+          _sectionHeader(Icons.accessibility_new_rounded, "Physiotherapist & Allied Care (${onlyOthers.length})", const Color(0xFF6A1B9A)),
+          ...onlyOthers.map((d) => _uniformResultCard(
+            type: 'OTHERS',
+            title: d['partner_doctor_name'] ?? "Specialist",
+            subtitle: d['partner_doctor_specialist'] ?? "Physiotherapist & Allied Care",
+            color: const Color(0xFF6A1B9A),
+            icon: Icons.accessibility_new_rounded,
+            actionLabel: "Book Appointment",
+            infoLines: [
+              if (d['partner_doctor_fees'] != null && d['partner_doctor_fees'].toString().isNotEmpty && d['partner_doctor_fees'].toString() != 'null')
+                {"icon": Icons.currency_rupee_rounded, "text": "Consultation Fee: ₹${d['partner_doctor_fees']}"},
               if (d['partner_doctor_designation'] != null && d['partner_doctor_designation'].toString().isNotEmpty)
                 {"icon": Icons.work_outline_rounded, "text": d['partner_doctor_designation'].toString()},
               if (d['partner_doctor_city'] != null || d['partner_doctor_state'] != null)
@@ -691,7 +721,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: (type == 'DOCTOR' && rawData['banner'] != null)
+                    child: ((type == 'DOCTOR' || type == 'OTHERS') && rawData['banner'] != null)
                         ? Image.network(
                             _getImageUrl(rawData['banner'] is Map
                                 ? rawData['banner']['doctorbanner']
@@ -855,7 +885,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           ),
         ),
       );
-    } else if (type == 'DOCTOR') {
+    } else if (type == 'DOCTOR' || type == 'OTHERS') {
       final doctorModel = AllAvailableDoctorsModel.fromSearchResult(rawData);
       Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute(

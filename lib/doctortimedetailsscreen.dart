@@ -148,8 +148,14 @@ class DoctorTimeDetailsScreen extends StatelessWidget {
                 const SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    doctor.partnerDoctorFees,
-                    style: const TextStyle(fontSize: 15, color: Colors.black54),
+                    doctor.partnerDoctorFees.trim().isEmpty || doctor.partnerDoctorFees == 'null'
+                        ? "N/A"
+                        : "₹${doctor.partnerDoctorFees}",
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2E7D32),
+                    ),
                   ),
                 ),
               ],
