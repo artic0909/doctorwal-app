@@ -858,246 +858,290 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
             ),
           ),
 
-          // 3. Categories Grid: 4 x 2 layout
+          // 3. Categories Grid: Responsive Wrapping (4 items per line on mobile, wraps to new line)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              children: [
-                // Row 1: Doctor Consultation, Pathology Tests, Chambers (OPD), Appointments
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 1. Doctor Consultation
-                    _categoryCircleItem(
-                      title: "Doctor\nConsultation",
-                      color: const Color(0xFF1565C0),
-                      customIcon: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(Icons.person_rounded, color: Color(0xFF1565C0), size: 24),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(1),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.medical_services_rounded, color: Color(0xFF0D47A1), size: 11),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final double totalWidth = constraints.maxWidth;
+                int count = 4;
+                if (totalWidth >= 680) {
+                  count = 6;
+                } else if (totalWidth >= 520) {
+                  count = 5;
+                } else if (totalWidth < 300) {
+                  count = 3;
+                } else {
+                  count = 4; // 4 items per row on mobile (exact same layout & styling as original)
+                }
+                final double itemWidth = totalWidth / count;
+
+                final items = [
+                  // 1. Doctor Consultation
+                  _categoryCircleItem(
+                    title: "Doctor\nConsultation",
+                    color: const Color(0xFF1565C0),
+                    customIcon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.person_rounded, color: Color(0xFF1565C0), size: 24),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(Icons.medical_services_rounded, color: Color(0xFF0D47A1), size: 11),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AllDoctorsScreen(userData: widget.userData, filterRegistrationType: 'doctor'),
                       ),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AllDoctorsScreen(userData: widget.userData),
+                    ),
+                  ),
+                  // 2. Physiotherapist & Allied Care
+                  _categoryCircleItem(
+                    title: "Physiotherapy\n& Allied Care",
+                    color: const Color(0xFF00897B),
+                    customIcon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.accessibility_new_rounded, color: Color(0xFF00897B), size: 24),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.healing_rounded, color: Color(0xFF004D40), size: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AllDoctorsScreen(
+                          userData: widget.userData,
+                          filterRegistrationType: 'others',
+                          pageTitle: 'Physiotherapist & Allied Care',
                         ),
                       ),
                     ),
-                    // 2. Pathology Tests
-                    _categoryCircleItem(
-                      title: "Pathology\nTests",
-                      color: const Color(0xFF00897B),
-                      customIcon: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(Icons.biotech_rounded, color: Color(0xFF00897B), size: 24),
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(1),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.science_rounded, color: Color(0xFF004D40), size: 10),
+                  ),
+                  // 3. Pathology Tests
+                  _categoryCircleItem(
+                    title: "Pathology\nTests",
+                    color: const Color(0xFF2E7D32),
+                    customIcon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.biotech_rounded, color: Color(0xFF2E7D32), size: 24),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(Icons.science_rounded, color: Color(0xFF1B5E20), size: 10),
                           ),
-                        ],
-                      ),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AllAvailablePathologyScreen(userData: widget.userData),
                         ),
+                      ],
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AllAvailablePathologyScreen(userData: widget.userData),
                       ),
                     ),
-                    // 3. Chambers (OPD)
-                    _categoryCircleItem(
-                      title: "Chambers\n(OPD)",
-                      color: const Color(0xFFE53935),
-                      customIcon: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(Icons.domain_rounded, color: Color(0xFFE53935), size: 23),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(1),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.local_hospital_rounded, color: Color(0xFFC62828), size: 11),
+                  ),
+                  // 4. Chambers (OPD)
+                  _categoryCircleItem(
+                    title: "Chambers\n(OPD)",
+                    color: const Color(0xFFE53935),
+                    customIcon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.domain_rounded, color: Color(0xFFE53935), size: 23),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(Icons.local_hospital_rounded, color: Color(0xFFC62828), size: 11),
                           ),
-                        ],
-                      ),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AllAvailableOPDScreen(userData: widget.userData),
                         ),
+                      ],
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AllAvailableOPDScreen(userData: widget.userData),
                       ),
                     ),
-                    // 4. Appointments
-                    _categoryCircleItem(
-                      title: "Appointments\n ",
-                      color: const Color(0xFF6A1B9A),
-                      customIcon: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(Icons.calendar_month_rounded, color: Color(0xFF6A1B9A), size: 23),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(1),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.check_circle_rounded, color: Color(0xFF2E7D32), size: 11),
+                  ),
+                  // 5. Appointments
+                  _categoryCircleItem(
+                    title: "Appointments\n ",
+                    color: const Color(0xFF6A1B9A),
+                    customIcon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.calendar_month_rounded, color: Color(0xFF6A1B9A), size: 23),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(Icons.check_circle_rounded, color: Color(0xFF2E7D32), size: 11),
                           ),
-                        ],
-                      ),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AllAppointmentsScreen(userData: widget.userData),
                         ),
+                      ],
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AllAppointmentsScreen(userData: widget.userData),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                // Row 2: Prescriptions, Reports, Pay Your Bills, Call Ambulance
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 5. Prescriptions
-                    _categoryCircleItem(
-                      title: "Prescriptions\n ",
-                      color: const Color(0xFF0288D1),
-                      customIcon: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(Icons.receipt_long_rounded, color: Color(0xFF0288D1), size: 23),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(1),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.medication_rounded, color: Color(0xFFE53935), size: 11),
+                  ),
+                  // 6. Prescriptions
+                  _categoryCircleItem(
+                    title: "Prescriptions\n ",
+                    color: const Color(0xFF0288D1),
+                    customIcon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.receipt_long_rounded, color: Color(0xFF0288D1), size: 23),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(Icons.medication_rounded, color: Color(0xFFE53935), size: 11),
                           ),
-                        ],
-                      ),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MedicalHistoryScreen(initialTabIndex: 1),
                         ),
+                      ],
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MedicalHistoryScreen(initialTabIndex: 1),
                       ),
                     ),
-                    // 6. Reports
-                    _categoryCircleItem(
-                      title: "Reports\n ",
-                      color: const Color(0xFFE65100),
-                      customIcon: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(Icons.assignment_rounded, color: Color(0xFFE65100), size: 23),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(1),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.checklist_rounded, color: Color(0xFF2E7D32), size: 11),
+                  ),
+                  // 7. Reports
+                  _categoryCircleItem(
+                    title: "Reports\n ",
+                    color: const Color(0xFFE65100),
+                    customIcon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.assignment_rounded, color: Color(0xFFE65100), size: 23),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(Icons.checklist_rounded, color: Color(0xFF2E7D32), size: 11),
                           ),
-                        ],
-                      ),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MedicalHistoryScreen(initialTabIndex: 0),
                         ),
+                      ],
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MedicalHistoryScreen(initialTabIndex: 0),
                       ),
                     ),
-                    // 7. Pay Your Bills
-                    _categoryCircleItem(
-                      title: "Pay Your\nBills",
-                      color: const Color(0xFFF57F17),
-                      customIcon: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFF57F17), size: 23),
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(1),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.currency_rupee_rounded, color: Color(0xFF2E7D32), size: 10),
+                  ),
+                  // 8. Pay Your Bills
+                  _categoryCircleItem(
+                    title: "Pay Your\nBills",
+                    color: const Color(0xFFF57F17),
+                    customIcon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFF57F17), size: 23),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(Icons.currency_rupee_rounded, color: Color(0xFF2E7D32), size: 10),
                           ),
-                        ],
-                      ),
-                      onTap: _showMyBills,
+                        ),
+                      ],
                     ),
-                    // 8. Call Ambulance
-                    _categoryCircleItem(
-                      title: "Call\nAmbulance",
-                      color: const Color(0xFFD32F2F),
-                      customIcon: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(Icons.airport_shuttle_rounded, color: Color(0xFFD32F2F), size: 24),
-                          Positioned(
-                            top: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(1),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.emergency_rounded, color: Color(0xFFE53935), size: 10),
+                    onTap: _showMyBills,
+                  ),
+                  // 9. Call Ambulance
+                  _categoryCircleItem(
+                    title: "Call\nAmbulance",
+                    color: const Color(0xFFD32F2F),
+                    customIcon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.airport_shuttle_rounded, color: Color(0xFFD32F2F), size: 24),
+                        Positioned(
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(Icons.emergency_rounded, color: Color(0xFFE53935), size: 10),
                           ),
-                        ],
-                      ),
-                      onTap: _callAmbulance,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
+                    onTap: _callAmbulance,
+                  ),
+                ];
+
+                return Wrap(
+                  spacing: 0,
+                  runSpacing: 18,
+                  children: items.map((item) => SizedBox(
+                    width: itemWidth,
+                    child: item,
+                  )).toList(),
+                );
+              },
             ),
           ),
 
@@ -1212,7 +1256,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
           ),
 
           // Generous bottom spacing so bottom nav bar floating button doesn't overlap
-          const SizedBox(height: 36),
+          const SizedBox(height: 100),
         ],
       ),
     );
@@ -1225,62 +1269,61 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(8),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                  BoxShadow(
-                    color: color.withAlpha(25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-                border: Border.all(color: Colors.blueGrey.withAlpha(20)),
-              ),
-              child: Center(
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: color.withAlpha(18),
-                  ),
-                  child: Center(
-                    child: customIcon ?? Icon(icon, color: color, size: 23),
-                  ),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(8),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: color.withAlpha(25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+              border: Border.all(color: Colors.blueGrey.withAlpha(20)),
+            ),
+            child: Center(
+              child: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withAlpha(18),
+                ),
+                child: Center(
+                  child: customIcon ?? Icon(icon, color: color, size: 23),
                 ),
               ),
             ),
-            const SizedBox(height: 7),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1E293B),
-                height: 1.2,
-              ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1E293B),
+              height: 1.2,
+              letterSpacing: -0.2,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

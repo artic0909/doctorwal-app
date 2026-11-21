@@ -74,17 +74,12 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
             child: _buildImageStyleHeader(context),
           ),
 
-          // 2. Robust Sticky Search Bar
-          SliverAppBar(
-            pinned: true,
-            floating: false,
-            primary: true,
-            backgroundColor: const Color(0xFFF8FAFF),
-            elevation: 0,
-            toolbarHeight: 52,
-            automaticallyImplyLeading: false,
-            titleSpacing: 0,
-            title: _buildSearchBar(),
+          // 2. Search Bar
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 14, bottom: 4),
+              child: _buildSearchBar(),
+            ),
           ),
 
           // 3. Test Listing Section
