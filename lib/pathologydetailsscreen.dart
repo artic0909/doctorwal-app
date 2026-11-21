@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:demoapp/Models/all_available_path_model.dart';
 import 'package:demoapp/pathologyfeedbackscreen.dart';
 import 'package:demoapp/pathologytestsdetailsscreen.dart';
+import 'package:demoapp/bookingscreen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PathologyDetailsScreen extends StatefulWidget {
@@ -367,49 +369,252 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
   Widget _buildTestCard(dynamic test) {
     final t = test as Map<String, dynamic>;
     final price = t['test_price']?.toString() ?? '0';
+
+    // Parse test schedule / days
+    String scheduleSummary = "Lab & Home Collection";
+    final rawSchedule = t['test_day_time'];
+    if (rawSchedule != null) {
+      try {
+        dynamic decoded = rawSchedule;
+        if (rawSchedule is String && rawSchedule.isNotEmpty) {
+          decoded = jsonDecode(rawSchedule);
+        }
+        if (decoded is List && decoded.isNotEmpty) {
+          final days = decoded
+              .map((e) => (e['day'] ?? '').toString())
+              .where((d) => d.isNotEmpty)
+              .map((d) => d.length > 3 ? d.substring(0, 3) : d)
+              .toSet()
+              .toList();
+          if (days.isNotEmpty) {
+            scheduleSummary = days.join(', ');
+          }
+        }
+      } catch (_) {}
+    }
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF2E7D32).withAlpha(10)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1E293B).withAlpha(8),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      child: InkWell(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => PathologyTestsDetailsScreen(test: t, userData: widget.userData, clinicName: widget.pathology.clinicName))),
-        child: Row(
-          children: [
-            Container(
-              width: 50, height: 50,
-              decoration: BoxDecoration(color: const Color(0xFF2E7D32).withAlpha(10), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.science_rounded, color: Color(0xFF2E7D32), size: 24),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _capitalizeWords(t['test_name']?.toString() ?? 'N/A'),
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF263238)),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Type: ${t['test_type']?.toString() ?? 'General'}",
-                    style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                ],
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (c) => PathologyTestsDetailsScreen(
+                test: t,
+                userData: widget.userData,
+                clinicName: widget.pathology.clinicName,
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("₹$price", style: const TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.w900, fontSize: 15)),
-                const SizedBox(height: 4),
-                const Text("BOOK NOW", style: TextStyle(color: Color(0xFF1565C0), fontWeight: FontWeight.w900, fontSize: 8, letterSpacing: 0.5)),
+                // 1. Icon + Test Info
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                      child: const Icon(Icons.biotech_rounded, color: Color(0xFF2E7D32), size: 26),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _capitalizeWords(t['test_name']?.toString() ?? 'N/A'),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2E7D32).withAlpha(15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              t['test_type']?.toString() ?? 'Diagnostic Test',
+                              style: const TextStyle(
+                                color: Color(0xFF2E7D32),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // 2. Schedule & Certified Lab Strip
+                Container(
+                  margin: const EdgeInsets.only(top: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_month_outlined, size: 14, color: Color(0xFF0284C7)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          scheduleSummary,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF334155),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle_rounded, size: 11, color: Color(0xFF16A34A)),
+                            SizedBox(width: 3),
+                            Text("Certified Lab", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF15803D))),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 3. Divider
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                ),
+
+                // 4. Test Price + Action Buttons
+                Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "TEST PRICE",
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF94A3B8),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          "₹$price",
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    OutlinedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (c) => PathologyTestsDetailsScreen(
+                            test: t,
+                            userData: widget.userData,
+                            clinicName: widget.pathology.clinicName,
+                          ),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text(
+                        "Details",
+                        style: TextStyle(color: Color(0xFF475569), fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BookingScreen(
+                              type: BookingType.pathology,
+                              partnerId: t['currently_loggedin_partner_id']?.toString() ?? widget.pathology.currentlyLoggedInPartnerId.toString(),
+                              clinicName: widget.pathology.clinicName,
+                              userData: widget.userData,
+                              itemId: t['id']?.toString(),
+                              itemName: t['test_name']?.toString() ?? "Diagnostic Test",
+                              itemPrice: price,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.calendar_today_rounded, size: 12),
+                      label: const Text("Book Test", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E7D32),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
