@@ -403,7 +403,7 @@ class _SearchScreenState extends State<SearchScreen> {
             // Scrollable Suggestions & Popular Tags
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 30),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
                 children: [
                   // 1. Popular Doctor Specialties Section
                   _buildSectionHeader("POPULAR SPECIALTIES", Icons.local_fire_department_rounded, const Color(0xFFEA580C)),

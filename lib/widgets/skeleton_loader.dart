@@ -475,6 +475,144 @@ class PathologyListSkeleton extends StatelessWidget {
   }
 }
 
+/// Single Doctor Card Skeleton for infinite scroll loading indicator
+class DoctorCardSkeleton extends StatelessWidget {
+  const DoctorCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoading(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF6A1B9A).withAlpha(20)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6A1B9A).withAlpha(8),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: const Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SkeletonBox(width: 80, height: 80, borderRadius: 15),
+            SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonBox(width: 160, height: 16, borderRadius: 4),
+                  SizedBox(height: 8),
+                  SkeletonBox(width: 100, height: 12, borderRadius: 4),
+                  SizedBox(height: 10),
+                  SkeletonBox(width: double.infinity, height: 11, borderRadius: 4),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Single OPD Clinic Card Skeleton for infinite scroll loading indicator
+class OpdCardSkeleton extends StatelessWidget {
+  const OpdCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoading(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF1565C0).withAlpha(20)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1565C0).withAlpha(8),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: const Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SkeletonBox(width: 80, height: 80, borderRadius: 15),
+            SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonBox(width: 170, height: 16, borderRadius: 4),
+                  SizedBox(height: 8),
+                  SkeletonBox(width: 120, height: 12, borderRadius: 4),
+                  SizedBox(height: 10),
+                  SkeletonBox(width: double.infinity, height: 11, borderRadius: 4),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Single Pathology Lab Card Skeleton for infinite scroll loading indicator
+class PathologyCardSkeleton extends StatelessWidget {
+  const PathologyCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoading(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF2E7D32).withAlpha(20)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2E7D32).withAlpha(8),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: const Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SkeletonBox(width: 80, height: 80, borderRadius: 15),
+            SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonBox(width: 170, height: 16, borderRadius: 4),
+                  SizedBox(height: 8),
+                  SkeletonBox(width: 120, height: 12, borderRadius: 4),
+                  SizedBox(height: 10),
+                  SkeletonBox(width: double.infinity, height: 11, borderRadius: 4),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Skeleton for Search Results
 class SearchResultsSkeleton extends StatelessWidget {
   final int itemCount;

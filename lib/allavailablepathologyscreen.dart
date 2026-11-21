@@ -22,6 +22,7 @@ class _AllAvailablePathologyScreenState
   static List<AllAvailablePathModel> _cachedClinics = [];
   List<AllAvailablePathModel> _clinics = [];
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
   bool _isLoading = true;
   bool _isLoadMoreLoading = false;
@@ -33,11 +34,21 @@ class _AllAvailablePathologyScreenState
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     if (_cachedClinics.isNotEmpty) {
       _clinics = List.from(_cachedClinics);
       _isLoading = false;
     }
     _initData();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 250) {
+      if (_currentPage < _lastPage && !_isLoadMoreLoading) {
+        _loadMore();
+      }
+    }
   }
 
   Future<void> _initData() async {
@@ -50,6 +61,8 @@ class _AllAvailablePathologyScreenState
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -159,18 +172,19 @@ class _AllAvailablePathologyScreenState
                     child: displayClinics.isEmpty
                       ? _buildEmptyState()
                       : ListView.builder(
+                          controller: _scrollController,
                           padding: EdgeInsets.fromLTRB(
                             20,
                             10,
                             20,
-                            MediaQuery.of(context).viewPadding.bottom + 25,
+                            MediaQuery.of(context).viewPadding.bottom + 90,
                           ),
                           itemCount: displayClinics.length + (_currentPage < _lastPage ? 1 : 0),
                           itemBuilder: (context, index) {
                             if (index < displayClinics.length) {
                               return _buildPathologyCard(displayClinics[index]);
                             } else {
-                              return _buildLoadMoreBtn();
+                              return const PathologyCardSkeleton();
                             }
                           },
                         ),
@@ -409,28 +423,6 @@ class _AllAvailablePathologyScreenState
             const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.blueGrey),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildLoadMoreBtn() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Center(
-        child: _isLoadMoreLoading
-            ? const CircularProgressIndicator(color: Color(0xFF2E7D32))
-            : TextButton(
-                onPressed: _loadMore,
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                  backgroundColor: const Color(0xFF2E7D32).withAlpha(10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text(
-                  "VIEW MORE LABS",
-                  style: TextStyle(color: Color(0xFF2E7D32), fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-                ),
-              ),
       ),
     );
   }

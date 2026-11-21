@@ -781,7 +781,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       body: ListView(
         controller: _scrollController,
         physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.only(bottom: 100),
         children: [
           // 1. Search Bar (Matching reference screenshot)
           Padding(

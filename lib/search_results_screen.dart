@@ -549,7 +549,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 30),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 100),
       children: [
         if (onlyDocs.isNotEmpty && (_currentCategory == 'all' || _currentCategory == 'doctor')) ...[
           _sectionHeader(Icons.medical_services_rounded, "Doctors (${onlyDocs.length})", const Color(0xFF1565C0)),

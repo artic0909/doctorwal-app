@@ -505,12 +505,6 @@ class CurvedNotchPainter extends CustomPainter {
     final h = size.height;
     final cx = centerX;
 
-    // Fill the background of the notch area with the exact screen background
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, w, h),
-      Paint()..color = canvasBackgroundColor,
-    );
-
     final path = Path();
     path.moveTo(0, topRadius);
     path.arcToPoint(

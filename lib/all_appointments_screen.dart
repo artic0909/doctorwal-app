@@ -294,7 +294,7 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
           16,
           16,
           16,
-          MediaQuery.of(context).viewPadding.bottom + 20,
+          MediaQuery.of(context).viewPadding.bottom + 80,
         ),
         itemCount: _appointments.length,
         itemBuilder: (context, index) {
