@@ -66,9 +66,10 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
           SliverAppBar(
             pinned: true,
             floating: false,
+            primary: true,
             backgroundColor: const Color(0xFFF8FAFF),
             elevation: 0,
-            toolbarHeight: 80,
+            toolbarHeight: 52,
             automaticallyImplyLeading: false,
             titleSpacing: 0,
             title: _buildSearchBar(),
@@ -260,30 +261,27 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
 
   Widget _buildSearchBar() {
     return Container(
-      color: const Color(0xFFF8FAFF),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Container(
-        height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(8), blurRadius: 8, offset: const Offset(0, 2))],
-        ),
-        child: TextField(
-          controller: searchController,
-          onChanged: _filterDoctors,
-          decoration: InputDecoration(
-            hintText: "Filter doctors by name or specialty...",
-            hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 13),
-            border: InputBorder.none,
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1565C0), size: 18),
-            suffixIcon: searchController.text.isNotEmpty 
-                ? IconButton(icon: const Icon(Icons.close_rounded, size: 16), onPressed: _resetSearch) 
-                : null,
-          ),
+      height: 42,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(8), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: TextField(
+        controller: searchController,
+        onChanged: _filterDoctors,
+        decoration: InputDecoration(
+          hintText: "Filter doctors by name or specialty...",
+          hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 13),
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 11),
+          prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1565C0), size: 18),
+          suffixIcon: searchController.text.isNotEmpty 
+              ? IconButton(icon: const Icon(Icons.close_rounded, size: 16), onPressed: _resetSearch) 
+              : null,
         ),
       ),
     );
