@@ -319,12 +319,12 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       },
       {
         'id': 'doctor',
-        'label': 'Doctor',
+        'label': 'Doctors',
         'count': onlyDocs.length,
       },
       {
         'id': 'others',
-        'label': 'Physiotherapist & Allied Care',
+        'label': 'Physio & Allied',
         'count': onlyOthers.length,
       },
       {
@@ -339,12 +339,17 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       },
     ];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: categories.map((cat) {
+    return Container(
+      height: 52,
+      margin: const EdgeInsets.only(top: 8, bottom: 4),
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: categories.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final cat = categories[index];
           final bool isSelected = _currentCategory == cat['id'];
           final int count = cat['count'] as int;
 
@@ -356,10 +361,12 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isSelected ? const Color(0xFF1565C0) : Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(22),
                 border: Border.all(
                   color: isSelected ? const Color(0xFF1565C0) : const Color(0xFFE2E8F0),
                   width: 1.2,
@@ -367,15 +374,22 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: const Color(0xFF1565C0).withAlpha(35),
+                          color: const Color(0xFF1565C0).withAlpha(45),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
                       ]
-                    : null,
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(6),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     cat['label'] as String,
@@ -383,23 +397,27 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                       color: isSelected ? Colors.white : const Color(0xFF1E293B),
                       fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                       fontSize: 12.5,
+                      letterSpacing: -0.1,
                     ),
                   ),
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.white.withAlpha(45)
                           : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(10),
+                      border: isSelected
+                          ? null
+                          : Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
                     ),
                     child: Text(
                       "$count",
                       style: TextStyle(
                         color: isSelected ? Colors.white : const Color(0xFF64748B),
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
@@ -407,7 +425,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               ),
             ),
           );
-        }).toList(),
+        },
       ),
     );
   }

@@ -45,7 +45,7 @@ class _SearchScreenState extends State<SearchScreen> {
     },
     {
       'id': 'others',
-      'name': 'Physiotherapist & Allied Care',
+      'name': 'Physio & Allied Care',
     },
     {
       'id': 'opd',
