@@ -909,11 +909,11 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                   // 2. Physiotherapist & Allied Care
                   _categoryCircleItem(
                     title: "Physiotherapy\n& Allied Care",
-                    color: const Color(0xFF00897B),
+                    color: const Color(0xFFD97706),
                     customIcon: Stack(
                       alignment: Alignment.center,
                       children: [
-                        const Icon(Icons.accessibility_new_rounded, color: Color(0xFF00897B), size: 24),
+                        const Icon(Icons.accessibility_new_rounded, color: Color(0xFFD97706), size: 24),
                         Positioned(
                           bottom: 0,
                           right: 0,
@@ -923,7 +923,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                               color: Colors.white,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.healing_rounded, color: Color(0xFF004D40), size: 11),
+                            child: const Icon(Icons.healing_rounded, color: Color(0xFFB45309), size: 11),
                           ),
                         ),
                       ],

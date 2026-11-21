@@ -44,7 +44,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
     _searchQuery = widget.initialSearchQuery ?? '';
     _searchController = TextEditingController(text: _searchQuery);
     _scrollController.addListener(_onScroll);
-    if (_searchQuery.isEmpty && _cachedDoctors.isNotEmpty) {
+    if (_searchQuery.isEmpty && _cachedDoctors.isNotEmpty && widget.filterRegistrationType == null) {
       _doctors = List.from(_cachedDoctors);
       _isLoading = false;
     }
@@ -61,8 +61,13 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   }
 
   Future<void> _initData() async {
-    final val = await LocationService.getIsNearMe();
-    if (mounted) setState(() => _isNearMe = val);
+    final bool isOthers = widget.filterRegistrationType == 'others';
+    if (isOthers) {
+      if (mounted) setState(() => _isNearMe = false);
+    } else {
+      final val = await LocationService.getIsNearMe();
+      if (mounted) setState(() => _isNearMe = val);
+    }
     _fetchInitialDoctors();
   }
 
@@ -88,7 +93,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   }
 
   Future<void> _fetchInitialDoctors() async {
-    if (_searchQuery.isEmpty && _cachedDoctors.isNotEmpty) {
+    if (_searchQuery.isEmpty && _cachedDoctors.isNotEmpty && widget.filterRegistrationType == null) {
       if (mounted) {
         setState(() {
           _doctors = List.from(_cachedDoctors);
@@ -112,7 +117,14 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
 
   Future<void> _fetchDoctors(int page) async {
     try {
-      String queryParam = _searchQuery.isNotEmpty ? '&query=${Uri.encodeComponent(_searchQuery)}' : '';
+      final bool isOthers = widget.filterRegistrationType == 'others';
+      String queryParam = '';
+      if (_searchQuery.isNotEmpty) {
+        queryParam += '&query=${Uri.encodeComponent(_searchQuery)}';
+      } else if (isOthers) {
+        queryParam += '&query=other';
+      }
+
       if (_isNearMe) {
         final city = await LocationService.getUserCity(context: context);
         if (city != null && city.isNotEmpty) {
@@ -129,7 +141,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
         final bool isSearch = jsonData['is_search'] ?? false;
         
         final newDoctors = data.map((json) => AllAvailableDoctorsModel.fromJson(json)).toList();
-        if (page == 1 && _searchQuery.isEmpty) {
+        if (page == 1 && _searchQuery.isEmpty && widget.filterRegistrationType == null) {
           _cachedDoctors = List.from(newDoctors);
         }
 
@@ -167,10 +179,25 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isOthers = widget.filterRegistrationType == 'others';
+    final Color themeColor = isOthers ? const Color(0xFFD97706) : const Color(0xFF6A1B9A);
+
     final displayDoctors = isOthers
-        ? _doctors.where((d) => d.clinicRegistrationType.toLowerCase() == 'others' || (d.partnerDoctorSpecialist ?? '').toLowerCase().contains('physio') || (d.partnerDoctorSpecialist ?? '').toLowerCase().contains('allied')).toList()
+        ? _doctors.where((d) {
+            final reg = d.clinicRegistrationType.toLowerCase().trim();
+            final spec = (d.partnerDoctorSpecialist ?? '').toLowerCase();
+            final desig = (d.partnerDoctorDesignation ?? '').toLowerCase();
+            final name = (d.partnerDoctorName ?? '').toLowerCase();
+            return reg == 'others' ||
+                   reg.contains('other') ||
+                   spec.contains('physio') ||
+                   spec.contains('allied') ||
+                   spec.contains('therapy') ||
+                   desig.contains('physio') ||
+                   name.contains('physio') ||
+                   name.contains('allied');
+          }).toList()
         : (widget.filterRegistrationType == 'doctor'
-            ? _doctors.where((d) => d.clinicRegistrationType.toLowerCase() != 'others').toList()
+            ? _doctors.where((d) => !d.clinicRegistrationType.toLowerCase().contains('other')).toList()
             : _doctors);
 
     return Scaffold(
@@ -183,7 +210,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                 ? const DoctorsListSkeleton()
                 : RefreshIndicator(
                     onRefresh: _fetchInitialDoctors,
-                    color: isOthers ? const Color(0xFF00897B) : const Color(0xFF6A1B9A),
+                    color: themeColor,
                     child: displayDoctors.isEmpty 
                       ? _buildEmptyState()
                       : ListView.builder(
@@ -220,7 +247,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
           const SizedBox(height: 16),
           Text(
             _searchQuery.isEmpty 
-                ? (isOthers ? "No physiotherapists available currently" : "No doctors available")
+                ? (isOthers ? "No physiotherapists or allied care partners found" : "No doctors available")
                 : "No results for \"$_searchQuery\"",
             style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold),
           ),
@@ -236,7 +263,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
         ? "Connect with top physiotherapists & care experts" 
         : "Connect with top experts in 50+ specialties";
     final gradientColors = isOthers
-        ? const [Color(0xFF00897B), Color(0xFF004D40)]
+        ? const [Color(0xFFF59E0B), Color(0xFFD97706)]
         : const [Color(0xFF6A1B9A), Color(0xFF4A148C)];
 
     final double statusBarHeight = MediaQuery.of(context).padding.top;
@@ -317,7 +344,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(width: 12),
-                      const Icon(Icons.search_rounded, color: Color(0xFF6A1B9A), size: 18),
+                      Icon(Icons.search_rounded, color: isOthers ? const Color(0xFFD97706) : const Color(0xFF6A1B9A), size: 18),
                       const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
@@ -398,14 +425,17 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   }
 
   Widget _buildDoctorCard(AllAvailableDoctorsModel doctor) {
+    final bool isOthers = widget.filterRegistrationType == 'others';
+    final Color themeColor = isOthers ? const Color(0xFFD97706) : const Color(0xFF6A1B9A);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: const Color(0xFF6A1B9A).withAlpha(8), blurRadius: 15, offset: const Offset(0, 8))],
-        border: Border.all(color: const Color(0xFF6A1B9A).withAlpha(15), width: 1),
+        boxShadow: [BoxShadow(color: themeColor.withAlpha(8), blurRadius: 15, offset: const Offset(0, 8))],
+        border: Border.all(color: themeColor.withAlpha(15), width: 1),
       ),
       child: InkWell(
         onTap: () => Navigator.of(context, rootNavigator: true).push(
@@ -419,19 +449,19 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: const Color(0xFF6A1B9A).withAlpha(30), width: 2),
+                border: Border.all(color: themeColor.withAlpha(30), width: 2),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(13),
                 child: Container(
-                  width: 80, height: 80, color: const Color(0xFF6A1B9A).withAlpha(10),
+                  width: 80, height: 80, color: themeColor.withAlpha(10),
                   child: doctor.banner != null && doctor.banner!.isNotEmpty
                       ? Image.network(
                           _getImageUrl(doctor.banner),
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person_rounded, color: Color(0xFF6A1B9A), size: 40),
+                          errorBuilder: (context, error, stackTrace) => Icon(Icons.person_rounded, color: themeColor, size: 40),
                         )
-                      : const Icon(Icons.person_rounded, color: Color(0xFF6A1B9A), size: 40),
+                      : Icon(Icons.person_rounded, color: themeColor, size: 40),
                 ),
               ),
             ),
@@ -447,7 +477,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                   const SizedBox(height: 4),
                   Text(
                     _capitalizeWords(doctor.partnerDoctorSpecialist ?? "Specialist"),
-                    style: const TextStyle(color: Color(0xFF6A1B9A), fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: themeColor, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Row(

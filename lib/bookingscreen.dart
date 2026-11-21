@@ -137,7 +137,7 @@ class _BookingScreenState extends State<BookingScreen> {
       case BookingType.opd: return const Color(0xFF1565C0);
       case BookingType.pathology: return const Color(0xFF2E7D32);
       case BookingType.doctor: 
-        return _isPhysioOrOthers ? const Color(0xFF00897B) : const Color(0xFF6A1B9A);
+        return _isPhysioOrOthers ? const Color(0xFFD97706) : const Color(0xFF6A1B9A);
     }
   }
 
@@ -149,7 +149,7 @@ class _BookingScreenState extends State<BookingScreen> {
         return const [Color(0xFF2E7D32), Color(0xFF1B5E20)];
       case BookingType.doctor:
         return _isPhysioOrOthers
-            ? const [Color(0xFF00897B), Color(0xFF004D40)]
+            ? const [Color(0xFFF59E0B), Color(0xFFD97706)]
             : const [Color(0xFF6A1B9A), Color(0xFF4A148C)];
     }
   }
