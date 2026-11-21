@@ -12,6 +12,7 @@ class BookingScreen extends StatefulWidget {
   final String? itemId; // test_id or doctor_id
   final String? itemName;
   final String? itemPrice;
+  final String? clinicRegistrationType;
   final Map<String, dynamic> userData;
 
   const BookingScreen({
@@ -23,6 +24,7 @@ class BookingScreen extends StatefulWidget {
     this.itemId,
     this.itemName,
     this.itemPrice,
+    this.clinicRegistrationType,
   });
 
   @override
@@ -55,8 +57,27 @@ class _BookingScreenState extends State<BookingScreen> {
     _dateController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
     _timeController.text = DateFormat('HH:mm').format(DateTime.now());
     
-    // Default visit mode
-    _visitMode = 'offline';
+    // Set visit mode:
+    // 1. OPD & Pathology: strictly offline
+    // 2. Doctor: directly online (video call)
+    // 3. Physiotherapist & Allied Care (Others): can be offline or online, default offline
+    if (widget.type == BookingType.doctor && !_isPhysioOrOthers) {
+      _visitMode = 'online';
+    } else {
+      _visitMode = 'offline';
+    }
+  }
+
+  bool get _isPhysioOrOthers {
+    final regType = (widget.clinicRegistrationType ?? '').toLowerCase().trim();
+    final name = (widget.itemName ?? '').toLowerCase();
+    final clinic = widget.clinicName.toLowerCase();
+    return regType == 'others' || name.contains('physio') || clinic.contains('physio') || name.contains('allied');
+  }
+
+  bool get _showVisitModeSelector {
+    // Only Physiotherapist & Allied Care (Others) get to choose between offline and online
+    return widget.type == BookingType.doctor && _isPhysioOrOthers;
   }
 
   @override
@@ -124,7 +145,7 @@ class _BookingScreenState extends State<BookingScreen> {
     switch (widget.type) {
       case BookingType.opd: return 'OPD';
       case BookingType.pathology: return 'Pathology';
-      case BookingType.doctor: return 'Doctor';
+      case BookingType.doctor: return _isPhysioOrOthers ? 'Others' : 'Doctor';
     }
   }
 
@@ -282,8 +303,10 @@ class _BookingScreenState extends State<BookingScreen> {
                       Expanded(child: _buildTimePicker()),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  _buildVisitModeSelector(),
+                  if (_showVisitModeSelector) ...[
+                    const SizedBox(height: 20),
+                    _buildVisitModeSelector(),
+                  ],
                   const SizedBox(height: 30),
                   const Text("INQUIRY / SYMPTOMS", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF90A4AE), letterSpacing: 1.0)),
                   const SizedBox(height: 15),
@@ -349,6 +372,57 @@ class _BookingScreenState extends State<BookingScreen> {
                 Text("₹${widget.itemPrice}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF2E7D32))),
             ],
           ),
+          if (widget.type == BookingType.doctor && !_isPhysioOrOthers)
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6A1B9A).withAlpha(15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.videocam_rounded, color: Color(0xFF6A1B9A), size: 15),
+                  SizedBox(width: 6),
+                  Text("Online Video Consultation", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6A1B9A))),
+                ],
+              ),
+            )
+          else if (widget.type == BookingType.opd)
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1565C0).withAlpha(15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.apartment_rounded, color: Color(0xFF1565C0), size: 15),
+                  SizedBox(width: 6),
+                  Text("Physical Chamber Visit Only", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF1565C0))),
+                ],
+              ),
+            )
+          else if (widget.type == BookingType.pathology)
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E7D32).withAlpha(15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.biotech_rounded, color: Color(0xFF2E7D32), size: 15),
+                  SizedBox(width: 6),
+                  Text("Physical Lab Visit Only", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+                ],
+              ),
+            ),
         ],
       ),
     );

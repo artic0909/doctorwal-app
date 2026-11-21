@@ -50,11 +50,16 @@ class AppointmentModel {
   });
 
   bool get isVideoCall {
+    final type = clinicType?.toLowerCase().trim() ?? '';
+    // Video calling is strictly disabled for OPD and Pathology
+    if (type == 'opd' || type == 'pathology') {
+      return false;
+    }
     final mode = visitMode?.toLowerCase().trim() ?? '';
     if (mode == 'offline' || mode == 'physical' || mode == 'in_person') {
       return false;
     }
-    return isVideo || mode == 'online' || mode == 'video' || mode == 'video call';
+    return (type == 'doctor' || type == 'others') && (isVideo || mode == 'online' || mode == 'video' || mode == 'video call');
   }
 
   bool isWindowOpen() {

@@ -298,6 +298,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
                   itemId: widget.doctor.id.toString(),
                   itemName: widget.doctor.partnerDoctorName,
                   itemPrice: widget.doctor.partnerDoctorFees,
+                  clinicRegistrationType: widget.doctor.clinicRegistrationType,
                 ),
               ),
             );
