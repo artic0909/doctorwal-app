@@ -72,74 +72,129 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
     final d = widget.doctor;
     final String docName = d.partnerDoctorName ?? "Dr. Unknown";
     final double statusBarHeight = MediaQuery.of(context).padding.top;
-    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 16.0;
+    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 8.0;
     
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, topPadding, 20, 20),
+      padding: EdgeInsets.fromLTRB(16, topPadding, 16, 14),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF6A1B9A), Color(0xFF4A148C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(35), bottomRight: Radius.circular(35)),
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-          const SizedBox(height: 20),
           Row(
             children: [
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 12),
               Container(
-                width: 55, height: 55,
-                decoration: BoxDecoration(color: Colors.white.withAlpha(40), borderRadius: BorderRadius.circular(15)),
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(color: Colors.white.withAlpha(40), borderRadius: BorderRadius.circular(12)),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(12),
                   child: d.banner != null && d.banner!.isNotEmpty
                       ? Image.network(
                           _getImageUrl(d.banner),
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person_rounded, color: Colors.white, size: 30),
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person_rounded, color: Colors.white, size: 24),
                         )
-                      : const Icon(Icons.person_rounded, color: Colors.white, size: 30),
+                      : const Icon(Icons.person_rounded, color: Colors.white, size: 24),
                 ),
               ),
-              const SizedBox(width: 15),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       _capitalizeWords(docName),
-                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: -0.3),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       _capitalizeWords(d.partnerDoctorSpecialist ?? "Specialist"),
-                      style: const TextStyle(color: Color(0xFFFFD700), fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.2),
+                      style: const TextStyle(color: Color(0xFFFFD700), fontSize: 12, fontWeight: FontWeight.w800),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               _feesBadge(d.partnerDoctorFees),
             ],
           ),
-          const SizedBox(height: 20),
-          _headerInfoRow(Icons.work_history_rounded, "Current Designation", d.partnerDoctorDesignation ?? "Doctor"),
+          const SizedBox(height: 10),
+          if ((d.partnerDoctorDesignation ?? "").isNotEmpty) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(Icons.work_history_rounded, color: Colors.white.withAlpha(200), size: 14),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Current Designation: ",
+                          style: TextStyle(color: Colors.white.withAlpha(180), fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                        TextSpan(
+                          text: _capitalizeWords(d.partnerDoctorDesignation ?? "Doctor"),
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+          ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(Icons.location_on_rounded, color: Colors.white.withAlpha(200), size: 14),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Consultation Address: ",
+                        style: TextStyle(color: Colors.white.withAlpha(180), fontSize: 12, fontWeight: FontWeight.w500),
+                      ),
+                      TextSpan(
+                        text: _capitalizeWords(d.partnerDoctorAddress ?? "Address not provided"),
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
-          _headerInfoRow(Icons.location_on_rounded, "Consultation Address", d.partnerDoctorAddress ?? "Address not provided"),
-          const SizedBox(height: 25),
           Row(
             children: [
               Expanded(child: _headerActionBtn("CALL", Icons.phone_rounded, () => launchUrl(Uri.parse("tel:${d.partnerDoctorMobile}")))),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(child: _headerActionBtn("MAP", Icons.near_me_rounded, () async {
                 final url = d.partnerDoctorGoogleMapLink ?? "";
                 if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
@@ -155,54 +210,31 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
 
   Widget _feesBadge(String fees) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: Colors.white.withAlpha(30), borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(color: Colors.white.withAlpha(28), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.white.withAlpha(40))),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text("FEES", style: TextStyle(color: Colors.white70, fontSize: 8, fontWeight: FontWeight.w900)),
-          Text(fees.trim().isEmpty || fees == 'null' ? "N/A" : "₹$fees", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+          const Text("FEES", style: TextStyle(color: Colors.white70, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+          Text(fees.trim().isEmpty || fees == 'null' ? "N/A" : "₹$fees", style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
         ],
       ),
-    );
-  }
-
-  Widget _headerInfoRow(IconData icon, String label, String val) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: Colors.white70, size: 16),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: TextStyle(color: Colors.white.withAlpha(150), fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
-              const SizedBox(height: 2),
-              Text(
-                _capitalizeWords(val),
-                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
   Widget _headerActionBtn(String label, IconData icon, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(color: Colors.white.withAlpha(30), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withAlpha(40))),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(color: Colors.white.withAlpha(28), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.white.withAlpha(40))),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Colors.white, size: 15),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+            Icon(icon, color: Colors.white, size: 13),
+            const SizedBox(width: 5),
+            Text(label, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
           ],
         ),
       ),

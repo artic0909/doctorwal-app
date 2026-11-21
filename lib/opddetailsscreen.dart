@@ -110,60 +110,114 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
   Widget _buildImageStyleHeader(BuildContext context) {
     final o = widget.opd;
     final double statusBarHeight = MediaQuery.of(context).padding.top;
-    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 16.0;
+    final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 8.0;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, topPadding, 20, 25),
+      padding: EdgeInsets.fromLTRB(16, topPadding, 16, 14),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(35), bottomRight: Radius.circular(35)),
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-          const SizedBox(height: 20),
           Row(
             children: [
-              Container(
-                width: 55, height: 55,
-                decoration: BoxDecoration(color: Colors.white.withAlpha(40), borderRadius: BorderRadius.circular(15)),
-                child: const Icon(Icons.business_rounded, color: Colors.white, size: 30),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 15),
+              const SizedBox(width: 12),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(color: Colors.white.withAlpha(40), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.business_rounded, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       _capitalizeWords(o.clinicName),
-                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: -0.3),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       "Official Healthcare Partner",
-                      style: TextStyle(color: Colors.white.withAlpha(170), fontSize: 11, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: Colors.white.withAlpha(180), fontSize: 11, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          _headerInfoRow(Icons.person_rounded, "Contact Manager", (o.contactPersonName.isNotEmpty) ? o.contactPersonName : "Incharge Manager"),
+          const SizedBox(height: 10),
+          if (o.contactPersonName.isNotEmpty) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(Icons.person_rounded, color: Colors.white.withAlpha(200), size: 14),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Contact Manager: ",
+                          style: TextStyle(color: Colors.white.withAlpha(180), fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                        TextSpan(
+                          text: _capitalizeWords(o.contactPersonName),
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+          ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(Icons.location_on_rounded, color: Colors.white.withAlpha(200), size: 14),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Clinic Address: ",
+                        style: TextStyle(color: Colors.white.withAlpha(180), fontSize: 12, fontWeight: FontWeight.w500),
+                      ),
+                      TextSpan(
+                        text: _capitalizeWords("${o.clinicAddress}${o.clinicLandmark.isNotEmpty ? ', ${o.clinicLandmark}' : ''}"),
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
-          _headerInfoRow(Icons.location_on_rounded, "Clinic Address", "${o.clinicAddress}, ${o.clinicLandmark}"),
-          const SizedBox(height: 25),
           Row(
             children: [
               Expanded(child: _headerActionBtn("CALL", Icons.phone_rounded, () => launchUrl(Uri.parse("tel:${o.clinicMobileNumber}")))),
@@ -185,42 +239,18 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
     );
   }
 
-  Widget _headerInfoRow(IconData icon, String label, String val) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: Colors.white70, size: 16),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: TextStyle(color: Colors.white.withAlpha(150), fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
-              const SizedBox(height: 2),
-              Text(
-                _capitalizeWords(val),
-                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _headerActionBtn(String label, IconData icon, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(color: Colors.white.withAlpha(30), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withAlpha(40))),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(color: Colors.white.withAlpha(28), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.white.withAlpha(40))),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Colors.white, size: 14),
-            const SizedBox(width: 6),
+            Icon(icon, color: Colors.white, size: 13),
+            const SizedBox(width: 5),
             Text(label, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
           ],
         ),
@@ -231,14 +261,14 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
   Widget _buildSearchBar() {
     return Container(
       color: const Color(0xFFF8FAFF),
-      padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Container(
-        height: 50,
-        padding: const EdgeInsets.symmetric(horizontal: 15),
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4))],
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: Colors.black.withAlpha(8), blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: TextField(
           controller: searchController,
@@ -247,6 +277,8 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
             hintText: "Filter doctors by name or specialty...",
             hintStyle: TextStyle(color: Colors.blueGrey[200], fontSize: 13),
             border: InputBorder.none,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
             prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1565C0), size: 18),
             suffixIcon: searchController.text.isNotEmpty 
                 ? IconButton(icon: const Icon(Icons.close_rounded, size: 16), onPressed: _resetSearch) 
