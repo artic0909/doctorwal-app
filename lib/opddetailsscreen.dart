@@ -3,6 +3,7 @@ import 'package:demoapp/opdfeedbackscreen.dart';
 import 'package:demoapp/bookingscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
 import 'opddoctordetailsscreen.dart';
 
 class OPDDetailsScreen extends StatefulWidget {
@@ -289,137 +290,280 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
 
   Widget _buildUniformDoctorCard(BuildContext context, dynamic doctor) {
     final docs = doctor as Map<String, dynamic>;
+    final fees = docs['doctor_fees']?.toString() ?? '0';
+
+    // Parse available days from visit_day_time
+    String scheduleSummary = "Available at Chamber";
+    final rawSchedule = docs['visit_day_time'];
+    if (rawSchedule != null) {
+      try {
+        dynamic decoded = rawSchedule;
+        if (rawSchedule is String && rawSchedule.isNotEmpty) {
+          decoded = jsonDecode(rawSchedule);
+        }
+        if (decoded is List && decoded.isNotEmpty) {
+          final days = decoded
+              .map((e) => (e['day'] ?? '').toString())
+              .where((d) => d.isNotEmpty)
+              .map((d) => d.length > 3 ? d.substring(0, 3) : d)
+              .toSet()
+              .toList();
+          if (days.isNotEmpty) {
+            scheduleSummary = days.join(', ');
+          }
+        }
+      } catch (_) {}
+    }
+
+    final String? banner = docs['banner'] ?? docs['doctor_image'] ?? docs['image'];
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF1565C0).withAlpha(8), blurRadius: 15, offset: const Offset(0, 8)),
+          BoxShadow(
+            color: const Color(0xFF1E293B).withAlpha(8),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
         ],
-        border: Border.all(color: const Color(0xFF1565C0).withAlpha(15), width: 1),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 50, height: 50,
-                decoration: BoxDecoration(color: const Color(0xFF1565C0).withAlpha(12), borderRadius: BorderRadius.circular(15)),
-                child: const Icon(Icons.person_rounded, color: Color(0xFF1565C0), size: 26),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ODPDoctorDetailScreen(opd: widget.opd, doctor: docs, userData: widget.userData),
               ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Doctor Avatar + Info
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: banner != null && banner.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Image.network(
+                                _getImageUrl(banner),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: Color(0xFF1565C0), size: 28),
+                              ),
+                            )
+                          : const Icon(Icons.person_rounded, color: Color(0xFF1565C0), size: 28),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
                             _capitalizeWords(docs['doctor_name']?.toString() ?? ""),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            docs['doctor_specialist']?.toString() ?? "Specialist",
+                            style: const TextStyle(
+                              color: Color(0xFF1565C0),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if ((docs['doctor_more']?.toString() ?? "").isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              docs['doctor_more'].toString(),
+                              style: const TextStyle(
+                                color: Color(0xFF64748B),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // 2. Schedule & Verified Availability Strip
+                Container(
+                  margin: const EdgeInsets.only(top: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_month_outlined, size: 14, color: Color(0xFF0284C7)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          scheduleSummary,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF334155),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle_rounded, size: 11, color: Color(0xFF16A34A)),
+                            SizedBox(width: 3),
+                            Text("Verified", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF15803D))),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 3. Divider
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                ),
+
+                // 4. Consultation Fee + Action Buttons
+                Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "CONSULTATION FEE",
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF94A3B8),
+                            letterSpacing: 0.5,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: const Color(0xFF00C853).withAlpha(15), borderRadius: BorderRadius.circular(8)),
-                          child: Text(
-                            "₹${docs['doctor_fees']?.toString() ?? '0'}",
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF2E7D32)),
+                        const SizedBox(height: 1),
+                        Text(
+                          "₹$fees",
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      docs['doctor_specialist']?.toString() ?? "Specialist",
-                      style: const TextStyle(color: Color(0xFF1565C0), fontSize: 13, fontWeight: FontWeight.bold),
+                    const Spacer(),
+                    OutlinedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ODPDoctorDetailScreen(opd: widget.opd, doctor: docs, userData: widget.userData),
+                          ),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text(
+                        "Details",
+                        style: TextStyle(color: Color(0xFF475569), fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BookingScreen(
+                              type: BookingType.opd,
+                              partnerId: widget.opd.currentlyLoggedInPartnerId.toString(),
+                              clinicName: widget.opd.clinicName,
+                              userData: widget.userData,
+                              itemId: docs['id']?.toString(),
+                              itemName: docs['doctor_name']?.toString(),
+                              itemPrice: docs['doctor_fees']?.toString(),
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.calendar_today_rounded, size: 12),
+                      label: const Text("Appointment", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1565C0),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          _miniTagRow(Icons.description_rounded, docs['doctor_more']?.toString() ?? "N/A"),
-          const SizedBox(height: 8),
-          _miniTagRow(Icons.check_circle_rounded, "Verified Availability"),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ODPDoctorDetailScreen(opd: widget.opd, doctor: docs, userData: widget.userData),
-                      ),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    side: const BorderSide(color: Color(0xFF1565C0), width: 1.5),
-                  ),
-                  child: const Text("VIEW DETAILS", style: TextStyle(color: Color(0xFF1565C0), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BookingScreen(
-                          type: BookingType.opd,
-                          partnerId: widget.opd.currentlyLoggedInPartnerId.toString(),
-                          clinicName: widget.opd.clinicName,
-                          userData: widget.userData,
-                          itemId: docs['id']?.toString(),
-                          itemName: docs['doctor_name']?.toString(),
-                          itemPrice: docs['doctor_fees']?.toString(),
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1565C0),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
-                  ),
-                  child: const Text("APPOINTMENT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _miniTagRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 13, color: Colors.blueGrey[300]),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 11, color: Colors.blueGrey[400], fontWeight: FontWeight.w600),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
+  String _getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return "";
+    if (path.startsWith('http')) return path;
+    const String domain = "https://doctorwala.info/";
+    String cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    if (!cleanPath.startsWith('storage/')) {
+      cleanPath = 'storage/$cleanPath';
+    }
+    return domain + cleanPath;
   }
 
   Widget _buildServicesSection() {
