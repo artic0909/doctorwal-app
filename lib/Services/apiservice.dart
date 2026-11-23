@@ -454,6 +454,34 @@ class ApiService {
     }
   }
 
+  // --- RAZORPAY APPOINTMENT PAYMENTS (DOCTOR & OTHERS) ---
+
+  Future<Map<String, dynamic>> createPaymentOrder(Map<String, dynamic> data) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post('/api/payment/create-order', data: data);
+      return response.data is Map<String, dynamic> ? response.data : {'status': false, 'message': 'Invalid server response'};
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null && e.response?.data is Map<String, dynamic>) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': e.message ?? 'Network error initializing payment'};
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyPayment(Map<String, dynamic> data) async {
+    try {
+      await _setAuthHeader();
+      final response = await _dio.post('/api/payment/verify', data: data);
+      return response.data is Map<String, dynamic> ? response.data : {'status': false, 'message': 'Invalid server response'};
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null && e.response?.data is Map<String, dynamic>) {
+        return e.response?.data;
+      }
+      return {'status': false, 'message': e.message ?? 'Payment verification failed'};
+    }
+  }
+
   // --- APPOINTMENT MANAGEMENT ---
 
   Future<Map<String, dynamic>> getAppointments() async {

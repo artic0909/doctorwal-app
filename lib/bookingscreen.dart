@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:demoapp/Services/apiservice.dart';
 import 'package:demoapp/all_appointments_screen.dart';
@@ -35,6 +36,8 @@ class BookingScreen extends StatefulWidget {
 class _BookingScreenState extends State<BookingScreen> {
   final _formKey = GlobalKey<FormState>();
   final ApiService _apiService = ApiService();
+  late Razorpay _razorpay;
+  Map<String, dynamic>? _pendingBookingData;
   
   late TextEditingController _nameController;
   late TextEditingController _emailController;
@@ -49,6 +52,11 @@ class _BookingScreenState extends State<BookingScreen> {
   @override
   void initState() {
     super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+
     _nameController = TextEditingController(text: widget.userData['user_name'] ?? widget.userData['name'] ?? '');
     _emailController = TextEditingController(text: widget.userData['user_email'] ?? widget.userData['email'] ?? '');
     _mobileController = TextEditingController(text: widget.userData['user_mobile'] ?? widget.userData['mobile'] ?? '');
@@ -60,6 +68,53 @@ class _BookingScreenState extends State<BookingScreen> {
       _visitMode = 'online';
     } else {
       _visitMode = 'offline';
+    }
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    if (_pendingBookingData == null) return;
+
+    if (mounted) setState(() => _isLoading = true);
+
+    try {
+      final verifyPayload = Map<String, dynamic>.from(_pendingBookingData!);
+      verifyPayload['razorpay_order_id'] = response.orderId;
+      verifyPayload['razorpay_payment_id'] = response.paymentId;
+      verifyPayload['razorpay_signature'] = response.signature;
+
+      final verifyResult = await _apiService.verifyPayment(verifyPayload);
+
+      if (verifyResult['status'] == true) {
+        _pendingBookingData = null;
+        if (mounted) {
+          setState(() => _isLoading = false);
+          _showSuccessDialog();
+        }
+      } else {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          _showErrorSnackBar(verifyResult['message'] ?? 'Payment verification failed. Please contact support.');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showErrorSnackBar('Payment confirmation error: $e');
+      }
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    if (mounted) {
+      setState(() => _isLoading = false);
+      _showErrorSnackBar('Payment cancelled or failed: ${response.message ?? "Transaction declined"}');
+    }
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    if (mounted) {
+      setState(() => _isLoading = false);
+      _showErrorSnackBar('External wallet selected: ${response.walletName}');
     }
   }
 
@@ -81,6 +136,7 @@ class _BookingScreenState extends State<BookingScreen> {
 
   @override
   void dispose() {
+    _razorpay.clear();
     _nameController.dispose();
     _emailController.dispose();
     _mobileController.dispose();
@@ -188,6 +244,51 @@ class _BookingScreenState extends State<BookingScreen> {
       bookingData['test_id'] = widget.itemId;
     } else if (widget.itemId != null) {
       bookingData['doctor_id'] = widget.itemId;
+    }
+
+    // Razorpay Online Payment for Doctor & Others Appointments
+    if (widget.type == BookingType.doctor) {
+      try {
+        if (widget.itemPrice != null && widget.itemPrice!.isNotEmpty) {
+          bookingData['amount'] = widget.itemPrice;
+        }
+
+        final orderResult = await _apiService.createPaymentOrder(bookingData);
+
+        if (orderResult['status'] != true) {
+          _showErrorSnackBar(orderResult['message'] ?? 'Unable to initialize online payment.');
+          if (mounted) setState(() => _isLoading = false);
+          return;
+        }
+
+        _pendingBookingData = bookingData;
+
+        final num amountInPaise = orderResult['amount'] ?? 50000;
+        final String key = orderResult['key'] ?? '';
+        final String orderId = orderResult['order_id'] ?? '';
+
+        var options = {
+          'key': key,
+          'amount': amountInPaise,
+          'name': 'Doctorwala Health',
+          'description': 'Consultation with ${widget.itemName ?? widget.clinicName}',
+          'order_id': orderId,
+          'prefill': {
+            'contact': _mobileController.text.trim(),
+            'email': _emailController.text.trim(),
+            'name': _nameController.text.trim(),
+          },
+          'theme': {
+            'color': '#0284c7'
+          }
+        };
+
+        _razorpay.open(options);
+      } catch (e) {
+        _showErrorSnackBar('Error opening payment gateway: $e');
+        if (mounted) setState(() => _isLoading = false);
+      }
+      return;
     }
 
     try {
@@ -536,15 +637,19 @@ class _BookingScreenState extends State<BookingScreen> {
                             height: 20,
                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                           )
-                        : const Row(
+                        : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              if (widget.type == BookingType.doctor) ...[
+                                const Icon(Icons.lock_rounded, size: 14),
+                                const SizedBox(width: 6),
+                              ],
                               Text(
-                                "CONFIRM BOOKING",
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                                widget.type == BookingType.doctor ? "PAY & BOOK" : "CONFIRM BOOKING",
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                               ),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward_rounded, size: 16),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_forward_rounded, size: 16),
                             ],
                           ),
                   ),
