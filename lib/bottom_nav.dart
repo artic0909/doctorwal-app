@@ -4,6 +4,7 @@ import 'package:demoapp/categoryscreen.dart';
 import 'package:demoapp/search_screen.dart';
 import 'package:demoapp/my_health_screen.dart';
 import 'package:demoapp/account_tab_screen.dart';
+import 'package:demoapp/profileeditscreen.dart';
 import 'package:demoapp/tab_skeleton_view.dart';
 import 'package:demoapp/main.dart'; // For LoginScreen
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,6 +43,7 @@ class TabNavigator extends StatelessWidget {
 
 class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  late Map<String, dynamic> _currentUserData;
   final List<int> _tabKeys = [0, 0, 0, 0];
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
     GlobalKey<NavigatorState>(),
@@ -59,6 +61,8 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
+    _currentUserData = Map<String, dynamic>.from(widget.userData);
+    _refreshUserData();
     BottomNavScreen.switchTab = _onTabSelected;
     _notchController = AnimationController(
       vsync: this,
@@ -67,6 +71,29 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
     _notchAnim = Tween<double>(begin: 0.0, end: 0.0).animate(
       CurvedAnimation(parent: _notchController, curve: Curves.easeInOutCubic),
     );
+  }
+
+  Future<void> _refreshUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _currentUserData = {
+        ..._currentUserData,
+        if (prefs.getString('name') != null) 'name': prefs.getString('name'),
+        if (prefs.getString('user_name') != null) 'user_name': prefs.getString('user_name'),
+        if (prefs.getString('email') != null) 'email': prefs.getString('email'),
+        if (prefs.getString('user_email') != null) 'user_email': prefs.getString('user_email'),
+        if (prefs.getString('mobile') != null) 'mobile': prefs.getString('mobile'),
+        if (prefs.getString('user_mobile') != null) 'user_mobile': prefs.getString('user_mobile'),
+        if (prefs.getString('profile_image') != null) 'image': prefs.getString('profile_image'),
+        if (prefs.getString('image') != null) 'image': prefs.getString('image'),
+        if (prefs.getString('user_image') != null) 'user_image': prefs.getString('user_image'),
+        if (prefs.getString('profile_image') != null) 'profile_image': prefs.getString('profile_image'),
+        if (prefs.getString('member_id') != null) 'member_id': prefs.getString('member_id'),
+        if (prefs.getString('medical_card_no') != null) 'medical_card_no': prefs.getString('medical_card_no'),
+        if (prefs.getString('city') != null) 'city': prefs.getString('city'),
+      };
+    });
   }
 
   @override
@@ -96,6 +123,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
   }
 
   void _onTabSelected(int index) {
+    _refreshUserData();
+    ProfileEditScreen.profileUpdateNotifier.value++;
+
     if (_currentIndex != index) {
       _notchAnim = Tween<double>(
         begin: _notchAnim.value,
@@ -156,7 +186,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
           navigatorKey: _navigatorKeys[0],
           child: CategoryHomeScreen(
             key: ValueKey('home_${_tabKeys[0]}'),
-            userData: widget.userData,
+            userData: _currentUserData,
           ),
         );
         break;
@@ -166,7 +196,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
           navigatorKey: _navigatorKeys[1],
           child: SearchScreen(
             key: ValueKey('search_${_tabKeys[1]}'),
-            userData: widget.userData,
+            userData: _currentUserData,
           ),
         );
         break;
@@ -176,7 +206,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
           navigatorKey: _navigatorKeys[2],
           child: MyHealthScreen(
             key: ValueKey('health_${_tabKeys[2]}'),
-            userData: widget.userData,
+            userData: _currentUserData,
           ),
         );
         break;
@@ -186,7 +216,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
           navigatorKey: _navigatorKeys[3],
           child: AccountTabScreen(
             key: ValueKey('account_${_tabKeys[3]}'),
-            userData: widget.userData,
+            userData: _currentUserData,
             onLogout: logout,
           ),
         );

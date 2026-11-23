@@ -36,36 +36,52 @@ class _AccountTabScreenState extends State<AccountTabScreen> {
   @override
   void initState() {
     super.initState();
+    ProfileEditScreen.profileUpdateNotifier.addListener(_loadData);
     _loadData();
   }
 
+  @override
+  void dispose() {
+    ProfileEditScreen.profileUpdateNotifier.removeListener(_loadData);
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
-    // 1. Initial load from widget.userData & SharedPreferences
+    // 1. Initial load from SharedPreferences (latest updated) & fallback to widget.userData
     final prefs = await SharedPreferences.getInstance();
 
-    String name = widget.userData['name'] ??
+    String name = prefs.getString('name') ??
+        prefs.getString('user_name') ??
+        widget.userData['name'] ??
         widget.userData['user_name'] ??
-        prefs.getString('name') ??
-        'Saklin Mustak';
-    String email = widget.userData['email'] ?? prefs.getString('email') ?? '';
-    String mobile = widget.userData['mobile'] ??
+        'User';
+    String email = prefs.getString('email') ??
+        prefs.getString('user_email') ??
+        widget.userData['email'] ??
+        '';
+    String mobile = prefs.getString('mobile') ??
+        prefs.getString('user_mobile') ??
+        widget.userData['mobile'] ??
         widget.userData['phone'] ??
-        prefs.getString('mobile') ??
         '';
-    String memId = widget.userData['member_id']?.toString() ??
+    String memId = prefs.getString('member_id') ??
+        widget.userData['member_id']?.toString() ??
         widget.userData['memberid']?.toString() ??
-        prefs.getString('member_id') ??
         '';
-    String cardNo = widget.userData['medical_card_no']?.toString() ??
-        widget.userData['medicalcardno']?.toString() ??
-        prefs.getString('medical_card_no') ??
+    String cardNo = prefs.getString('medical_card_no') ??
         prefs.getString('medicalcardno') ??
+        widget.userData['medical_card_no']?.toString() ??
+        widget.userData['medicalcardno']?.toString() ??
         '';
-    String image = widget.userData['image']?.toString() ??
+    String image = prefs.getString('profile_image') ??
         prefs.getString('image') ??
+        prefs.getString('user_image') ??
+        widget.userData['profile_image']?.toString() ??
+        widget.userData['image']?.toString() ??
         '';
-    String city = widget.userData['city']?.toString() ??
-        prefs.getString('city') ??
+    String city = prefs.getString('city') ??
+        prefs.getString('user_city') ??
+        widget.userData['city']?.toString() ??
         '';
     String address = widget.userData['address']?.toString() ??
         prefs.getString('address') ??

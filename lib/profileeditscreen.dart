@@ -188,8 +188,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         await prefs.setString('city', _cityController.text.trim());
         await prefs.setString('user_city', _cityController.text.trim());
 
-        if (response['user'] != null && response['user']['image'] != null) {
-          await prefs.setString('profile_image', response['user']['image'].toString());
+        final String? newImage = (response['image'] ?? response['user']?['image'])?.toString();
+        if (newImage != null && newImage.isNotEmpty) {
+          await prefs.setString('profile_image', newImage);
+          await prefs.setString('image', newImage);
+          await prefs.setString('user_image', newImage);
         }
 
         ProfileEditScreen.profileUpdateNotifier.value++;

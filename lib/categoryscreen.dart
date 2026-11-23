@@ -137,7 +137,10 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
       if (medicalCardNo.trim().isEmpty) medicalCardNo = 'DW26 0000 00';
 
       profileImg =
+          prefs.getString('profile_image') ??
           prefs.getString('image') ??
+          prefs.getString('user_image') ??
+          widget.userData['profile_image']?.toString() ??
           widget.userData['image']?.toString() ??
           '';
     });
