@@ -589,6 +589,7 @@ class _PathologyDetailsScreenState extends State<PathologyDetailsScreen> {
                               itemId: t['id']?.toString(),
                               itemName: t['test_name']?.toString() ?? "Diagnostic Test",
                               itemPrice: price,
+                              schedule: t['test_day_time'],
                             ),
                           ),
                         );

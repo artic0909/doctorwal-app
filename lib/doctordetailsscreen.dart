@@ -331,6 +331,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
                   itemName: widget.doctor.partnerDoctorName,
                   itemPrice: widget.doctor.partnerDoctorFees,
                   clinicRegistrationType: widget.doctor.clinicRegistrationType,
+                  schedule: widget.doctor.visitDayTime,
                 ),
               ),
             );

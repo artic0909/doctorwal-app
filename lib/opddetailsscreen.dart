@@ -524,6 +524,7 @@ class _OPDDetailsScreenState extends State<OPDDetailsScreen> {
                               itemId: docs['id']?.toString(),
                               itemName: docs['doctor_name']?.toString(),
                               itemPrice: docs['doctor_fees']?.toString(),
+                              schedule: docs['visit_day_time'],
                             ),
                           ),
                         );

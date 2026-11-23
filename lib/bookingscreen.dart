@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -15,6 +16,7 @@ class BookingScreen extends StatefulWidget {
   final String? itemName;
   final String? itemPrice;
   final String? clinicRegistrationType;
+  final dynamic schedule; // visit_day_time or test_day_time
   final Map<String, dynamic> userData;
 
   const BookingScreen({
@@ -27,6 +29,7 @@ class BookingScreen extends StatefulWidget {
     this.itemName,
     this.itemPrice,
     this.clinicRegistrationType,
+    this.schedule,
   });
 
   @override
@@ -49,6 +52,10 @@ class _BookingScreenState extends State<BookingScreen> {
   String _visitMode = 'offline';
   bool _isLoading = false;
 
+  final Map<int, List<Map<String, String?>>> _dayScheduleMap = {};
+  bool _isAllDaysAllowed = false;
+  String _formattedScheduleText = '';
+
   @override
   void initState() {
     super.initState();
@@ -60,15 +67,177 @@ class _BookingScreenState extends State<BookingScreen> {
     _nameController = TextEditingController(text: widget.userData['user_name'] ?? widget.userData['name'] ?? '');
     _emailController = TextEditingController(text: widget.userData['user_email'] ?? widget.userData['email'] ?? '');
     _mobileController = TextEditingController(text: widget.userData['user_mobile'] ?? widget.userData['mobile'] ?? '');
-    
-    _dateController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    _timeController.text = DateFormat('HH:mm').format(DateTime.now());
+
+    _parseSchedule();
+
+    // Auto-select first valid date according to the schedule
+    DateTime validDate = DateTime.now();
+    if (!_isDaySelectable(validDate)) {
+      for (int i = 1; i <= 30; i++) {
+        final candidate = DateTime.now().add(Duration(days: i));
+        if (_isDaySelectable(candidate)) {
+          validDate = candidate;
+          break;
+        }
+      }
+    }
+    _dateController.text = DateFormat('yyyy-MM-dd').format(validDate);
+
+    // Auto-select valid start time for that day
+    final slots = _dayScheduleMap[validDate.weekday];
+    if (slots != null && slots.isNotEmpty && slots.first['start'] != null) {
+      _timeController.text = slots.first['start']!;
+    } else {
+      _timeController.text = "10:00";
+    }
     
     if (widget.type == BookingType.doctor && !_isPhysioOrOthers) {
       _visitMode = 'online';
     } else {
       _visitMode = 'offline';
     }
+  }
+
+  void _parseSchedule() {
+    if (widget.schedule == null) return;
+    dynamic raw = widget.schedule;
+    if (raw is String) {
+      String s = raw.trim();
+      while ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+        s = s.substring(1, s.length - 1).trim();
+      }
+      s = s.replaceAll(r'\"', '"').replaceAll(r"\'", "'");
+      try {
+        raw = jsonDecode(s);
+      } catch (_) {
+        return;
+      }
+    }
+
+    if (raw is! List) return;
+
+    final List<String> summaryParts = [];
+
+    for (var item in raw) {
+      if (item is! Map) continue;
+      final dayStr = (item['day'] ?? item['test_day'] ?? '').toString().trim();
+      final startTime = item['start_time'] != null && item['start_time'].toString().isNotEmpty
+          ? item['start_time'].toString().trim()
+          : null;
+      final endTime = item['end_time'] != null && item['end_time'].toString().isNotEmpty
+          ? item['end_time'].toString().trim()
+          : null;
+
+      if (dayStr.toLowerCase().contains('all day')) {
+        _isAllDaysAllowed = true;
+        for (int w = 1; w <= 7; w++) {
+          _dayScheduleMap.putIfAbsent(w, () => []).add({'start': startTime, 'end': endTime});
+        }
+        String timeSummary = '';
+        if (startTime != null && endTime != null) {
+          timeSummary = ' (${_formatTime12h(startTime)} - ${_formatTime12h(endTime)})';
+        } else if (startTime != null) {
+          timeSummary = ' (From ${_formatTime12h(startTime)})';
+        }
+        summaryParts.add('All Days$timeSummary');
+        continue;
+      }
+
+      final weekday = _dayNameToWeekday(dayStr);
+      if (weekday != null) {
+        _dayScheduleMap.putIfAbsent(weekday, () => []).add({'start': startTime, 'end': endTime});
+        String timeSummary = '';
+        if (startTime != null && endTime != null) {
+          timeSummary = ' (${_formatTime12h(startTime)} - ${_formatTime12h(endTime)})';
+        } else if (startTime != null) {
+          timeSummary = ' (From ${_formatTime12h(startTime)})';
+        }
+        summaryParts.add('${dayStr.substring(0, 3)}$timeSummary');
+      }
+    }
+
+    if (summaryParts.isNotEmpty) {
+      _formattedScheduleText = summaryParts.join(', ');
+    }
+  }
+
+  int? _dayNameToWeekday(String dayName) {
+    final d = dayName.trim().toLowerCase();
+    if (d.contains('mon')) return DateTime.monday;
+    if (d.contains('tue')) return DateTime.tuesday;
+    if (d.contains('wed')) return DateTime.wednesday;
+    if (d.contains('thu')) return DateTime.thursday;
+    if (d.contains('fri')) return DateTime.friday;
+    if (d.contains('sat')) return DateTime.saturday;
+    if (d.contains('sun')) return DateTime.sunday;
+    return null;
+  }
+
+  String _formatTime12h(String timeStr) {
+    try {
+      final parts = timeStr.trim().split(':');
+      int h = int.parse(parts[0]);
+      int m = parts.length > 1 ? int.parse(parts[1]) : 0;
+      final period = h >= 12 ? 'PM' : 'AM';
+      int h12 = h % 12;
+      if (h12 == 0) h12 = 12;
+      return "${h12.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')} $period";
+    } catch (_) {
+      return timeStr;
+    }
+  }
+
+  int _timeToMinutes(String timeStr) {
+    try {
+      final parts = timeStr.trim().split(':');
+      int h = int.parse(parts[0]);
+      int m = parts.length > 1 ? int.parse(parts[1]) : 0;
+      return h * 60 + m;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  String _getFormattedDayTiming(int weekday) {
+    final slots = _dayScheduleMap[weekday];
+    if (slots == null || slots.isEmpty) return 'Consultation hours';
+    final parts = slots.map((s) {
+      final start = s['start'];
+      final end = s['end'];
+      if (start != null && end != null) {
+        return "${_formatTime12h(start)} - ${_formatTime12h(end)}";
+      } else if (start != null) {
+        return "From ${_formatTime12h(start)}";
+      }
+      return "All Day";
+    }).toList();
+    return parts.join(', ');
+  }
+
+  bool _isDaySelectable(DateTime date) {
+    if (_dayScheduleMap.isEmpty || _isAllDaysAllowed) return true;
+    return _dayScheduleMap.containsKey(date.weekday);
+  }
+
+  bool _isTimeValidForDate(DateTime date, int pickedMinutes) {
+    if (_dayScheduleMap.isEmpty) return true;
+    final slots = _dayScheduleMap[date.weekday];
+    if (slots == null || slots.isEmpty) return true;
+
+    for (var slot in slots) {
+      final start = slot['start'];
+      final end = slot['end'];
+
+      if (start == null && end == null) return true;
+
+      int startMin = start != null ? _timeToMinutes(start) : 0;
+      int endMin = end != null ? _timeToMinutes(end) : 1439;
+
+      if (pickedMinutes >= startMin && pickedMinutes <= endMin) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
@@ -147,11 +316,23 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Future<void> _selectDate() async {
+    DateTime currentSelected = DateTime.tryParse(_dateController.text) ?? DateTime.now();
+    if (!_isDaySelectable(currentSelected)) {
+      for (int i = 0; i <= 30; i++) {
+        final d = DateTime.now().add(Duration(days: i));
+        if (_isDaySelectable(d)) {
+          currentSelected = d;
+          break;
+        }
+      }
+    }
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().add(const Duration(days: 1)),
+      initialDate: currentSelected,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 60)),
+      selectableDayPredicate: (DateTime date) => _isDaySelectable(date),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme.light(
@@ -166,14 +347,33 @@ class _BookingScreenState extends State<BookingScreen> {
     if (picked != null) {
       setState(() {
         _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
+        // If current time is not valid for newly selected day, reset to that day's start time
+        final chosenSlots = _dayScheduleMap[picked.weekday];
+        if (chosenSlots != null && chosenSlots.isNotEmpty && chosenSlots.first['start'] != null) {
+          final currentMin = _timeToMinutes(_timeController.text);
+          if (!_isTimeValidForDate(picked, currentMin)) {
+            _timeController.text = chosenSlots.first['start']!;
+          }
+        }
       });
     }
   }
 
   Future<void> _selectTime() async {
+    final DateTime chosenDate = DateTime.tryParse(_dateController.text) ?? DateTime.now();
+    final slots = _dayScheduleMap[chosenDate.weekday];
+
+    TimeOfDay initial = const TimeOfDay(hour: 10, minute: 0);
+    if (slots != null && slots.isNotEmpty && slots.first['start'] != null) {
+      try {
+        final p = slots.first['start']!.split(':');
+        initial = TimeOfDay(hour: int.parse(p[0]), minute: int.parse(p[1]));
+      } catch (_) {}
+    }
+
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: const TimeOfDay(hour: 10, minute: 0),
+      initialTime: initial,
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme.light(primary: _getBrandColor()),
@@ -181,7 +381,16 @@ class _BookingScreenState extends State<BookingScreen> {
         child: child!,
       ),
     );
+
     if (picked != null) {
+      final pickedMinutes = picked.hour * 60 + picked.minute;
+      if (!_isTimeValidForDate(chosenDate, pickedMinutes)) {
+        final dayName = DateFormat('EEEE').format(chosenDate);
+        final timingStr = _getFormattedDayTiming(chosenDate.weekday);
+        _showErrorSnackBar("Selected time is outside the available schedule ($timingStr) for $dayName.");
+        return;
+      }
+
       setState(() {
         _timeController.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
       });
@@ -220,6 +429,22 @@ class _BookingScreenState extends State<BookingScreen> {
 
   Future<void> _submitBooking() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Schedule Validation
+    final chosenDate = DateTime.tryParse(_dateController.text);
+    if (chosenDate != null && !_isDaySelectable(chosenDate)) {
+      _showErrorSnackBar("Doctor/Service is not available on ${DateFormat('EEEE').format(chosenDate)}. Please select an available day.");
+      return;
+    }
+
+    if (chosenDate != null) {
+      final pickedMinutes = _timeToMinutes(_timeController.text);
+      if (!_isTimeValidForDate(chosenDate, pickedMinutes)) {
+        final timingStr = _getFormattedDayTiming(chosenDate.weekday);
+        _showErrorSnackBar("Please select a time within the available hours ($timingStr) for ${DateFormat('EEEE').format(chosenDate)}.");
+        return;
+      }
+    }
 
     setState(() => _isLoading = true);
 
@@ -542,6 +767,10 @@ class _BookingScreenState extends State<BookingScreen> {
                         // Section 2: Preferred Schedule
                         _buildSectionHeader(Icons.calendar_month_outlined, "Schedule & Visiting Mode"),
                         const SizedBox(height: 10),
+                        if (_formattedScheduleText.isNotEmpty) ...[
+                          _buildScheduleBadge(),
+                          const SizedBox(height: 10),
+                        ],
                         Row(
                           children: [
                             Expanded(child: _buildDatePicker()),
@@ -969,6 +1198,53 @@ class _BookingScreenState extends State<BookingScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildScheduleBadge() {
+    if (_formattedScheduleText.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: _getBrandColor().withAlpha(14),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _getBrandColor().withAlpha(45)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.event_available_rounded, size: 16, color: _getBrandColor()),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "AVAILABLE SCHEDULE & HOURS",
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: _getBrandColor(),
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _formattedScheduleText,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E293B),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

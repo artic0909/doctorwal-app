@@ -288,6 +288,7 @@ class PathologyTestsDetailsScreen extends StatelessWidget {
                         itemId: test['id']?.toString(),
                         itemName: testName,
                         itemPrice: testPrice,
+                        schedule: test['test_day_time'],
                       ),
                     ),
                   );

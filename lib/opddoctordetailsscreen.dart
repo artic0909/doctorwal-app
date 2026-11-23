@@ -167,6 +167,7 @@ class ODPDoctorDetailScreen extends StatelessWidget {
                         itemId: doctor['id']?.toString(),
                         itemName: docName,
                         itemPrice: fees,
+                        schedule: doctor['visit_day_time'],
                       ),
                     ),
                   );
