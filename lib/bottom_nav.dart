@@ -125,6 +125,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> with SingleTickerProv
   void _onTabSelected(int index) {
     _refreshUserData();
     ProfileEditScreen.profileUpdateNotifier.value++;
+    if (index == 2) {
+      MyHealthScreen.refreshNotifier.value++;
+    }
 
     if (_currentIndex != index) {
       _notchAnim = Tween<double>(

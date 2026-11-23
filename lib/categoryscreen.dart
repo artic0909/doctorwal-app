@@ -20,6 +20,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:demoapp/bottom_nav.dart';
 import 'package:demoapp/account_tab_screen.dart';
 import 'package:demoapp/profileeditscreen.dart';
+import 'package:demoapp/my_bills_payments_screen.dart';
 
 class CategoryHomeScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -492,88 +493,11 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
   }
 
   Future<void> _showMyBills() async {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MyBillsPaymentsScreen(userData: widget.userData),
       ),
-      backgroundColor: Colors.white,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 25),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withAlpha(25),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.receipt_long_rounded, color: Color(0xFFF57F17), size: 36),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  "My Bills & Payment Invoices",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "All consultation and diagnostic invoices are synced with your records",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.blueGrey[400], fontSize: 13),
-                ),
-                const SizedBox(height: 20),
-                ListTile(
-                  tileColor: const Color(0xFFF8FAFF),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                  leading: const Icon(Icons.calendar_today_rounded, color: Color(0xFF1565C0)),
-                  title: const Text("Appointment Invoices", style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text("View paid and upcoming consultation fees"),
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AllAppointmentsScreen(userData: widget.userData),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 10),
-                ListTile(
-                  tileColor: const Color(0xFFF8FAFF),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                  leading: const Icon(Icons.assignment_rounded, color: Color(0xFF2E7D32)),
-                  title: const Text("Diagnostic & Test Invoices", style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text("View test receipts and digital bills"),
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MedicalHistoryScreen(initialTabIndex: 0),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -1089,7 +1013,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                   ),
                   // 8. Pay Your Bills
                   _categoryCircleItem(
-                    title: "Pay Your\nBills",
+                    title: "My Bills\n& Payments",
                     color: const Color(0xFFF57F17),
                     customIcon: Stack(
                       alignment: Alignment.center,

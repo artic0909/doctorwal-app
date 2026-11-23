@@ -9,9 +9,12 @@ import 'package:demoapp/healthparametersscreen.dart';
 import 'package:demoapp/alldoctorsscreen.dart';
 import 'package:demoapp/Models/appointment_model.dart';
 import 'package:demoapp/Services/apiservice.dart';
+import 'package:demoapp/profileeditscreen.dart';
+import 'package:demoapp/my_bills_payments_screen.dart';
 
 class MyHealthScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
+  static final ValueNotifier<int> refreshNotifier = ValueNotifier<int>(0);
 
   const MyHealthScreen({super.key, required this.userData});
 
@@ -22,6 +25,8 @@ class MyHealthScreen extends StatefulWidget {
 class _MyHealthScreenState extends State<MyHealthScreen> {
   String _memberId = '';
   String _medicalCardNo = '';
+  String _currentName = '';
+  String? _currentImg;
 
   final ApiService _apiService = ApiService();
   List<AppointmentModel> _recentAppointments = [];
@@ -33,15 +38,27 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
   @override
   void initState() {
     super.initState();
+    _currentName = widget.userData['name'] ?? widget.userData['user_name'] ?? 'Saklin Mustak';
+    _currentImg = widget.userData['image']?.toString();
     _loadIds();
     _fetchCompletedAppointments();
+    MyHealthScreen.refreshNotifier.addListener(_onAutoRefresh);
+    ProfileEditScreen.profileUpdateNotifier.addListener(_onAutoRefresh);
   }
 
   @override
   void dispose() {
+    MyHealthScreen.refreshNotifier.removeListener(_onAutoRefresh);
+    ProfileEditScreen.profileUpdateNotifier.removeListener(_onAutoRefresh);
     _autoScrollTimer?.cancel();
     _appointmentScrollController.dispose();
     super.dispose();
+  }
+
+  void _onAutoRefresh() {
+    if (!mounted) return;
+    _loadIds();
+    _fetchCompletedAppointments();
   }
 
   Future<void> _loadIds() async {
@@ -51,16 +68,26 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
     String cardNo = widget.userData['medical_card_no']?.toString() ??
         widget.userData['medicalcardno']?.toString() ??
         '';
+    String userName = widget.userData['name'] ?? widget.userData['user_name'] ?? 'Saklin Mustak';
+    String? userImg = widget.userData['image']?.toString();
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (memId.isEmpty) {
-        memId = prefs.getString('member_id') ?? '';
+      if (prefs.getString('member_id') != null && prefs.getString('member_id')!.isNotEmpty) {
+        memId = prefs.getString('member_id')!;
       }
-      if (cardNo.isEmpty) {
-        cardNo = prefs.getString('medical_card_no') ??
-            prefs.getString('medicalcardno') ??
-            '';
+      if (prefs.getString('medical_card_no') != null && prefs.getString('medical_card_no')!.isNotEmpty) {
+        cardNo = prefs.getString('medical_card_no')!;
+      }
+      if (prefs.getString('name') != null && prefs.getString('name')!.isNotEmpty) {
+        userName = prefs.getString('name')!;
+      } else if (prefs.getString('user_name') != null && prefs.getString('user_name')!.isNotEmpty) {
+        userName = prefs.getString('user_name')!;
+      }
+      if (prefs.getString('image') != null && prefs.getString('image')!.isNotEmpty) {
+        userImg = prefs.getString('image')!;
+      } else if (prefs.getString('profile_image') != null && prefs.getString('profile_image')!.isNotEmpty) {
+        userImg = prefs.getString('profile_image')!;
       }
     } catch (e) {
       debugPrint("Error loading card/member IDs: $e");
@@ -70,6 +97,8 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
       setState(() {
         _memberId = memId.isNotEmpty ? memId : 'DW-2026';
         _medicalCardNo = cardNo.isNotEmpty ? cardNo : 'DW-CARD';
+        _currentName = userName;
+        _currentImg = userImg;
       });
     }
   }
@@ -206,9 +235,10 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String currentName =
-        widget.userData['name'] ?? widget.userData['user_name'] ?? 'Saklin Mustak';
-    final String? currentImg = widget.userData['image']?.toString();
+    final String currentName = _currentName.isNotEmpty
+        ? _currentName
+        : (widget.userData['name'] ?? widget.userData['user_name'] ?? 'Saklin Mustak');
+    final String? currentImg = _currentImg ?? widget.userData['image']?.toString();
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     final double topPadding = (statusBarHeight > 0 ? statusBarHeight : 24.0) + 14.0;
 
@@ -484,156 +514,185 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
 
           // 2. SCROLLABLE CONTENT (Using ClampingScrollPhysics - NOT Spring / Bouncing)
           Expanded(
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(), // Solid, non-spring scroll
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
+            child: RefreshIndicator(
+              color: const Color(0xFF0D47A1),
+              backgroundColor: Colors.white,
+              onRefresh: () async {
+                await Future.wait([
+                  _loadIds(),
+                  _fetchCompletedAppointments(),
+                ]);
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
 
-                  // Action Cards List (Sequence 1 to 4)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        // 1. View My Appointments
-                        _buildActionCard(
-                          context: context,
-                          icon: Icons.event_available_rounded,
-                          iconColor: const Color(0xFF059669), // Emerald Green
-                          iconBgColor: const Color(0xFFECFDF5),
-                          title: "View My Appointments",
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    AllAppointmentsScreen(userData: widget.userData),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12),
-
-                        // 2. View Medical Reports
-                        _buildActionCard(
-                          context: context,
-                          icon: Icons.medical_information_rounded,
-                          iconColor: const Color(0xFFD97706), // Warm Amber
-                          iconBgColor: const Color(0xFFFFFBEB),
-                          title: "View Medical Reports",
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const MedicalHistoryScreen(initialTabIndex: 0),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12),
-
-                        // 3. View Doctor Prescriptions
-                        _buildActionCard(
-                          context: context,
-                          icon: Icons.medication_rounded,
-                          iconColor: const Color(0xFF2563EB), // Medical Blue
-                          iconBgColor: const Color(0xFFEFF6FF),
-                          title: "View Doctor Prescriptions",
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const MedicalHistoryScreen(initialTabIndex: 1),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12),
-
-                        // 4. View Health Vitals Records
-                        _buildActionCard(
-                          context: context,
-                          icon: Icons.monitor_heart_rounded,
-                          iconColor: const Color(0xFFE11D48), // Vital Pulse Red
-                          iconBgColor: const Color(0xFFFFF1F2),
-                          title: "View Health Vitals Records",
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const HealthParametersScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Section Title: Recent Appointments (with View All link)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Recent Appointments",
-                          style: TextStyle(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    AllAppointmentsScreen(userData: widget.userData),
-                              ),
-                            );
-                          },
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                "View All",
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF1565C0),
+                    // Action Cards List (Sequence 1 to 5)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          // 1. View My Appointments
+                          _buildActionCard(
+                            context: context,
+                            icon: Icons.event_available_rounded,
+                            iconColor: const Color(0xFF059669), // Emerald Green
+                            iconBgColor: const Color(0xFFECFDF5),
+                            title: "View My Appointments",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      AllAppointmentsScreen(userData: widget.userData),
                                 ),
-                              ),
-                              SizedBox(width: 2),
-                              Icon(Icons.arrow_forward_ios_rounded,
-                                  size: 11, color: Color(0xFF1565C0)),
-                            ],
+                              );
+                            },
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+
+                          // 2. View Medical Reports
+                          _buildActionCard(
+                            context: context,
+                            icon: Icons.medical_information_rounded,
+                            iconColor: const Color(0xFFD97706), // Warm Amber
+                            iconBgColor: const Color(0xFFFFFBEB),
+                            title: "View Medical Reports",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const MedicalHistoryScreen(initialTabIndex: 0),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12),
+
+                          // 3. View Doctor Prescriptions
+                          _buildActionCard(
+                            context: context,
+                            icon: Icons.medication_rounded,
+                            iconColor: const Color(0xFF2563EB), // Medical Blue
+                            iconBgColor: const Color(0xFFEFF6FF),
+                            title: "View Doctor Prescriptions",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const MedicalHistoryScreen(initialTabIndex: 1),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12),
+
+                          // 4. View Health Vitals Records
+                          _buildActionCard(
+                            context: context,
+                            icon: Icons.monitor_heart_rounded,
+                            iconColor: const Color(0xFFE11D48), // Vital Pulse Red
+                            iconBgColor: const Color(0xFFFFF1F2),
+                            title: "View Health Vitals Records",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const HealthParametersScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12),
+
+                          // 5. View Bills & Transactions
+                          _buildActionCard(
+                            context: context,
+                            icon: Icons.receipt_long_rounded,
+                            iconColor: const Color(0xFFF57F17), // Amber / Golden
+                            iconBgColor: const Color(0xFFFFFBEB),
+                            title: "View Bills & Transactions",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      MyBillsPaymentsScreen(userData: widget.userData),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 24),
 
-                  // Horizontal Scrollable Cards (Auto-scrolls latest completed appointments with full details)
-                  SizedBox(
-                    height: 188,
-                    child: _buildAppointmentsSection(context),
-                  ),
+                    // Section Title: Recent Appointments (with View All link)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Recent Appointments",
+                            style: TextStyle(
+                              fontSize: 16.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      AllAppointmentsScreen(userData: widget.userData),
+                                ),
+                              );
+                            },
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "View All",
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1565C0),
+                                  ),
+                                ),
+                                SizedBox(width: 2),
+                                Icon(Icons.arrow_forward_ios_rounded,
+                                    size: 11, color: Color(0xFF1565C0)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
-                  // Bottom padding for curved floating nav bar
-                  const SizedBox(height: 110),
-                ],
+                    const SizedBox(height: 12),
+
+                    // Horizontal Scrollable Cards (Auto-scrolls latest completed appointments with full details)
+                    SizedBox(
+                      height: 188,
+                      child: _buildAppointmentsSection(context),
+                    ),
+
+                    // Bottom padding for curved floating nav bar
+                    const SizedBox(height: 110),
+                  ],
+                ),
               ),
             ),
           ),

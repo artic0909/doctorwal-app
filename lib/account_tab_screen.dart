@@ -6,6 +6,7 @@ import 'package:demoapp/changepasswordscreen.dart';
 import 'package:demoapp/notificationscreen.dart';
 import 'package:demoapp/contactscreen.dart';
 import 'package:demoapp/privacypolicyscreen.dart';
+import 'package:demoapp/my_bills_payments_screen.dart';
 import 'package:demoapp/Services/apiservice.dart';
 
 class AccountTabScreen extends StatefulWidget {
@@ -420,6 +421,23 @@ class _AccountTabScreenState extends State<AccountTabScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => ChangePasswordScreen(email: _email),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 9),
+
+                        // 3.1 My Bills & Payments
+                        _buildActionTile(
+                          icon: Icons.receipt_long_rounded,
+                          iconColor: const Color(0xFF059669), // Emerald Green
+                          iconBgColor: const Color(0xFFECFDF5),
+                          title: "My Bills & Payments",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => MyBillsPaymentsScreen(userData: widget.userData),
                               ),
                             );
                           },

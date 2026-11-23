@@ -22,6 +22,10 @@ class AppointmentModel {
   final Map<String, dynamic>? opdContact;
   final Map<String, dynamic>? pathologyContact;
   final Map<String, dynamic>? doctorContact;
+  final String? paymentStatus;
+  final String? paymentAmount;
+  final String? razorpayPaymentId;
+  final String? razorpayOrderId;
 
   AppointmentModel({
     required this.id,
@@ -47,6 +51,10 @@ class AppointmentModel {
     this.opdContact,
     this.pathologyContact,
     this.doctorContact,
+    this.paymentStatus,
+    this.paymentAmount,
+    this.razorpayPaymentId,
+    this.razorpayOrderId,
   });
 
   bool get isVideoCall {
@@ -139,6 +147,10 @@ class AppointmentModel {
       opdContact: json['opd_contact'],
       pathologyContact: json['pathology_contact'],
       doctorContact: json['doctor_contact'],
+      paymentStatus: json['payment_status']?.toString(),
+      paymentAmount: json['payment_amount']?.toString(),
+      razorpayPaymentId: json['razorpay_payment_id']?.toString(),
+      razorpayOrderId: json['razorpay_order_id']?.toString(),
     );
   }
 
@@ -167,6 +179,10 @@ class AppointmentModel {
       'opd_contact': opdContact,
       'pathology_contact': pathologyContact,
       'doctor_contact': doctorContact,
+      'payment_status': paymentStatus,
+      'payment_amount': paymentAmount,
+      'razorpay_payment_id': razorpayPaymentId,
+      'razorpay_order_id': razorpayOrderId,
     };
   }
 }
