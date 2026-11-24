@@ -1257,12 +1257,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
 
   Widget _buildInstantVideoConsultCard() {
     void navigateToConsult() {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AllDoctorsScreen(userData: widget.userData),
-        ),
-      );
+      _showVideoConsultCategoryModal();
     }
 
     return GestureDetector(
@@ -1360,6 +1355,150 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showVideoConsultCategoryModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            12,
+            16,
+            MediaQuery.of(context).padding.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag indicator
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Option 1: Specialized Doctors
+              _buildConsultModalOption(
+                icon: Icons.medical_services_rounded,
+                iconColor: const Color(0xFF1565C0),
+                iconBgColor: const Color(0xFFEFF6FF),
+                title: "Specialized Doctors",
+                onTap: () {
+                  Navigator.pop(modalContext);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AllDoctorsScreen(
+                        userData: widget.userData,
+                        filterRegistrationType: 'doctor',
+                        pageTitle: 'Specialized Doctors',
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Option 2: Physiotherapist & Allied Care
+              _buildConsultModalOption(
+                icon: Icons.accessibility_new_rounded,
+                iconColor: const Color(0xFFD97706),
+                iconBgColor: const Color(0xFFFFFBEB),
+                title: "Physiotherapist & Allied Care",
+                onTap: () {
+                  Navigator.pop(modalContext);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AllDoctorsScreen(
+                        userData: widget.userData,
+                        filterRegistrationType: 'others',
+                        pageTitle: 'Physiotherapist & Allied Care',
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildConsultModalOption({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(5),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: Color(0xFF94A3B8),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
