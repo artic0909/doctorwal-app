@@ -28,6 +28,7 @@ class AllDoctorsScreen extends StatefulWidget {
 class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
   static List<AllAvailableDoctorsModel> _cachedDoctors = [];
   List<AllAvailableDoctorsModel> _doctors = [];
+  List<AllAvailableDoctorsModel> _allClientDoctors = []; // Store unpaginated pool for 10-by-10 chunking
   String _searchQuery = '';
   late TextEditingController _searchController;
   final ScrollController _scrollController = ScrollController();
@@ -92,11 +93,36 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
     });
   }
 
+  List<AllAvailableDoctorsModel> _filterByType(List<AllAvailableDoctorsModel> list) {
+    final bool isOthers = widget.filterRegistrationType == 'others';
+    return list.where((d) {
+      if (isOthers) {
+        final reg = d.clinicRegistrationType.toLowerCase().trim();
+        final spec = (d.partnerDoctorSpecialist ?? '').toLowerCase();
+        final desig = (d.partnerDoctorDesignation ?? '').toLowerCase();
+        final name = (d.partnerDoctorName ?? '').toLowerCase();
+        return reg == 'others' ||
+               reg.contains('other') ||
+               spec.contains('physio') ||
+               spec.contains('allied') ||
+               spec.contains('therapy') ||
+               desig.contains('physio') ||
+               name.contains('physio') ||
+               name.contains('allied');
+      } else if (widget.filterRegistrationType == 'doctor') {
+        return !d.clinicRegistrationType.toLowerCase().contains('other') &&
+               !(d.partnerDoctorSpecialist ?? '').toLowerCase().contains('physio');
+      }
+      return true;
+    }).toList();
+  }
+
   Future<void> _fetchInitialDoctors() async {
     if (_searchQuery.isEmpty && _cachedDoctors.isNotEmpty && widget.filterRegistrationType == null) {
       if (mounted) {
         setState(() {
           _doctors = List.from(_cachedDoctors);
+          _allClientDoctors = [];
           _isLoading = false;
           _currentPage = 1;
         });
@@ -108,6 +134,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
           _isLoading = true;
           _currentPage = 1;
           _doctors = [];
+          _allClientDoctors = [];
         });
       }
       await _fetchDoctors(1);
@@ -122,7 +149,9 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
       if (_searchQuery.isNotEmpty) {
         queryParam += '&query=${Uri.encodeComponent(_searchQuery)}';
       } else if (isOthers) {
-        queryParam += '&query=other';
+        queryParam += '&registration_type=others&query=other';
+      } else if (widget.filterRegistrationType != null) {
+        queryParam += '&registration_type=${Uri.encodeComponent(widget.filterRegistrationType!)}';
       }
 
       if (_isNearMe) {
@@ -139,26 +168,39 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
         final jsonData = json.decode(response.body);
         final List<dynamic> data = jsonData['data'] ?? [];
         final bool isSearch = jsonData['is_search'] ?? false;
+        final int backendLastPage = jsonData['last_page'] ?? 1;
         
-        final newDoctors = data.map((json) => AllAvailableDoctorsModel.fromJson(json)).toList();
+        final parsedDoctors = data.map((json) => AllAvailableDoctorsModel.fromJson(json)).toList();
+        final filteredNew = _filterByType(parsedDoctors);
+
         if (page == 1 && _searchQuery.isEmpty && widget.filterRegistrationType == null) {
-          _cachedDoctors = List.from(newDoctors);
+          _cachedDoctors = List.from(parsedDoctors);
         }
 
         if (mounted) {
           setState(() {
-            if (page == 1) {
-              _doctors = newDoctors;
-            } else {
-              _doctors.addAll(newDoctors);
-            }
-            
-            if (isSearch) {
+            // Case A: The backend returned an unpaginated / search batch (e.g. 40+ items at once)
+            // Or backend is_search is true but we have more than 10 items to display.
+            if ((isSearch || backendLastPage <= 1) && filteredNew.length > 10) {
+              _allClientDoctors = filteredNew;
               _currentPage = 1;
-              _lastPage = 1;
+              _lastPage = (_allClientDoctors.length / 10).ceil();
+              _doctors = _allClientDoctors.take(10).toList();
             } else {
-              _currentPage = jsonData['current_page'] ?? 1;
-              _lastPage = jsonData['last_page'] ?? 1;
+              // Case B: Standard 10-item backend pagination (OPD/Pathology style)
+              if (page == 1) {
+                _doctors = filteredNew;
+              } else {
+                _doctors.addAll(filteredNew);
+              }
+              
+              if (isSearch) {
+                _currentPage = 1;
+                _lastPage = 1;
+              } else {
+                _currentPage = jsonData['current_page'] ?? 1;
+                _lastPage = backendLastPage;
+              }
             }
           });
         }
@@ -172,8 +214,27 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
     if (_currentPage >= _lastPage || _isLoadMoreLoading) return;
 
     setState(() => _isLoadMoreLoading = true);
-    await _fetchDoctors(_currentPage + 1);
-    setState(() => _isLoadMoreLoading = false);
+
+    if (_allClientDoctors.isNotEmpty) {
+      // Client-side chunking simulation with natural network delay so skeleton shows smoothly
+      await Future.delayed(const Duration(milliseconds: 550));
+      if (mounted) {
+        final nextPage = _currentPage + 1;
+        final startIndex = (nextPage - 1) * 10;
+        final nextChunk = _allClientDoctors.skip(startIndex).take(10).toList();
+        setState(() {
+          _doctors.addAll(nextChunk);
+          _currentPage = nextPage;
+          _isLoadMoreLoading = false;
+        });
+      }
+    } else {
+      // Backend pagination
+      await _fetchDoctors(_currentPage + 1);
+      if (mounted) {
+        setState(() => _isLoadMoreLoading = false);
+      }
+    }
   }
 
   @override
@@ -181,24 +242,8 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
     final bool isOthers = widget.filterRegistrationType == 'others';
     final Color themeColor = isOthers ? const Color(0xFFD97706) : const Color(0xFF6A1B9A);
 
-    final displayDoctors = isOthers
-        ? _doctors.where((d) {
-            final reg = d.clinicRegistrationType.toLowerCase().trim();
-            final spec = (d.partnerDoctorSpecialist ?? '').toLowerCase();
-            final desig = (d.partnerDoctorDesignation ?? '').toLowerCase();
-            final name = (d.partnerDoctorName ?? '').toLowerCase();
-            return reg == 'others' ||
-                   reg.contains('other') ||
-                   spec.contains('physio') ||
-                   spec.contains('allied') ||
-                   spec.contains('therapy') ||
-                   desig.contains('physio') ||
-                   name.contains('physio') ||
-                   name.contains('allied');
-          }).toList()
-        : (widget.filterRegistrationType == 'doctor'
-            ? _doctors.where((d) => !d.clinicRegistrationType.toLowerCase().contains('other')).toList()
-            : _doctors);
+    // _doctors is already filtered by _filterByType
+    final displayDoctors = _doctors;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
