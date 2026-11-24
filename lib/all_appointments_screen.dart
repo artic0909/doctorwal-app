@@ -394,10 +394,20 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
                         const SizedBox(height: 12),
                         _detailRow(Icons.location_on_outlined, "Location", _getClinicAddress(item)),
                         const SizedBox(height: 6),
-                        if (item.doctorId != null)
-                          _detailRow(Icons.person_outline, "Doctor", item.doctor?['doctor_name'] ?? "Specialist", isHighlighted: item.clinicType == 'OPD'),
-                        if (item.doctorId != null)
-                          _detailRow(Icons.person_outline, "Specialist", item.doctor?['doctor_specialist'] ?? "Medical Specialist", isHighlighted: item.clinicType == 'OPD'),
+                        if (item.clinicType == 'Doctor' || item.clinicType == 'Others' || item.doctorId != null)
+                          _detailRow(
+                            Icons.person_outline,
+                            item.clinicType == 'Others' ? "Specialist" : "Doctor",
+                            item.doctor?['doctor_name'] ?? item.doctorContact?['partner_doctor_name'] ?? item.clinicName ?? "Specialist",
+                            isHighlighted: item.clinicType == 'OPD',
+                          ),
+                        if (item.clinicType == 'Doctor' || item.clinicType == 'Others' || item.doctorId != null)
+                          _detailRow(
+                            Icons.medical_services_outlined,
+                            "Specialty",
+                            item.doctor?['doctor_specialist'] ?? item.doctorContact?['partner_doctor_specialist'] ?? (item.clinicType == 'Others' ? "Allied Care" : "General Physician"),
+                            isHighlighted: item.clinicType == 'OPD',
+                          ),
                         if (item.testId != null)
                           _detailRow(Icons.biotech_outlined, "Test", item.test?['test_name'] ?? "Diagnostic Test", isHighlighted: item.clinicType == 'Pathology'),
                         if (item.testId != null && item.test?['test_type'] != null)
