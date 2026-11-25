@@ -57,6 +57,7 @@ class _BookingScreenState extends State<BookingScreen> {
   final Map<String, List<Map<String, dynamic>>> _dateScheduleMap = {};
   List<Map<String, dynamic>> _currentAvailableSlots = [];
   String? _selectedSlotId;
+  bool _isSlotExpanded = true;
   bool _isAllDaysAllowed = false;
   String _formattedScheduleText = '';
 
@@ -1061,13 +1062,16 @@ class _BookingScreenState extends State<BookingScreen> {
                             ),
                           ],
                           const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(child: _buildDatePicker()),
-                              const SizedBox(width: 10),
-                              Expanded(child: _buildTimePicker()),
-                            ],
-                          ),
+                          if (widget.type == BookingType.doctor)
+                            _buildDatePicker()
+                          else
+                            Row(
+                              children: [
+                                Expanded(child: _buildDatePicker()),
+                                const SizedBox(width: 10),
+                                Expanded(child: _buildTimePicker()),
+                              ],
+                            ),
                           if (widget.type == BookingType.doctor && _currentAvailableSlots.isNotEmpty) ...[
                             const SizedBox(height: 14),
                             _buildSlotSelector(),
@@ -1624,6 +1628,7 @@ class _BookingScreenState extends State<BookingScreen> {
             final slotId = (slot['id'] ?? 'slot').toString();
             final slotName = (slot['name'] ?? 'Slot').toString();
             final isSelected = _selectedSlotId == slotId;
+            final isExpanded = isSelected && _isSlotExpanded;
             final start = slot['start'] != null ? _formatTime12h(slot['start']) : '';
             final end = slot['end'] != null ? _formatTime12h(slot['end']) : '';
 
@@ -1646,240 +1651,294 @@ class _BookingScreenState extends State<BookingScreen> {
 
             return Padding(
               padding: EdgeInsets.only(bottom: idx == _currentAvailableSlots.length - 1 ? 0 : 8),
-              child: InkWell(
-                onTap: () {
-                  setState(() {
-                    _selectedSlotId = slotId;
-                    _generateSubSlotsForActiveShift();
-                  });
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-                  decoration: BoxDecoration(
-                    color: isSelected ? _getBrandColor().withAlpha(14) : const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected ? _getBrandColor() : const Color(0xFFE2E8F0),
-                      width: isSelected ? 1.4 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: iconBg,
-                          borderRadius: BorderRadius.circular(9),
-                        ),
-                        child: Icon(icon, size: 16, color: iconColor),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              slotName,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w800,
-                                color: isSelected ? _getBrandColor() : const Color(0xFF0F172A),
-                              ),
-                            ),
-                            if (start.isNotEmpty && end.isNotEmpty)
-                              Text(
-                                "$start - $end",
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: isSelected ? _getBrandColor().withAlpha(200) : const Color(0xFF64748B),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                        size: 20,
-                        color: isSelected ? _getBrandColor() : const Color(0xFFCBD5E1),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-          if (_subSlots.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.only(top: 10),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-              ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Row(
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        if (_selectedSlotId == slotId) {
+                          _isSlotExpanded = !_isSlotExpanded;
+                        } else {
+                          _selectedSlotId = slotId;
+                          _isSlotExpanded = true;
+                          _generateSubSlotsForActiveShift();
+                        }
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: isSelected ? _getBrandColor().withAlpha(14) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected ? _getBrandColor() : const Color(0xFFE2E8F0),
+                          width: isSelected ? 1.4 : 1,
+                        ),
+                      ),
+                      child: Row(
                         children: [
-                          Icon(Icons.timer_outlined, size: 14, color: Color(0xFF334155)),
-                          SizedBox(width: 5),
-                          Text(
-                            "CHOOSE 10-MINUTE SLOT",
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF334155),
-                              letterSpacing: 0.4,
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: iconBg,
+                              borderRadius: BorderRadius.circular(9),
                             ),
+                            child: Icon(icon, size: 16, color: iconColor),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  slotName,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: isSelected ? _getBrandColor() : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                if (start.isNotEmpty && end.isNotEmpty)
+                                  Text(
+                                    "$start - $end",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: isSelected ? _getBrandColor().withAlpha(200) : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                            size: 20,
+                            color: isSelected ? _getBrandColor() : const Color(0xFF94A3B8),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                            size: 20,
+                            color: isSelected ? _getBrandColor() : const Color(0xFFCBD5E1),
                           ),
                         ],
                       ),
-                      if (_isLoadingSlots)
-                        const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      else
-                        Text(
-                          "${_subSlots.where((s) => s['isBooked'] == false).length} / ${_subSlots.length} available",
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: _getBrandColor(),
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _subSlots.map((sub) {
-                      final bool isBooked = sub['isBooked'] == true;
-                      final String startTime = sub['startTime'];
-                      final String endTime = sub['endTime'];
-                      final int index = sub['index'];
-                      final bool isSelected = _selectedSubSlotTime == startTime && !isBooked;
-
-                      return InkWell(
-                        onTap: isBooked
-                            ? null
-                            : () {
-                                setState(() {
-                                  _selectedSubSlotTime = startTime;
-                                  _timeController.text = startTime;
-                                });
-                              },
-                        borderRadius: BorderRadius.circular(10),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 160),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                          decoration: BoxDecoration(
-                            color: isBooked
-                                ? const Color(0xFFF1F5F9)
-                                : isSelected
-                                    ? _getBrandColor()
-                                    : Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: isBooked
-                                  ? const Color(0xFFCBD5E1)
-                                  : isSelected
-                                      ? _getBrandColor()
-                                      : const Color(0xFFE2E8F0),
-                              width: isSelected ? 1.5 : 1,
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeInOut,
+                    alignment: Alignment.topCenter,
+                    child: (isExpanded && _subSlots.isNotEmpty)
+                        ? Container(
+                            margin: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: _getBrandColor().withAlpha(45)),
                             ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: _getBrandColor().withAlpha(60),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        "Slot $index",
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w800,
-                                          color: isBooked
-                                              ? const Color(0xFF94A3B8)
-                                              : isSelected
-                                                  ? Colors.white
-                                                  : const Color(0xFF0F172A),
-                                          decoration: isBooked ? TextDecoration.lineThrough : null,
-                                        ),
-                                      ),
-                                      if (isBooked) ...[
-                                        const SizedBox(width: 5),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFFEE2E2),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: const Text(
-                                            "Booked",
-                                            style: TextStyle(
-                                              fontSize: 8.5,
-                                              fontWeight: FontWeight.w800,
-                                              color: Color(0xFFDC2626),
-                                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Row(
+                                      children: [
+                                        Icon(Icons.timer_outlined, size: 13.5, color: Color(0xFF334155)),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          "CHOOSE 10-MINUTE SLOT",
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF334155),
+                                            letterSpacing: 0.4,
                                           ),
                                         ),
                                       ],
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    "${_formatTime12h(startTime)} - ${_formatTime12h(endTime)}",
-                                    style: TextStyle(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: isBooked
-                                          ? const Color(0xFF94A3B8)
-                                          : isSelected
-                                              ? Colors.white.withAlpha(220)
-                                              : const Color(0xFF64748B),
-                                      decoration: isBooked ? TextDecoration.lineThrough : null,
                                     ),
-                                  ),
-                                ],
-                              ),
-                              if (isSelected) ...[
-                                const SizedBox(width: 6),
-                                const Icon(Icons.check_circle_rounded, size: 14, color: Colors.white),
+                                    if (_isLoadingSlots)
+                                      const SizedBox(
+                                        width: 13,
+                                        height: 13,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    else
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: _getBrandColor().withAlpha(18),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          "${_subSlots.where((s) => s['isBooked'] == false).length} / ${_subSlots.length} available",
+                                          style: TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: _getBrandColor(),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final double maxW = constraints.maxWidth;
+                                    final int crossAxisCount = maxW >= 660 ? 4 : (maxW >= 460 ? 3 : 2);
+                                    return GridView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      padding: EdgeInsets.zero,
+                                      itemCount: _subSlots.length,
+                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: crossAxisCount,
+                                        crossAxisSpacing: 8,
+                                        mainAxisSpacing: 8,
+                                        mainAxisExtent: 52,
+                                      ),
+                                      itemBuilder: (context, subIdx) {
+                                        final sub = _subSlots[subIdx];
+                                        final bool isBooked = sub['isBooked'] == true;
+                                        final String startTime = sub['startTime'];
+                                        final String endTime = sub['endTime'];
+                                        final int slotNumber = sub['index'];
+                                        final bool isSubSelected = _selectedSubSlotTime == startTime && !isBooked;
+
+                                        return InkWell(
+                                          onTap: isBooked
+                                              ? null
+                                              : () {
+                                                  setState(() {
+                                                    _selectedSubSlotTime = startTime;
+                                                    _timeController.text = startTime;
+                                                  });
+                                                },
+                                          borderRadius: BorderRadius.circular(10),
+                                          child: AnimatedContainer(
+                                            duration: const Duration(milliseconds: 160),
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: isBooked
+                                                  ? const Color(0xFFF1F5F9)
+                                                  : isSubSelected
+                                                      ? _getBrandColor()
+                                                      : Colors.white,
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: isBooked
+                                                    ? const Color(0xFFCBD5E1)
+                                                    : isSubSelected
+                                                        ? _getBrandColor()
+                                                        : const Color(0xFFE2E8F0),
+                                                width: isSubSelected ? 1.5 : 1,
+                                              ),
+                                              boxShadow: isSubSelected
+                                                  ? [
+                                                      BoxShadow(
+                                                        color: _getBrandColor().withAlpha(55),
+                                                        blurRadius: 6,
+                                                        offset: const Offset(0, 2),
+                                                      ),
+                                                    ]
+                                                  : null,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Flexible(
+                                                            child: Text(
+                                                              "Slot $slotNumber",
+                                                              maxLines: 1,
+                                                              overflow: TextOverflow.ellipsis,
+                                                              style: TextStyle(
+                                                                fontSize: 11,
+                                                                fontWeight: FontWeight.w800,
+                                                                color: isBooked
+                                                                    ? const Color(0xFF94A3B8)
+                                                                    : isSubSelected
+                                                                        ? Colors.white
+                                                                        : const Color(0xFF0F172A),
+                                                                decoration: isBooked ? TextDecoration.lineThrough : null,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          if (isBooked) ...[
+                                                            const SizedBox(width: 4),
+                                                            Container(
+                                                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                                              decoration: BoxDecoration(
+                                                                color: const Color(0xFFFEE2E2),
+                                                                borderRadius: BorderRadius.circular(4),
+                                                              ),
+                                                              child: const Text(
+                                                                "Booked",
+                                                                style: TextStyle(
+                                                                  fontSize: 8,
+                                                                  fontWeight: FontWeight.w800,
+                                                                  color: Color(0xFFDC2626),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      FittedBox(
+                                                        fit: BoxFit.scaleDown,
+                                                        alignment: Alignment.centerLeft,
+                                                        child: Text(
+                                                          "${_formatTime12h(startTime)} - ${_formatTime12h(endTime)}",
+                                                          maxLines: 1,
+                                                          style: TextStyle(
+                                                            fontSize: 9.5,
+                                                            fontWeight: FontWeight.w600,
+                                                            color: isBooked
+                                                                ? const Color(0xFF94A3B8)
+                                                                : isSubSelected
+                                                                    ? Colors.white.withAlpha(225)
+                                                                    : const Color(0xFF64748B),
+                                                            decoration: isBooked ? TextDecoration.lineThrough : null,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                if (isSubSelected) ...[
+                                                  const SizedBox(width: 4),
+                                                  const Icon(Icons.check_circle_rounded, size: 15, color: Colors.white),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                               ],
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
                   ),
                 ],
               ),
-            ),
-          ],
+            );
+          }),
         ],
       ),
     );
