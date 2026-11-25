@@ -866,36 +866,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                       ),
                     ),
                   ),
-                  // 3. Pathology Tests
-                  _categoryCircleItem(
-                    title: "Pathology\nTests",
-                    color: const Color(0xFF2E7D32),
-                    customIcon: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        const Icon(Icons.biotech_rounded, color: Color(0xFF2E7D32), size: 24),
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(1),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.science_rounded, color: Color(0xFF1B5E20), size: 10),
-                          ),
-                        ),
-                      ],
-                    ),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AllAvailablePathologyScreen(userData: widget.userData),
-                      ),
-                    ),
-                  ),
-                  // 4. Chambers (OPD)
+                  
+                  // 3. Chambers (OPD)
                   _categoryCircleItem(
                     title: "Chambers\n(OPD)",
                     color: const Color(0xFFE53935),
@@ -921,6 +893,35 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => AllAvailableOPDScreen(userData: widget.userData),
+                      ),
+                    ),
+                  ),
+                  // 4. Pathology Tests
+                  _categoryCircleItem(
+                    title: "Pathology\nTests",
+                    color: const Color(0xFF2E7D32),
+                    customIcon: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.biotech_rounded, color: Color(0xFF2E7D32), size: 24),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.science_rounded, color: Color(0xFF1B5E20), size: 10),
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AllAvailablePathologyScreen(userData: widget.userData),
                       ),
                     ),
                   ),
