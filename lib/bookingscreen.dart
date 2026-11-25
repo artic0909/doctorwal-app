@@ -57,8 +57,8 @@ class _BookingScreenState extends State<BookingScreen> {
   final Map<String, List<Map<String, dynamic>>> _dateScheduleMap = {};
   List<Map<String, dynamic>> _currentAvailableSlots = [];
   String? _selectedSlotId;
-  // ignore: unused_field
-  final bool _isAllDaysAllowed = false;
+  bool _isAllDaysAllowed = false;
+  String _formattedScheduleText = '';
 
   @override
   void initState() {
@@ -86,7 +86,16 @@ class _BookingScreenState extends State<BookingScreen> {
       }
     }
     _dateController.text = DateFormat('yyyy-MM-dd').format(validDate);
-    _updateSlotsForSelectedDate(validDate);
+    if (widget.type == BookingType.doctor) {
+      _updateSlotsForSelectedDate(validDate);
+    } else {
+      final slots = _getSlotsForDate(validDate);
+      if (slots.isNotEmpty && slots.first['start'] != null) {
+        _timeController.text = slots.first['start']!;
+      } else {
+        _timeController.text = "10:00";
+      }
+    }
     
     if (widget.type == BookingType.doctor && !_isPhysioOrOthers) {
       _visitMode = 'online';
@@ -98,6 +107,8 @@ class _BookingScreenState extends State<BookingScreen> {
   void _parseSchedule() {
     _dayScheduleMap.clear();
     _dateScheduleMap.clear();
+    _isAllDaysAllowed = false;
+    _formattedScheduleText = '';
     if (widget.schedule == null) return;
     dynamic raw = widget.schedule;
     if (raw is String) {
@@ -115,12 +126,15 @@ class _BookingScreenState extends State<BookingScreen> {
 
     if (raw is! List) return;
 
+    final List<String> summaryParts = [];
+
     for (var item in raw) {
       if (item is! Map) continue;
       final scheduleType = (item['schedule_type'] ?? 'day').toString().trim().toLowerCase();
       final dateStr = item['date']?.toString().trim();
+      final dayStr = (item['day'] ?? item['doctor_visit_day'] ?? item['test_day'] ?? item['partner_doctor_visit_day'] ?? '').toString().trim();
 
-      // Extract slot items
+      // Extract slot items if any
       List<Map<String, dynamic>> slots = [];
       if (item['slots'] is List && (item['slots'] as List).isNotEmpty) {
         for (var s in item['slots']) {
@@ -138,28 +152,95 @@ class _BookingScreenState extends State<BookingScreen> {
           }
         }
       } else {
-        final startTime = item['start_time'] != null && item['start_time'].toString().isNotEmpty
-            ? item['start_time'].toString().trim()
-            : null;
-        final endTime = item['end_time'] != null && item['end_time'].toString().isNotEmpty
-            ? item['end_time'].toString().trim()
-            : null;
-        if (startTime != null || endTime != null) {
+        final startTime = item['start_time'] ?? item['doctor_visit_start_time'] ?? item['test_start_time'] ?? item['partner_doctor_visit_start_time'];
+        final endTime = item['end_time'] ?? item['doctor_visit_end_time'] ?? item['test_end_time'] ?? item['partner_doctor_visit_end_time'];
+        final sStart = startTime != null && startTime.toString().isNotEmpty ? startTime.toString().trim() : null;
+        final sEnd = endTime != null && endTime.toString().isNotEmpty ? endTime.toString().trim() : null;
+        if (sStart != null || sEnd != null) {
           slots.add({
+            'id': 'regular',
+            'name': 'Visiting Hours',
+            'start': sStart,
+            'end': sEnd,
+          });
+        }
+      }
+
+      // 1. Date-specific schedule (Doctor / Others)
+      if (scheduleType == 'date' && dateStr != null && dateStr.isNotEmpty) {
+        _dateScheduleMap[dateStr] = slots;
+        continue;
+      }
+
+      // 2. Day-wise schedule (Standard for OPD & Pathology, or fallback for Doctor)
+      final rawStart = item['start_time'] ?? item['doctor_visit_start_time'] ?? item['test_start_time'] ?? item['partner_doctor_visit_start_time'];
+      final rawEnd = item['end_time'] ?? item['doctor_visit_end_time'] ?? item['test_end_time'] ?? item['partner_doctor_visit_end_time'];
+      final startTime = rawStart != null && rawStart.toString().isNotEmpty ? rawStart.toString().trim() : (slots.isNotEmpty ? slots.first['start'] : null);
+      final endTime = rawEnd != null && rawEnd.toString().isNotEmpty ? rawEnd.toString().trim() : (slots.isNotEmpty ? slots.last['end'] : null);
+
+      if (dayStr.toLowerCase().contains('all day') || dayStr.toLowerCase().contains('everyday')) {
+        _isAllDaysAllowed = true;
+        for (int w = 1; w <= 7; w++) {
+          final list = _dayScheduleMap.putIfAbsent(w, () => []);
+          if (slots.isNotEmpty) {
+            list.addAll(slots);
+          } else {
+            list.add({
+              'id': 'regular',
+              'name': 'Visiting Hours',
+              'start': startTime,
+              'end': endTime,
+            });
+          }
+        }
+        String timeSummary = '';
+        if (startTime != null && endTime != null) {
+          timeSummary = ' (${_formatTime12h(startTime)} - ${_formatTime12h(endTime)})';
+        } else if (startTime != null) {
+          timeSummary = ' (From ${_formatTime12h(startTime)})';
+        }
+        summaryParts.add('All Days$timeSummary');
+        continue;
+      }
+
+      final weekday = _dayNameToWeekday(dayStr);
+      if (weekday != null) {
+        final list = _dayScheduleMap.putIfAbsent(weekday, () => []);
+        if (slots.isNotEmpty) {
+          list.addAll(slots);
+        } else {
+          list.add({
             'id': 'regular',
             'name': 'Visiting Hours',
             'start': startTime,
             'end': endTime,
           });
         }
+        String timeSummary = '';
+        if (startTime != null && endTime != null) {
+          timeSummary = ' (${_formatTime12h(startTime)} - ${_formatTime12h(endTime)})';
+        } else if (startTime != null) {
+          timeSummary = ' (From ${_formatTime12h(startTime)})';
+        }
+        summaryParts.add('${dayStr.length >= 3 ? dayStr.substring(0, 3) : dayStr}$timeSummary');
       }
-
-      if (scheduleType == 'date' && dateStr != null && dateStr.isNotEmpty) {
-        _dateScheduleMap[dateStr] = slots;
-        continue;
-      }
-      // Day-wise schedules are hidden for online booking for now
     }
+
+    if (summaryParts.isNotEmpty) {
+      _formattedScheduleText = summaryParts.join(', ');
+    }
+  }
+
+  int? _dayNameToWeekday(String dayName) {
+    final d = dayName.trim().toLowerCase();
+    if (d.contains('mon')) return DateTime.monday;
+    if (d.contains('tue')) return DateTime.tuesday;
+    if (d.contains('wed')) return DateTime.wednesday;
+    if (d.contains('thu')) return DateTime.thursday;
+    if (d.contains('fri')) return DateTime.friday;
+    if (d.contains('sat')) return DateTime.saturday;
+    if (d.contains('sun')) return DateTime.sunday;
+    return null;
   }
 
   String _formatTime12h(String timeStr) {
@@ -188,11 +269,19 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   List<Map<String, dynamic>> _getSlotsForDate(DateTime date) {
-    final dateStr = DateFormat('yyyy-MM-dd').format(date);
-    if (_dateScheduleMap.containsKey(dateStr) && _dateScheduleMap[dateStr]!.isNotEmpty) {
-      return _dateScheduleMap[dateStr]!;
+    if (widget.type == BookingType.doctor) {
+      final dateStr = DateFormat('yyyy-MM-dd').format(date);
+      if (_dateScheduleMap.containsKey(dateStr) && _dateScheduleMap[dateStr]!.isNotEmpty) {
+        return _dateScheduleMap[dateStr]!;
+      }
+      if (_dayScheduleMap.containsKey(date.weekday)) {
+        return _dayScheduleMap[date.weekday]!;
+      }
+      return [];
     }
-    return [];
+
+    // For OPD and Pathology: return day schedule
+    return _dayScheduleMap[date.weekday] ?? [];
   }
 
   String _getFormattedDayTiming(DateTime date) {
@@ -201,7 +290,7 @@ class _BookingScreenState extends State<BookingScreen> {
     final parts = slots.map((s) {
       final start = s['start'];
       final end = s['end'];
-      final name = s['name'] ?? 'Slot';
+      final name = s['name'] ?? 'Hours';
       if (start != null && end != null) {
         return "$name: ${_formatTime12h(start)} - ${_formatTime12h(end)}";
       } else if (start != null) {
@@ -213,9 +302,18 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   bool _isDaySelectable(DateTime date) {
-    if (_dateScheduleMap.isEmpty) return false;
-    final dateStr = DateFormat('yyyy-MM-dd').format(date);
-    return _dateScheduleMap.containsKey(dateStr);
+    if (widget.type == BookingType.doctor) {
+      if (_dateScheduleMap.isNotEmpty) {
+        final dateStr = DateFormat('yyyy-MM-dd').format(date);
+        return _dateScheduleMap.containsKey(dateStr);
+      }
+      if (_dayScheduleMap.isEmpty || _isAllDaysAllowed) return true;
+      return _dayScheduleMap.containsKey(date.weekday);
+    }
+
+    // For OPD and Pathology: standard day-wise schedule (e.g. Monday - Sunday)
+    if (_dayScheduleMap.isEmpty || _isAllDaysAllowed) return true;
+    return _dayScheduleMap.containsKey(date.weekday);
   }
 
   bool _isTimeValidForDate(DateTime date, int pickedMinutes) {
@@ -350,7 +448,17 @@ class _BookingScreenState extends State<BookingScreen> {
 
       setState(() {
         _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
-        _updateSlotsForSelectedDate(picked);
+        if (widget.type == BookingType.doctor) {
+          _updateSlotsForSelectedDate(picked);
+        } else {
+          final chosenSlots = _getSlotsForDate(picked);
+          if (chosenSlots.isNotEmpty && chosenSlots.first['start'] != null) {
+            final currentMin = _timeToMinutes(_timeController.text);
+            if (!_isTimeValidForDate(picked, currentMin)) {
+              _timeController.text = chosenSlots.first['start']!;
+            }
+          }
+        }
       });
     }
   }
@@ -828,6 +936,33 @@ class _BookingScreenState extends State<BookingScreen> {
 
                           // Section 1: Preferred Schedule (Patient info is hidden since user is logged in, still stored on submit)
                           _buildSectionHeader(Icons.calendar_month_outlined, "Schedule & Visiting Mode"),
+                          if (widget.type != BookingType.doctor && _formattedScheduleText.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: _getBrandColor().withAlpha(12),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: _getBrandColor().withAlpha(40)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.event_available_rounded, size: 16, color: _getBrandColor()),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      "Available Schedule: $_formattedScheduleText",
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: _getBrandColor(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 10),
                           Row(
                             children: [
@@ -836,7 +971,7 @@ class _BookingScreenState extends State<BookingScreen> {
                               Expanded(child: _buildTimePicker()),
                             ],
                           ),
-                          if (_currentAvailableSlots.isNotEmpty) ...[
+                          if (widget.type == BookingType.doctor && _currentAvailableSlots.isNotEmpty) ...[
                             const SizedBox(height: 14),
                             _buildSlotSelector(),
                           ],
@@ -1338,7 +1473,7 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Widget _buildSlotSelector() {
-    if (_currentAvailableSlots.isEmpty) return const SizedBox.shrink();
+    if (widget.type != BookingType.doctor || _currentAvailableSlots.isEmpty) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(12),
