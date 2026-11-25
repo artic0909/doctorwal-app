@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,9 +53,12 @@ class _BookingScreenState extends State<BookingScreen> {
   String _visitMode = 'offline';
   bool _isLoading = false;
 
-  final Map<int, List<Map<String, String?>>> _dayScheduleMap = {};
-  bool _isAllDaysAllowed = false;
-  String _formattedScheduleText = '';
+  final Map<int, List<Map<String, dynamic>>> _dayScheduleMap = {};
+  final Map<String, List<Map<String, dynamic>>> _dateScheduleMap = {};
+  List<Map<String, dynamic>> _currentAvailableSlots = [];
+  String? _selectedSlotId;
+  // ignore: unused_field
+  final bool _isAllDaysAllowed = false;
 
   @override
   void initState() {
@@ -73,7 +77,7 @@ class _BookingScreenState extends State<BookingScreen> {
     // Auto-select first valid date according to the schedule
     DateTime validDate = DateTime.now();
     if (!_isDaySelectable(validDate)) {
-      for (int i = 1; i <= 30; i++) {
+      for (int i = 1; i <= 60; i++) {
         final candidate = DateTime.now().add(Duration(days: i));
         if (_isDaySelectable(candidate)) {
           validDate = candidate;
@@ -82,14 +86,7 @@ class _BookingScreenState extends State<BookingScreen> {
       }
     }
     _dateController.text = DateFormat('yyyy-MM-dd').format(validDate);
-
-    // Auto-select valid start time for that day
-    final slots = _dayScheduleMap[validDate.weekday];
-    if (slots != null && slots.isNotEmpty && slots.first['start'] != null) {
-      _timeController.text = slots.first['start']!;
-    } else {
-      _timeController.text = "10:00";
-    }
+    _updateSlotsForSelectedDate(validDate);
     
     if (widget.type == BookingType.doctor && !_isPhysioOrOthers) {
       _visitMode = 'online';
@@ -99,6 +96,8 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   void _parseSchedule() {
+    _dayScheduleMap.clear();
+    _dateScheduleMap.clear();
     if (widget.schedule == null) return;
     dynamic raw = widget.schedule;
     if (raw is String) {
@@ -116,61 +115,51 @@ class _BookingScreenState extends State<BookingScreen> {
 
     if (raw is! List) return;
 
-    final List<String> summaryParts = [];
-
     for (var item in raw) {
       if (item is! Map) continue;
-      final dayStr = (item['day'] ?? item['test_day'] ?? '').toString().trim();
-      final startTime = item['start_time'] != null && item['start_time'].toString().isNotEmpty
-          ? item['start_time'].toString().trim()
-          : null;
-      final endTime = item['end_time'] != null && item['end_time'].toString().isNotEmpty
-          ? item['end_time'].toString().trim()
-          : null;
+      final scheduleType = (item['schedule_type'] ?? 'day').toString().trim().toLowerCase();
+      final dateStr = item['date']?.toString().trim();
 
-      if (dayStr.toLowerCase().contains('all day')) {
-        _isAllDaysAllowed = true;
-        for (int w = 1; w <= 7; w++) {
-          _dayScheduleMap.putIfAbsent(w, () => []).add({'start': startTime, 'end': endTime});
+      // Extract slot items
+      List<Map<String, dynamic>> slots = [];
+      if (item['slots'] is List && (item['slots'] as List).isNotEmpty) {
+        for (var s in item['slots']) {
+          if (s is Map) {
+            final sId = (s['id'] ?? 'slot').toString();
+            final sName = (s['name'] ?? (sId.isNotEmpty ? sId[0].toUpperCase() + sId.substring(1) : 'Slot')).toString();
+            final sStart = s['start_time'] != null && s['start_time'].toString().isNotEmpty ? s['start_time'].toString().trim() : null;
+            final sEnd = s['end_time'] != null && s['end_time'].toString().isNotEmpty ? s['end_time'].toString().trim() : null;
+            slots.add({
+              'id': sId,
+              'name': sName,
+              'start': sStart,
+              'end': sEnd,
+            });
+          }
         }
-        String timeSummary = '';
-        if (startTime != null && endTime != null) {
-          timeSummary = ' (${_formatTime12h(startTime)} - ${_formatTime12h(endTime)})';
-        } else if (startTime != null) {
-          timeSummary = ' (From ${_formatTime12h(startTime)})';
+      } else {
+        final startTime = item['start_time'] != null && item['start_time'].toString().isNotEmpty
+            ? item['start_time'].toString().trim()
+            : null;
+        final endTime = item['end_time'] != null && item['end_time'].toString().isNotEmpty
+            ? item['end_time'].toString().trim()
+            : null;
+        if (startTime != null || endTime != null) {
+          slots.add({
+            'id': 'regular',
+            'name': 'Visiting Hours',
+            'start': startTime,
+            'end': endTime,
+          });
         }
-        summaryParts.add('All Days$timeSummary');
+      }
+
+      if (scheduleType == 'date' && dateStr != null && dateStr.isNotEmpty) {
+        _dateScheduleMap[dateStr] = slots;
         continue;
       }
-
-      final weekday = _dayNameToWeekday(dayStr);
-      if (weekday != null) {
-        _dayScheduleMap.putIfAbsent(weekday, () => []).add({'start': startTime, 'end': endTime});
-        String timeSummary = '';
-        if (startTime != null && endTime != null) {
-          timeSummary = ' (${_formatTime12h(startTime)} - ${_formatTime12h(endTime)})';
-        } else if (startTime != null) {
-          timeSummary = ' (From ${_formatTime12h(startTime)})';
-        }
-        summaryParts.add('${dayStr.substring(0, 3)}$timeSummary');
-      }
+      // Day-wise schedules are hidden for online booking for now
     }
-
-    if (summaryParts.isNotEmpty) {
-      _formattedScheduleText = summaryParts.join(', ');
-    }
-  }
-
-  int? _dayNameToWeekday(String dayName) {
-    final d = dayName.trim().toLowerCase();
-    if (d.contains('mon')) return DateTime.monday;
-    if (d.contains('tue')) return DateTime.tuesday;
-    if (d.contains('wed')) return DateTime.wednesday;
-    if (d.contains('thu')) return DateTime.thursday;
-    if (d.contains('fri')) return DateTime.friday;
-    if (d.contains('sat')) return DateTime.saturday;
-    if (d.contains('sun')) return DateTime.sunday;
-    return null;
   }
 
   String _formatTime12h(String timeStr) {
@@ -198,31 +187,40 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  String _getFormattedDayTiming(int weekday) {
-    final slots = _dayScheduleMap[weekday];
-    if (slots == null || slots.isEmpty) return 'Consultation hours';
+  List<Map<String, dynamic>> _getSlotsForDate(DateTime date) {
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
+    if (_dateScheduleMap.containsKey(dateStr) && _dateScheduleMap[dateStr]!.isNotEmpty) {
+      return _dateScheduleMap[dateStr]!;
+    }
+    return [];
+  }
+
+  String _getFormattedDayTiming(DateTime date) {
+    final slots = _getSlotsForDate(date);
+    if (slots.isEmpty) return 'Consultation hours';
     final parts = slots.map((s) {
       final start = s['start'];
       final end = s['end'];
+      final name = s['name'] ?? 'Slot';
       if (start != null && end != null) {
-        return "${_formatTime12h(start)} - ${_formatTime12h(end)}";
+        return "$name: ${_formatTime12h(start)} - ${_formatTime12h(end)}";
       } else if (start != null) {
-        return "From ${_formatTime12h(start)}";
+        return "$name: From ${_formatTime12h(start)}";
       }
-      return "All Day";
+      return "$name: All Day";
     }).toList();
     return parts.join(', ');
   }
 
   bool _isDaySelectable(DateTime date) {
-    if (_dayScheduleMap.isEmpty || _isAllDaysAllowed) return true;
-    return _dayScheduleMap.containsKey(date.weekday);
+    if (_dateScheduleMap.isEmpty) return false;
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
+    return _dateScheduleMap.containsKey(dateStr);
   }
 
   bool _isTimeValidForDate(DateTime date, int pickedMinutes) {
-    if (_dayScheduleMap.isEmpty) return true;
-    final slots = _dayScheduleMap[date.weekday];
-    if (slots == null || slots.isEmpty) return true;
+    final slots = _getSlotsForDate(date);
+    if (slots.isEmpty) return true;
 
     for (var slot in slots) {
       final start = slot['start'];
@@ -318,7 +316,7 @@ class _BookingScreenState extends State<BookingScreen> {
   Future<void> _selectDate() async {
     DateTime currentSelected = DateTime.tryParse(_dateController.text) ?? DateTime.now();
     if (!_isDaySelectable(currentSelected)) {
-      for (int i = 0; i <= 30; i++) {
+      for (int i = 0; i <= 60; i++) {
         final d = DateTime.now().add(Duration(days: i));
         if (_isDaySelectable(d)) {
           currentSelected = d;
@@ -331,7 +329,7 @@ class _BookingScreenState extends State<BookingScreen> {
       context: context,
       initialDate: currentSelected,
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 60)),
+      lastDate: DateTime.now().add(const Duration(days: 90)),
       selectableDayPredicate: (DateTime date) => _isDaySelectable(date),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
@@ -345,28 +343,80 @@ class _BookingScreenState extends State<BookingScreen> {
       ),
     );
     if (picked != null) {
+      if (!_isDaySelectable(picked)) {
+        _showNotAvailableDialog(picked);
+        return;
+      }
+
       setState(() {
         _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
-        // If current time is not valid for newly selected day, reset to that day's start time
-        final chosenSlots = _dayScheduleMap[picked.weekday];
-        if (chosenSlots != null && chosenSlots.isNotEmpty && chosenSlots.first['start'] != null) {
-          final currentMin = _timeToMinutes(_timeController.text);
-          if (!_isTimeValidForDate(picked, currentMin)) {
-            _timeController.text = chosenSlots.first['start']!;
-          }
-        }
+        _updateSlotsForSelectedDate(picked);
       });
+    }
+  }
+
+  void _showNotAvailableDialog(DateTime date) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.event_busy_rounded, color: Colors.redAccent, size: 24),
+            SizedBox(width: 8),
+            Text("Not Available", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text(
+          "Specialist is not available on ${DateFormat('EEEE, dd MMM yyyy').format(date)}.\nPlease choose an available visiting day or date.",
+          style: const TextStyle(fontSize: 13, color: Color(0xFF334155)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("OK", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _updateSlotsForSelectedDate(DateTime date) {
+    final slots = _getSlotsForDate(date);
+    _currentAvailableSlots = slots;
+    if (slots.isNotEmpty) {
+      _selectedSlotId = slots.first['id'] ?? 'slot';
+      if (slots.first['start'] != null) {
+        _timeController.text = slots.first['start'];
+      }
+    } else {
+      _selectedSlotId = null;
     }
   }
 
   Future<void> _selectTime() async {
     final DateTime chosenDate = DateTime.tryParse(_dateController.text) ?? DateTime.now();
-    final slots = _dayScheduleMap[chosenDate.weekday];
+    final slots = _getSlotsForDate(chosenDate);
+
+    Map<String, dynamic>? activeSlot;
+    if (slots.isNotEmpty) {
+      activeSlot = slots.firstWhere(
+        (s) => (s['id']?.toString() ?? '') == (_selectedSlotId ?? ''),
+        orElse: () => slots.first,
+      );
+    }
 
     TimeOfDay initial = const TimeOfDay(hour: 10, minute: 0);
-    if (slots != null && slots.isNotEmpty && slots.first['start'] != null) {
+    // Prefer current _timeController value if valid, otherwise activeSlot's start time
+    final currentTimeStr = _timeController.text.trim();
+    if (currentTimeStr.contains(':')) {
       try {
-        final p = slots.first['start']!.split(':');
+        final p = currentTimeStr.split(':');
+        initial = TimeOfDay(hour: int.parse(p[0]), minute: int.parse(p[1]));
+      } catch (_) {}
+    } else if (activeSlot != null && activeSlot['start'] != null) {
+      try {
+        final p = activeSlot['start'].toString().split(':');
         initial = TimeOfDay(hour: int.parse(p[0]), minute: int.parse(p[1]));
       } catch (_) {}
     }
@@ -385,13 +435,29 @@ class _BookingScreenState extends State<BookingScreen> {
     if (picked != null) {
       final pickedMinutes = picked.hour * 60 + picked.minute;
       if (!_isTimeValidForDate(chosenDate, pickedMinutes)) {
-        final dayName = DateFormat('EEEE').format(chosenDate);
-        final timingStr = _getFormattedDayTiming(chosenDate.weekday);
-        _showErrorSnackBar("Selected time is outside the available schedule ($timingStr) for $dayName.");
+        final dateLabel = DateFormat('EEEE, dd MMM').format(chosenDate);
+        final timingStr = _getFormattedDayTiming(chosenDate);
+        _showErrorSnackBar("Selected time is outside the available visiting schedule ($timingStr) for $dateLabel.");
         return;
       }
 
+      // Auto-match the slot containing the picked time (so selecting 6:00 PM stays on Evening, or switches if needed)
+      String? matchedSlotId = _selectedSlotId;
+      for (final s in slots) {
+        final sStart = s['start'];
+        final sEnd = s['end'];
+        final int startMin = sStart != null ? _timeToMinutes(sStart.toString()) : 0;
+        final int endMin = sEnd != null ? _timeToMinutes(sEnd.toString()) : 1439;
+        if (pickedMinutes >= startMin && pickedMinutes <= endMin) {
+          matchedSlotId = s['id']?.toString();
+          break;
+        }
+      }
+
       setState(() {
+        if (matchedSlotId != null) {
+          _selectedSlotId = matchedSlotId;
+        }
         _timeController.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
       });
     }
@@ -433,15 +499,15 @@ class _BookingScreenState extends State<BookingScreen> {
     // Schedule Validation
     final chosenDate = DateTime.tryParse(_dateController.text);
     if (chosenDate != null && !_isDaySelectable(chosenDate)) {
-      _showErrorSnackBar("Doctor/Service is not available on ${DateFormat('EEEE').format(chosenDate)}. Please select an available day.");
+      _showNotAvailableDialog(chosenDate);
       return;
     }
 
     if (chosenDate != null) {
       final pickedMinutes = _timeToMinutes(_timeController.text);
       if (!_isTimeValidForDate(chosenDate, pickedMinutes)) {
-        final timingStr = _getFormattedDayTiming(chosenDate.weekday);
-        _showErrorSnackBar("Please select a time within the available hours ($timingStr) for ${DateFormat('EEEE').format(chosenDate)}.");
+        final timingStr = _getFormattedDayTiming(chosenDate);
+        _showErrorSnackBar("Please select a time within the available hours ($timingStr) for ${DateFormat('EEEE, dd MMM').format(chosenDate)}.");
         return;
       }
     }
@@ -462,6 +528,7 @@ class _BookingScreenState extends State<BookingScreen> {
       'dw_user_id': syncedId ?? widget.userData['id'],
       'booking_date': _dateController.text,
       'booking_time': _timeController.text,
+      'booking_slot': _selectedSlotId ?? '',
       'visit_mode': _visitMode,
     };
 
@@ -730,77 +797,66 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget build(BuildContext context) {
     final price = _formatPrice(widget.itemPrice);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFF),
-      body: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              // 1. Sleek Gradient Header
-              SliverToBoxAdapter(
-                child: _buildHeader(context),
-              ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFF),
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                // 1. Fixed Sleek Gradient Header
+                _buildHeader(context),
 
-              // 2. Form Body
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Summary Card
-                        _buildSummaryCard(),
-                        const SizedBox(height: 18),
+                // 2. Scrollable Form Body
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      MediaQuery.of(context).viewPadding.bottom + 100,
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Summary Card
+                          _buildSummaryCard(),
+                          const SizedBox(height: 18),
 
-                        // Section 1: Patient Information
-                        _buildSectionHeader(Icons.person_outline_rounded, "Patient Information"),
-                        const SizedBox(height: 10),
-                        _buildTextField(_nameController, "Full Name", Icons.person_rounded),
-                        const SizedBox(height: 10),
-                        _buildTextField(_mobileController, "Mobile Number", Icons.phone_rounded, keyboardType: TextInputType.phone),
-                        const SizedBox(height: 10),
-                        _buildTextField(_emailController, "Email Address (Optional)", Icons.email_rounded, keyboardType: TextInputType.emailAddress, isRequired: false),
-                        const SizedBox(height: 20),
-
-                        // Section 2: Preferred Schedule
-                        _buildSectionHeader(Icons.calendar_month_outlined, "Schedule & Visiting Mode"),
-                        const SizedBox(height: 10),
-                        if (_formattedScheduleText.isNotEmpty) ...[
-                          _buildScheduleBadge(),
+                          // Section 1: Preferred Schedule (Patient info is hidden since user is logged in, still stored on submit)
+                          _buildSectionHeader(Icons.calendar_month_outlined, "Schedule & Visiting Mode"),
                           const SizedBox(height: 10),
-                        ],
-                        Row(
-                          children: [
-                            Expanded(child: _buildDatePicker()),
-                            const SizedBox(width: 10),
-                            Expanded(child: _buildTimePicker()),
+                          Row(
+                            children: [
+                              Expanded(child: _buildDatePicker()),
+                              const SizedBox(width: 10),
+                              Expanded(child: _buildTimePicker()),
+                            ],
+                          ),
+                          if (_currentAvailableSlots.isNotEmpty) ...[
+                            const SizedBox(height: 14),
+                            _buildSlotSelector(),
                           ],
-                        ),
-                        if (_showVisitModeSelector) ...[
-                          const SizedBox(height: 14),
-                          _buildVisitModeSelector(),
-                        ],
-                        const SizedBox(height: 20),
+                          if (_showVisitModeSelector) ...[
+                            const SizedBox(height: 14),
+                            _buildVisitModeSelector(),
+                          ],
+                          const SizedBox(height: 20),
 
-                        // Section 3: Notes / Symptoms
-                        _buildSectionHeader(Icons.edit_note_rounded, "Symptoms or Inquiries (Optional)"),
-                        const SizedBox(height: 10),
-                        _buildTextField(_inquiryController, "Describe any symptoms, medical history, or questions...", Icons.chat_bubble_outline_rounded, maxLines: 3, isRequired: false),
-                      ],
+                          // Section 2: Notes / Symptoms
+                          _buildSectionHeader(Icons.edit_note_rounded, "Symptoms or Inquiries (Optional)"),
+                          const SizedBox(height: 10),
+                          _buildTextField(_inquiryController, "Describe any symptoms, medical history, or questions...", Icons.chat_bubble_outline_rounded, maxLines: 3, isRequired: false),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: MediaQuery.of(context).viewPadding.bottom + 100,
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
 
           // Floating Bottom Confirmation Bar
           Positioned(
@@ -888,6 +944,7 @@ class _BookingScreenState extends State<BookingScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -934,7 +991,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  "Fill patient info to confirm your booking",
+                  "Select schedule & confirm your booking",
                   style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500),
                 ),
               ],
@@ -1141,30 +1198,70 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Widget _buildDatePicker() {
+    String displayDate = _dateController.text;
+    final parsed = DateTime.tryParse(displayDate);
+    if (parsed != null) {
+      displayDate = DateFormat('dd MMM yyyy').format(parsed);
+    }
+
     return InkWell(
       onTap: _selectDate,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withAlpha(6),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Icon(Icons.calendar_month_rounded, color: _getBrandColor(), size: 17),
-            const SizedBox(width: 8),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: _getBrandColor().withAlpha(18),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.calendar_today_rounded, color: _getBrandColor(), size: 16),
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text("DATE", style: TextStyle(fontSize: 8.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w800)),
-                  Text(_dateController.text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: Color(0xFF0F172A))),
+                  const Text(
+                    "DATE",
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: Color(0xFF94A3B8),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    displayDate,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12.5,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
                 ],
               ),
             ),
+            const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF94A3B8)),
           ],
         ),
       ),
@@ -1172,78 +1269,220 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Widget _buildTimePicker() {
+    final String displayTime = _timeController.text.isNotEmpty
+        ? _formatTime12h(_timeController.text)
+        : "Select";
+
     return InkWell(
       onTap: _selectTime,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withAlpha(6),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Icon(Icons.access_time_filled_rounded, color: _getBrandColor(), size: 17),
-            const SizedBox(width: 8),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: _getBrandColor().withAlpha(18),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.access_time_rounded, color: _getBrandColor(), size: 17),
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text("TIME", style: TextStyle(fontSize: 8.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w800)),
-                  Text(_timeController.text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: Color(0xFF0F172A))),
+                  const Text(
+                    "TIME",
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: Color(0xFF94A3B8),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    displayTime,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12.5,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
                 ],
               ),
             ),
+            const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF94A3B8)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildScheduleBadge() {
-    if (_formattedScheduleText.isEmpty) return const SizedBox.shrink();
+  Widget _buildSlotSelector() {
+    if (_currentAvailableSlots.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _getBrandColor().withAlpha(14),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _getBrandColor().withAlpha(45)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withAlpha(6),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.event_available_rounded, size: 16, color: _getBrandColor()),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "AVAILABLE SCHEDULE & HOURS",
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "SELECT VISITING SLOT",
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF64748B),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _getBrandColor().withAlpha(15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "${_currentAvailableSlots.length} available",
                   style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    color: _getBrandColor(),
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _formattedScheduleText,
-                  style: const TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
-                    height: 1.3,
+                    color: _getBrandColor(),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          const SizedBox(height: 10),
+          ...List.generate(_currentAvailableSlots.length, (idx) {
+            final slot = _currentAvailableSlots[idx];
+            final slotId = (slot['id'] ?? 'slot').toString();
+            final slotName = (slot['name'] ?? 'Slot').toString();
+            final isSelected = _selectedSlotId == slotId;
+            final start = slot['start'] != null ? _formatTime12h(slot['start']) : '';
+            final end = slot['end'] != null ? _formatTime12h(slot['end']) : '';
+
+            IconData icon = Icons.access_time_rounded;
+            Color iconBg = const Color(0xFFF1F5F9);
+            Color iconColor = const Color(0xFF475569);
+            if (slotId.toLowerCase() == 'morning') {
+              icon = Icons.wb_sunny_rounded;
+              iconBg = const Color(0xFFFEF3C7);
+              iconColor = const Color(0xFFD97706);
+            } else if (slotId.toLowerCase() == 'afternoon') {
+              icon = Icons.light_mode_rounded;
+              iconBg = const Color(0xFFFFEDD5);
+              iconColor = const Color(0xFFEA580C);
+            } else if (slotId.toLowerCase() == 'evening') {
+              icon = Icons.nights_stay_rounded;
+              iconBg = const Color(0xFFEDE9FE);
+              iconColor = const Color(0xFF6A1B9A);
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: idx == _currentAvailableSlots.length - 1 ? 0 : 8),
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedSlotId = slotId;
+                    if (slot['start'] != null) {
+                      _timeController.text = slot['start'];
+                    }
+                  });
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: isSelected ? _getBrandColor().withAlpha(14) : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? _getBrandColor() : const Color(0xFFE2E8F0),
+                      width: isSelected ? 1.4 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: iconBg,
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: Icon(icon, size: 16, color: iconColor),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              slotName,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w800,
+                                color: isSelected ? _getBrandColor() : const Color(0xFF0F172A),
+                              ),
+                            ),
+                            if (start.isNotEmpty && end.isNotEmpty)
+                              Text(
+                                "$start - $end",
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected ? _getBrandColor().withAlpha(200) : const Color(0xFF64748B),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                        size: 20,
+                        color: isSelected ? _getBrandColor() : const Color(0xFFCBD5E1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );

@@ -242,62 +242,300 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
   }
 
   Widget _buildAvailabilityList(BuildContext context, List<dynamic>? visitTime) {
-    if (visitTime == null || visitTime.isEmpty) {
+    final dateOnlySchedules = (visitTime ?? []).where((item) {
+      if (item is! Map) return false;
+      return (item['schedule_type'] == 'date' || item['type'] == 'date') && item['date'] != null;
+    }).toList();
+
+    if (dateOnlySchedules.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 30),
-          child: Text("No chamber hours available", style: TextStyle(color: Colors.blueGrey[200], fontSize: 13)),
+          child: Text("No upcoming consultation dates scheduled", style: TextStyle(color: Colors.blueGrey[300], fontSize: 13, fontWeight: FontWeight.w600)),
         ),
       );
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.fromLTRB(20, 5, 20, MediaQuery.of(context).viewPadding.bottom + 90),
-      itemCount: visitTime.length,
-      itemBuilder: (context, index) {
-        final item = visitTime[index];
-        final day = item['day'] ?? '-';
-        final start = item['start_time'] ?? '-';
-        final end = item['end_time'] ?? '-';
+    String formatTime(String? timeStr) {
+      if (timeStr == null || timeStr.trim().isEmpty) return '-';
+      try {
+        final time = DateFormat("HH:mm").parse(timeStr.trim());
+        return DateFormat("h:mm a").format(time);
+      } catch (e) {
+        return timeStr;
+      }
+    }
 
-        String formatTime(String timeStr) {
-          try {
-            final time = DateFormat("HH:mm").parse(timeStr);
-            return DateFormat("h:mm a").format(time);
-          } catch (e) {
-            return timeStr;
-          }
-        }
+    return ListView.builder(
+      padding: EdgeInsets.fromLTRB(20, 6, 20, MediaQuery.of(context).viewPadding.bottom + 96),
+      itemCount: dateOnlySchedules.length,
+      itemBuilder: (context, index) {
+        final item = dateOnlySchedules[index];
+        final dateStr = item['date']?.toString();
+        final parsedDate = dateStr != null ? DateTime.tryParse(dateStr) : null;
+        final day = item['day'] ?? (parsedDate != null ? DateFormat('EEEE').format(parsedDate) : '-');
+        final rawSlots = item['slots'];
+        final List<dynamic> slots = (rawSlots is List) ? rawSlots : [];
+
+        final String dayNum = parsedDate != null ? DateFormat('dd').format(parsedDate) : '--';
+        final String monthShort = parsedDate != null ? DateFormat('MMM').format(parsedDate).toUpperCase() : '';
+        final String fullDateLabel = parsedDate != null ? DateFormat('dd MMM yyyy').format(parsedDate) : (dateStr ?? '-');
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: const Color(0xFF6A1B9A).withAlpha(10)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(color: const Color(0xFF6A1B9A).withAlpha(10), shape: BoxShape.circle),
-                child: const Icon(Icons.calendar_month_rounded, color: Color(0xFF6A1B9A), size: 16),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withAlpha(10),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Card Header: Calendar Badge + Day & Date + Available Pill
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                child: Row(
                   children: [
-                    Text(day, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF263238))),
-                    const SizedBox(height: 2),
-                    Text("Session Availability", style: TextStyle(color: Colors.blueGrey[300], fontSize: 10, fontWeight: FontWeight.bold)),
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3E8FF),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF6A1B9A).withAlpha(30)),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (monthShort.isNotEmpty)
+                            Text(
+                              monthShort,
+                              style: const TextStyle(
+                                color: Color(0xFF6A1B9A),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.6,
+                                height: 1.0,
+                              ),
+                            ),
+                          const SizedBox(height: 2),
+                          Text(
+                            dayNum,
+                            style: const TextStyle(
+                              color: Color(0xFF4A148C),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              height: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            day.toString(),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            fullDateLabel,
+                            style: const TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF10B981),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          const Text(
+                            "Available",
+                            style: TextStyle(
+                              color: Color(0xFF047857),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Text(
-                "${formatTime(start)} - ${formatTime(end)}",
-                style: const TextStyle(color: Color(0xFF6A1B9A), fontSize: 12, fontWeight: FontWeight.w900),
+
+              const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+
+              // Slots List (Full-width aligned rows)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                child: Column(
+                  children: [
+                    if (slots.isNotEmpty)
+                      ...List.generate(slots.length, (sIdx) {
+                        final slot = slots[sIdx];
+                        final slotId = (slot['id'] ?? '').toString().toLowerCase();
+                        final slotName = slot['name'] ??
+                            (slotId.isNotEmpty ? slotId[0].toUpperCase() + slotId.substring(1) : 'Slot');
+                        final sStart = slot['start_time']?.toString() ?? '';
+                        final sEnd = slot['end_time']?.toString() ?? '';
+                        final String timeText = sStart.isNotEmpty && sEnd.isNotEmpty
+                            ? "${formatTime(sStart)} - ${formatTime(sEnd)}"
+                            : (sStart.isNotEmpty ? "From ${formatTime(sStart)}" : "Active");
+
+                        Color iconBg = const Color(0xFFF1F5F9);
+                        Color iconColor = const Color(0xFF475569);
+                        IconData icon = Icons.access_time_rounded;
+
+                        if (slotId == 'morning') {
+                          iconBg = const Color(0xFFFEF3C7);
+                          iconColor = const Color(0xFFD97706);
+                          icon = Icons.wb_sunny_rounded;
+                        } else if (slotId == 'afternoon') {
+                          iconBg = const Color(0xFFFFEDD5);
+                          iconColor = const Color(0xFFEA580C);
+                          icon = Icons.light_mode_rounded;
+                        } else if (slotId == 'evening') {
+                          iconBg = const Color(0xFFEDE9FE);
+                          iconColor = const Color(0xFF6A1B9A);
+                          icon = Icons.nights_stay_rounded;
+                        }
+
+                        return Container(
+                          margin: EdgeInsets.only(bottom: sIdx == slots.length - 1 ? 0 : 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(11),
+                            border: Border.all(color: const Color(0xFFE2E8F0).withAlpha(180)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: iconBg,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(icon, color: iconColor, size: 15),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  slotName.toString(),
+                                  style: const TextStyle(
+                                    color: Color(0xFF1E293B),
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: Text(
+                                  timeText,
+                                  style: const TextStyle(
+                                    color: Color(0xFF0F172A),
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      })
+                    else if (item['start_time'] != null || item['end_time'] != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(11),
+                          border: Border.all(color: const Color(0xFFE2E8F0).withAlpha(180)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3E8FF),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.access_time_rounded, color: Color(0xFF6A1B9A), size: 15),
+                            ),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Text(
+                                "Consultation Hours",
+                                style: TextStyle(
+                                  color: Color(0xFF1E293B),
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: Text(
+                                "${formatTime(item['start_time'])} - ${formatTime(item['end_time'])}",
+                                style: const TextStyle(
+                                  color: Color(0xFF0F172A),
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
