@@ -638,6 +638,10 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
                       if (isDoctorOrOthers) ...[
                         const SizedBox(height: 6),
                         _detailRow(Icons.schedule_rounded, "Slot Timing", _getSlotTimingInfo(item), isHighlighted: true),
+                        if (_getSubSlotDetails(item) != null) ...[
+                          const SizedBox(height: 6),
+                          _detailRow(Icons.timer_outlined, "Slot Details", _getSubSlotDetails(item)!, isHighlighted: true),
+                        ],
                       ],
                       if (isDoctorOrOthers || (item.visitMode ?? '').isNotEmpty) ...[
                         const SizedBox(height: 6),
@@ -932,6 +936,61 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
     } catch (_) {
       return timeStr;
     }
+  }
+
+  String? _getSubSlotDetails(AppointmentModel item) {
+    final int? bookingMins = _parseTimeToMinutes(item.bookingTime);
+    if (bookingMins == null || item.bookingDate == null) return null;
+
+    final rawSchedule = item.doctorContact?['visit_day_time'];
+    List<dynamic> scheduleList = [];
+
+    if (rawSchedule is List) {
+      scheduleList = rawSchedule;
+    } else if (rawSchedule is String && rawSchedule.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(rawSchedule);
+        if (decoded is List) scheduleList = decoded;
+      } catch (_) {}
+    }
+
+    for (final entry in scheduleList) {
+      if (entry is! Map) continue;
+      final schedType = (entry['schedule_type'] ?? entry['type'] ?? '').toString().toLowerCase();
+      final entryDate = entry['date']?.toString().trim();
+      if (schedType == 'date' && entryDate == item.bookingDate!.trim()) {
+        final slots = entry['slots'];
+        if (slots is List) {
+          for (final s in slots) {
+            if (s is! Map) continue;
+            final sStart = s['start_time']?.toString();
+            final sEnd = s['end_time']?.toString();
+            if (sStart == null) continue;
+            final int? startMin = _parseTimeToMinutes(sStart);
+            if (startMin == null) continue;
+            int endMin = (sEnd != null ? _parseTimeToMinutes(sEnd) : null) ?? (startMin + 60);
+            if (endMin <= startMin) endMin = startMin + 60;
+
+            if (bookingMins >= startMin && bookingMins < endMin) {
+              final int slotIndex = ((bookingMins - startMin) ~/ 10) + 1;
+              final int subStart = startMin + (slotIndex - 1) * 10;
+              final int subEnd = (subStart + 10 <= endMin) ? (subStart + 10) : endMin;
+
+              String fmtMin(int mins) {
+                final h24 = mins ~/ 60;
+                final m = mins % 60;
+                final period = h24 >= 12 ? 'PM' : 'AM';
+                final h12 = h24 % 12 == 0 ? 12 : h24 % 12;
+                return '$h12:${m.toString().padLeft(2, '0')} $period';
+              }
+
+              return "Slot $slotIndex (${fmtMin(subStart)} - ${fmtMin(subEnd)})";
+            }
+          }
+        }
+      }
+    }
+    return null;
   }
 
   String _getSlotTimingInfo(AppointmentModel item) {
