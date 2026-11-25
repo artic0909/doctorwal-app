@@ -1268,14 +1268,17 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         width: double.infinity,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: Colors.white,
+          gradient: const LinearGradient(
+            colors: [Color(0xFF0D47A1), Color(0xFF00695C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.blueGrey.withAlpha(25)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(6),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: const Color(0xFF0D47A1).withAlpha(50),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -1294,7 +1297,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF1565C0),
+                        color: Colors.white,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -1303,7 +1306,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                       "Connect with top verified doctors",
                       style: TextStyle(
                         fontSize: 11.5,
-                        color: Color(0xFF546E7A),
+                        color: Colors.white70,
                         fontWeight: FontWeight.w500,
                       ),
                       maxLines: 1,
@@ -1313,8 +1316,8 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     ElevatedButton(
                       onPressed: navigateToConsult,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00796B),
-                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF0D47A1),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1512,17 +1515,14 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
         width: double.infinity,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF0D47A1), Color(0xFF00695C)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.blueGrey.withAlpha(25)),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0D47A1).withAlpha(50),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
+              color: Colors.black.withAlpha(6),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -1535,7 +1535,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
               child: Icon(
                 Icons.support_agent_rounded,
                 size: 85,
-                color: Colors.white.withAlpha(20),
+                color: const Color(0xFF1565C0).withAlpha(12),
               ),
             ),
             Padding(
@@ -1547,16 +1547,16 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(35),
+                      color: const Color(0xFF1565C0).withAlpha(18),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white.withAlpha(60),
+                        color: const Color(0xFF1565C0).withAlpha(45),
                         width: 1.5,
                       ),
                     ),
                     child: const Icon(
                       Icons.support_agent_rounded,
-                      color: Colors.white,
+                      color: Color(0xFF1565C0),
                       size: 24,
                     ),
                   ),
@@ -1573,7 +1573,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                               width: 6,
                               height: 6,
                               decoration: const BoxDecoration(
-                                color: Color(0xFF4ADE80),
+                                color: Color(0xFF16A34A),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -1581,7 +1581,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                             const Text(
                               "24/7 HELPLINE",
                               style: TextStyle(
-                                color: Color(0xFF86EFAC),
+                                color: Color(0xFF15803D),
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.6,
@@ -1591,9 +1591,9 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                         ),
                         const SizedBox(height: 2),
                         const Text(
-                          "Need Medical Help?",
+                          "Need App Support?",
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF1E293B),
                             fontSize: 14.5,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -0.2,
@@ -1603,7 +1603,7 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                         const Text(
                           "Call our care team for instant support",
                           style: TextStyle(
-                            color: Colors.white70,
+                            color: Color(0xFF546E7A),
                             fontSize: 10.5,
                             fontWeight: FontWeight.w500,
                           ),
@@ -1618,11 +1618,11 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: const Color(0xFF0D47A1),
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withAlpha(25),
+                          color: const Color(0xFF0D47A1).withAlpha(40),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -1631,14 +1631,14 @@ class _CategoryHomeScreenState extends State<CategoryHomeScreen> {
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.call_rounded, size: 13, color: Color(0xFF0D47A1)),
+                        Icon(Icons.call_rounded, size: 13, color: Colors.white),
                         SizedBox(width: 4),
                         Text(
                           "Call Now",
                           style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0D47A1),
+                            color: Colors.white,
                           ),
                         ),
                       ],
