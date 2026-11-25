@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
@@ -312,7 +313,7 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
     final bool windowOpen = item.isWindowOpen();
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -323,178 +324,437 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Column(
-          children: [
-            // 1. Highlighted Header (Date & Time) at Top
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: statusColor.withAlpha(15),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today_outlined, size: 14, color: statusColor),
-                  const SizedBox(width: 6),
-                  Text(
-                    item.bookingDate ?? "N/A",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: statusColor),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _showAppointmentDetailsModal(item),
+            child: Column(
+              children: [
+                // 1. Highlighted Header (Date & Time) at Top
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  color: statusColor.withAlpha(15),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today_outlined, size: 14, color: statusColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        item.bookingDate ?? "N/A",
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: statusColor),
+                      ),
+                      const Spacer(),
+                      Icon(Icons.access_time_rounded, size: 14, color: statusColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        _formatTime(item.bookingTime),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: statusColor),
+                      ),
+                    ],
                   ),
-                  const Spacer(),
-                  Icon(Icons.access_time_rounded, size: 14, color: statusColor),
-                  const SizedBox(width: 6),
-                  Text(
-                    _formatTime(item.bookingTime),
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: statusColor),
-                  ),
-                ],
-              ),
-            ),
-            
-            // 2. Main Details
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: statusColor.withAlpha(20),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Icon(_getTypeIcon(item.clinicType), color: statusColor, size: 28),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              item.clinicType?.toUpperCase() ?? "APPOINTMENT",
-                              style: TextStyle(color: statusColor.withAlpha(180), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-                            ),
-                            _buildStatusBadge(item.status),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          _getClinicName(item),
-                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
-                        ),
-                        if (item.clinicType == 'Doctor')
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              item.doctorContact?['partner_doctor_specialist'] ?? item.doctor?['doctor_specialist'] ?? "Specialist",
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
-                            ),
-                          ),
-                        const SizedBox(height: 12),
-                        _detailRow(Icons.location_on_outlined, "Location", _getClinicAddress(item)),
-                        const SizedBox(height: 6),
-                        if (item.clinicType == 'Doctor' || item.clinicType == 'Others' || item.doctorId != null)
-                          _detailRow(
-                            Icons.person_outline,
-                            item.clinicType == 'Others' ? "Specialist" : "Doctor",
-                            item.doctor?['doctor_name'] ?? item.doctorContact?['partner_doctor_name'] ?? item.clinicName ?? "Specialist",
-                            isHighlighted: item.clinicType == 'OPD',
-                          ),
-                        if (item.clinicType == 'Doctor' || item.clinicType == 'Others' || item.doctorId != null)
-                          _detailRow(
-                            Icons.medical_services_outlined,
-                            "Specialty",
-                            item.doctor?['doctor_specialist'] ?? item.doctorContact?['partner_doctor_specialist'] ?? (item.clinicType == 'Others' ? "Allied Care" : "General Physician"),
-                            isHighlighted: item.clinicType == 'OPD',
-                          ),
-                        if (item.testId != null)
-                          _detailRow(Icons.biotech_outlined, "Test", item.test?['test_name'] ?? "Diagnostic Test", isHighlighted: item.clinicType == 'Pathology'),
-                        if (item.testId != null && item.test?['test_type'] != null)
-                          _detailRow(Icons.biotech_outlined, "Type", item.test?['test_type'], isHighlighted: item.clinicType == 'Pathology'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
 
-            // Video Consultation Action (If video call and upcoming)
-            if (isUpcoming && isVideo)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: windowOpen
-                    ? InkWell(
-                        onTap: () => _startVideoCall(item),
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0D9488).withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.videocam_rounded, color: Colors.white, size: 20),
-                              SizedBox(width: 8),
-                              Text(
-                                "Join Video Consultation",
-                                style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    : Container(
-                        padding: const EdgeInsets.symmetric(vertical: 11),
+                // 2. Compact Main Summary (Tap card for full details)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
                         decoration: BoxDecoration(
-                          color: Colors.blueGrey.withValues(alpha: 0.08),
+                          color: statusColor.withAlpha(20),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.2)),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Icon(_getTypeIcon(item.clinicType), color: statusColor, size: 26),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.videocam_outlined, color: Colors.blueGrey[400], size: 18),
-                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  item.clinicType?.toUpperCase() ?? "APPOINTMENT",
+                                  style: TextStyle(color: statusColor.withAlpha(180), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                                ),
+                                _buildStatusBadge(item.status),
+                              ],
+                            ),
+                            const SizedBox(height: 5),
                             Text(
-                              "Video Call: ${item.getWindowStartFormatted()}",
-                              style: TextStyle(color: Colors.blueGrey[700], fontSize: 13, fontWeight: FontWeight.w600),
+                              _getClinicName(item),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF263238)),
+                            ),
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    (item.clinicType == 'Doctor' || item.clinicType == 'Others')
+                                        ? (item.doctorContact?['partner_doctor_specialist'] ??
+                                            item.doctor?['doctor_specialist'] ??
+                                            (item.clinicType == 'Others' ? "Allied Care" : "Specialist"))
+                                        : (item.testId != null
+                                            ? (item.test?['test_name'] ?? "Diagnostic Test")
+                                            : _getClinicAddress(item)),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "Details",
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: statusColor),
+                                ),
+                                Icon(Icons.chevron_right_rounded, size: 16, color: statusColor),
+                              ],
                             ),
                           ],
                         ),
                       ),
-              ),
-            
-            // 3. Complete / Cancel Action Buttons
+                    ],
+                  ),
+                ),
+
+            // 3. Compact Single-Row Action Bar (Video + Complete + Cancel)
             if (isUpcoming)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
                 child: Row(
                   children: [
+                    if (isVideo) ...[
+                      Expanded(
+                        flex: 5,
+                        child: windowOpen
+                            ? InkWell(
+                                onTap: () => _startVideoCall(item),
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF0D9488).withValues(alpha: 0.28),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.videocam_rounded, color: Colors.white, size: 15),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          "Join Call",
+                                          style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w800),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.blueGrey.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.2)),
+                                ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.videocam_outlined, color: Colors.blueGrey[500], size: 15),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        item.getWindowStartFormatted(),
+                                        style: TextStyle(color: Colors.blueGrey[700], fontSize: 11, fontWeight: FontWeight.w700),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
                     Expanded(
-                      child: _modernActionButton(Icons.check_circle_outline, "Complete", Colors.green, () => _handleAction(item.id, 'Complete')),
+                      flex: 3,
+                      child: _compactActionButton(
+                        Icons.check_circle_outline,
+                        "Complete",
+                        Colors.green,
+                        () => _handleAction(item.id, 'Complete'),
+                      ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 6),
                     Expanded(
-                      child: _modernActionButton(Icons.cancel_outlined, "Cancel", Colors.red, () => _handleAction(item.id, 'Cancel')),
+                      flex: 3,
+                      child: _compactActionButton(
+                        Icons.cancel_outlined,
+                        "Cancel",
+                        Colors.red,
+                        () => _handleAction(item.id, 'Cancel'),
+                      ),
                     ),
                   ],
                 ),
               ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  void _showAppointmentDetailsModal(AppointmentModel item) {
+    final statusColor = _getStatusColor(item.status);
+    final bool isUpcoming = item.status == 'Upcoming' || item.status == 'Confirmed' || item.status == 'Pending' || item.status == null || item.status == '';
+    final bool isVideo = item.isVideoCall;
+    final bool isDoctorOrOthers = item.clinicType == 'Doctor' || item.clinicType == 'Others';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalCtx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            12,
+            20,
+            MediaQuery.of(modalCtx).viewPadding.bottom + 20,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Drag Handle
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Modal Header
+                Row(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: statusColor.withAlpha(22),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Icon(_getTypeIcon(item.clinicType), color: statusColor, size: 28),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                item.clinicType?.toUpperCase() ?? "APPOINTMENT",
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              const Spacer(),
+                              _buildStatusBadge(item.status),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getClinicName(item),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          if (isDoctorOrOthers)
+                            Text(
+                              item.doctorContact?['partner_doctor_specialist'] ??
+                                  item.doctor?['doctor_specialist'] ??
+                                  (item.clinicType == 'Others' ? "Allied Care" : "Specialist"),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1565C0),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                const SizedBox(height: 16),
+
+                // All Details Container
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    children: [
+                      _detailRow(Icons.calendar_today_outlined, "Date", item.bookingDate ?? "N/A", isHighlighted: true),
+                      const SizedBox(height: 6),
+                      _detailRow(Icons.access_time_rounded, "Booking Time", _formatTime(item.bookingTime), isHighlighted: true),
+                      if (isDoctorOrOthers) ...[
+                        const SizedBox(height: 6),
+                        _detailRow(Icons.schedule_rounded, "Slot Timing", _getSlotTimingInfo(item), isHighlighted: true),
+                      ],
+                      if (isDoctorOrOthers || (item.visitMode ?? '').isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        _detailRow(
+                          isVideo ? Icons.videocam_outlined : Icons.apartment_rounded,
+                          "Visit Mode",
+                          isVideo ? "Online Video Consultation" : "Physical Visit",
+                        ),
+                      ],
+                      if (isDoctorOrOthers || item.doctorId != null) ...[
+                        const SizedBox(height: 6),
+                        _detailRow(
+                          Icons.person_outline,
+                          item.clinicType == 'Others' ? "Specialist" : "Doctor",
+                          item.doctor?['doctor_name'] ?? item.doctorContact?['partner_doctor_name'] ?? item.clinicName ?? "Specialist",
+                        ),
+                        const SizedBox(height: 6),
+                        _detailRow(
+                          Icons.medical_services_outlined,
+                          "Specialty",
+                          item.doctor?['doctor_specialist'] ?? item.doctorContact?['partner_doctor_specialist'] ?? (item.clinicType == 'Others' ? "Allied Care" : "General Physician"),
+                        ),
+                      ],
+                      if (item.testId != null) ...[
+                        const SizedBox(height: 6),
+                        _detailRow(Icons.biotech_outlined, "Test", item.test?['test_name'] ?? "Diagnostic Test", isHighlighted: true),
+                        if (item.test?['test_type'] != null) ...[
+                          const SizedBox(height: 6),
+                          _detailRow(Icons.category_outlined, "Type", item.test?['test_type']),
+                        ],
+                      ],
+                      const SizedBox(height: 6),
+                      _detailRow(Icons.location_on_outlined, "Location", _getClinicAddress(item)),
+                      if ((item.paymentAmount ?? '').isNotEmpty && item.paymentAmount != 'null') ...[
+                        const SizedBox(height: 6),
+                        _detailRow(
+                          Icons.payments_outlined,
+                          "Fee",
+                          "₹${item.paymentAmount}${item.paymentStatus != null ? ' (${item.paymentStatus!.toUpperCase()})' : ''}",
+                          isHighlighted: true,
+                        ),
+                      ],
+                      if ((item.userInquiry ?? '').trim().isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        _detailRow(Icons.notes_rounded, "Notes", item.userInquiry!.trim()),
+                      ],
+                    ],
+                  ),
+                ),
+
+                if (isUpcoming && isVideo) ...[
+                  const SizedBox(height: 14),
+                  item.isWindowOpen()
+                      ? SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(modalCtx);
+                              _startVideoCall(item);
+                            },
+                            icon: const Icon(Icons.videocam_rounded, size: 20),
+                            label: const Text("Join Video Consultation", style: TextStyle(fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0D9488),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          decoration: BoxDecoration(
+                            color: Colors.blueGrey.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.videocam_outlined, color: Colors.blueGrey[400], size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Video Call: ${item.getWindowStartFormatted()}",
+                                style: TextStyle(color: Colors.blueGrey[700], fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                ],
+
+                if (isUpcoming) ...[
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _modernActionButton(Icons.check_circle_outline, "Complete", Colors.green, () {
+                          Navigator.pop(modalCtx);
+                          _handleAction(item.id, 'Complete');
+                        }),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _modernActionButton(Icons.cancel_outlined, "Cancel", Colors.red, () {
+                          Navigator.pop(modalCtx);
+                          _handleAction(item.id, 'Cancel');
+                        }),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -523,6 +783,32 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _compactActionButton(IconData icon, String label, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withAlpha(15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withAlpha(35), width: 1),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 4),
+              Text(label, style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w800)),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -583,6 +869,7 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
       case 'OPD': return Icons.local_hospital_rounded;
       case 'Pathology': return Icons.biotech_rounded;
       case 'Doctor': return Icons.person_rounded;
+      case 'Others': return Icons.accessibility_new_rounded;
       default: return Icons.calendar_today_rounded;
     }
   }
@@ -593,7 +880,7 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
       name = item.opdContact?['clinic_name'];
     } else if (item.clinicType == 'Pathology') {
       name = item.pathologyContact?['clinic_name'];
-    } else if (item.clinicType == 'Doctor') {
+    } else if (item.clinicType == 'Doctor' || item.clinicType == 'Others') {
       name = item.doctorContact?['partner_doctor_name'];
     }
     
@@ -606,11 +893,111 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
       address = item.opdContact?['clinic_address'];
     } else if (item.clinicType == 'Pathology') {
       address = item.pathologyContact?['clinic_address'];
-    } else if (item.clinicType == 'Doctor') {
+    } else if (item.clinicType == 'Doctor' || item.clinicType == 'Others') {
       address = item.doctorContact?['partner_doctor_address'];
     }
 
     return address ?? "Address not provided";
+  }
+
+  int? _parseTimeToMinutes(String? timeStr) {
+    if (timeStr == null || timeStr.trim().isEmpty) return null;
+    try {
+      final raw = timeStr.trim();
+      final parts = raw.split(' ');
+      final hms = parts[0].split(':');
+      int h = int.parse(hms[0]);
+      int m = hms.length > 1 ? int.parse(hms[1]) : 0;
+      if (parts.length > 1) {
+        final period = parts[1].toUpperCase();
+        if (period == 'PM' && h < 12) h += 12;
+        if (period == 'AM' && h == 12) h = 0;
+      }
+      return h * 60 + m;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _formatShortTime(String? timeStr) {
+    if (timeStr == null || timeStr.trim().isEmpty) return '';
+    try {
+      final mins = _parseTimeToMinutes(timeStr);
+      if (mins == null) return timeStr;
+      final h24 = mins ~/ 60;
+      final m = mins % 60;
+      final period = h24 >= 12 ? 'PM' : 'AM';
+      final h12 = h24 % 12 == 0 ? 12 : h24 % 12;
+      return '$h12:${m.toString().padLeft(2, '0')} $period';
+    } catch (_) {
+      return timeStr;
+    }
+  }
+
+  String _getSlotTimingInfo(AppointmentModel item) {
+    final int? bookingMins = _parseTimeToMinutes(item.bookingTime);
+    final rawSchedule = item.doctorContact?['visit_day_time'];
+    List<dynamic> scheduleList = [];
+
+    if (rawSchedule is List) {
+      scheduleList = rawSchedule;
+    } else if (rawSchedule is String && rawSchedule.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(rawSchedule);
+        if (decoded is List) scheduleList = decoded;
+      } catch (_) {}
+    }
+
+    if (scheduleList.isNotEmpty && item.bookingDate != null) {
+      for (final entry in scheduleList) {
+        if (entry is! Map) continue;
+        final schedType = (entry['schedule_type'] ?? entry['type'] ?? '').toString().toLowerCase();
+        final entryDate = entry['date']?.toString().trim();
+        if (schedType == 'date' && entryDate == item.bookingDate!.trim()) {
+          final slots = entry['slots'];
+          if (slots is List && slots.isNotEmpty) {
+            if (bookingMins != null) {
+              for (final s in slots) {
+                if (s is! Map) continue;
+                final sStart = s['start_time']?.toString();
+                final sEnd = s['end_time']?.toString();
+                final int startMin = _parseTimeToMinutes(sStart) ?? 0;
+                final int endMin = _parseTimeToMinutes(sEnd) ?? 1439;
+                if (bookingMins >= startMin && bookingMins <= endMin) {
+                  final sId = (s['id'] ?? '').toString();
+                  final sName = (s['name'] ?? (sId.isNotEmpty ? sId[0].toUpperCase() + sId.substring(1) : 'Slot')).toString();
+                  if (sStart != null && sEnd != null) {
+                    return "$sName (${_formatShortTime(sStart)} - ${_formatShortTime(sEnd)})";
+                  }
+                  return "$sName (${_formatTime(item.bookingTime)})";
+                }
+              }
+            }
+            // Fallback: list slots on that date
+            final allLabels = slots.whereType<Map>().map((s) {
+              final sId = (s['id'] ?? '').toString();
+              final sName = (s['name'] ?? (sId.isNotEmpty ? sId[0].toUpperCase() + sId.substring(1) : 'Slot')).toString();
+              final sStart = s['start_time']?.toString();
+              final sEnd = s['end_time']?.toString();
+              if (sStart != null && sEnd != null) {
+                return "$sName (${_formatShortTime(sStart)} - ${_formatShortTime(sEnd)})";
+              }
+              return sName;
+            }).join(', ');
+            if (allLabels.isNotEmpty) return allLabels;
+          }
+        }
+      }
+    }
+
+    if (bookingMins != null) {
+      final String periodLabel = bookingMins < 12 * 60
+          ? 'Morning'
+          : (bookingMins < 17 * 60 ? 'Afternoon' : 'Evening');
+      return "$periodLabel (${_formatTime(item.bookingTime)})";
+    }
+
+    return _formatTime(item.bookingTime);
   }
 
   String _formatTime(String? timeStr) {
@@ -619,7 +1006,7 @@ class _AllAppointmentsScreenState extends State<AllAppointmentsScreen> with Sing
       final time = DateFormat("HH:mm:ss").parse(timeStr);
       return DateFormat("h:mm a").format(time);
     } catch (e) {
-      return timeStr;
+      return _formatShortTime(timeStr);
     }
   }
 }
