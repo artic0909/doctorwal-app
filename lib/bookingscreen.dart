@@ -60,6 +60,11 @@ class _BookingScreenState extends State<BookingScreen> {
   bool _isAllDaysAllowed = false;
   String _formattedScheduleText = '';
 
+  List<String> _bookedSlots = [];
+  final List<Map<String, dynamic>> _subSlots = [];
+  String? _selectedSubSlotTime;
+  bool _isLoadingSlots = false;
+
   @override
   void initState() {
     super.initState();
@@ -494,11 +499,98 @@ class _BookingScreenState extends State<BookingScreen> {
     _currentAvailableSlots = slots;
     if (slots.isNotEmpty) {
       _selectedSlotId = slots.first['id'] ?? 'slot';
-      if (slots.first['start'] != null) {
-        _timeController.text = slots.first['start'];
-      }
     } else {
       _selectedSlotId = null;
+    }
+    _fetchBookedSlotsForDate(date);
+  }
+
+  Future<void> _fetchBookedSlotsForDate(DateTime date) async {
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
+    if (mounted) setState(() => _isLoadingSlots = true);
+    try {
+      final booked = await _apiService.getBookedSlots(
+        partnerId: widget.partnerId,
+        doctorId: widget.itemId,
+        date: dateStr,
+      );
+      if (mounted) {
+        setState(() {
+          _bookedSlots = booked;
+          _isLoadingSlots = false;
+          _generateSubSlotsForActiveShift();
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _bookedSlots = [];
+          _isLoadingSlots = false;
+          _generateSubSlotsForActiveShift();
+        });
+      }
+    }
+  }
+
+  void _generateSubSlotsForActiveShift() {
+    _subSlots.clear();
+    if (_currentAvailableSlots.isEmpty) return;
+
+    final activeShift = _currentAvailableSlots.firstWhere(
+      (s) => (s['id']?.toString() ?? '') == (_selectedSlotId ?? ''),
+      orElse: () => _currentAvailableSlots.first,
+    );
+
+    final rawStart = activeShift['start'];
+    final rawEnd = activeShift['end'];
+    if (rawStart == null) return;
+
+    int startMin = _timeToMinutes(rawStart.toString());
+    int endMin = rawEnd != null ? _timeToMinutes(rawEnd.toString()) : (startMin + 60);
+    if (endMin <= startMin) endMin = startMin + 60;
+
+    int slotIndex = 1;
+    String? firstAvailableTime;
+
+    for (int m = startMin; m < endMin; m += 10) {
+      int subEndMin = (m + 10 <= endMin) ? (m + 10) : endMin;
+      int h1 = m ~/ 60;
+      int min1 = m % 60;
+      int h2 = subEndMin ~/ 60;
+      int min2 = subEndMin % 60;
+
+      String timeKey = "${h1.toString().padLeft(2, '0')}:${min1.toString().padLeft(2, '0')}";
+      String timeKeyEnd = "${h2.toString().padLeft(2, '0')}:${min2.toString().padLeft(2, '0')}";
+      String label = "Slot $slotIndex (${_formatTime12h(timeKey)} - ${_formatTime12h(timeKeyEnd)})";
+      bool isBooked = _bookedSlots.contains(timeKey);
+
+      _subSlots.add({
+        'index': slotIndex,
+        'startTime': timeKey,
+        'endTime': timeKeyEnd,
+        'label': label,
+        'isBooked': isBooked,
+      });
+
+      if (!isBooked && firstAvailableTime == null) {
+        firstAvailableTime = timeKey;
+      }
+
+      slotIndex++;
+    }
+
+    if (_subSlots.isNotEmpty) {
+      if (_selectedSubSlotTime == null || _bookedSlots.contains(_selectedSubSlotTime)) {
+        if (firstAvailableTime != null) {
+          _selectedSubSlotTime = firstAvailableTime;
+          _timeController.text = firstAvailableTime;
+        } else {
+          _selectedSubSlotTime = null;
+          _timeController.text = _subSlots.first['startTime'];
+        }
+      } else {
+        _timeController.text = _selectedSubSlotTime!;
+      }
     }
   }
 
@@ -620,6 +712,11 @@ class _BookingScreenState extends State<BookingScreen> {
       }
     }
 
+    if (_bookedSlots.contains(_timeController.text.trim())) {
+      _showErrorSnackBar("The slot at ${_timeController.text} has already been booked by another patient for this date. Please choose an available slot.");
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final prefs = await SharedPreferences.getInstance();
@@ -636,7 +733,7 @@ class _BookingScreenState extends State<BookingScreen> {
       'dw_user_id': syncedId ?? widget.userData['id'],
       'booking_date': _dateController.text,
       'booking_time': _timeController.text,
-      'booking_slot': _selectedSlotId ?? '',
+      'booking_slot': _selectedSubSlotTime != null ? "${_selectedSlotId ?? 'slot'} (${_timeController.text})" : (_selectedSlotId ?? ''),
       'visit_mode': _visitMode,
     };
 
@@ -1553,9 +1650,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 onTap: () {
                   setState(() {
                     _selectedSlotId = slotId;
-                    if (slot['start'] != null) {
-                      _timeController.text = slot['start'];
-                    }
+                    _generateSubSlotsForActiveShift();
                   });
                 },
                 borderRadius: BorderRadius.circular(12),
@@ -1618,6 +1713,173 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
             );
           }),
+          if (_subSlots.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.only(top: 10),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.timer_outlined, size: 14, color: Color(0xFF334155)),
+                          SizedBox(width: 5),
+                          Text(
+                            "CHOOSE 10-MINUTE SLOT",
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF334155),
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_isLoadingSlots)
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      else
+                        Text(
+                          "${_subSlots.where((s) => s['isBooked'] == false).length} / ${_subSlots.length} available",
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: _getBrandColor(),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _subSlots.map((sub) {
+                      final bool isBooked = sub['isBooked'] == true;
+                      final String startTime = sub['startTime'];
+                      final String endTime = sub['endTime'];
+                      final int index = sub['index'];
+                      final bool isSelected = _selectedSubSlotTime == startTime && !isBooked;
+
+                      return InkWell(
+                        onTap: isBooked
+                            ? null
+                            : () {
+                                setState(() {
+                                  _selectedSubSlotTime = startTime;
+                                  _timeController.text = startTime;
+                                });
+                              },
+                        borderRadius: BorderRadius.circular(10),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 160),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: isBooked
+                                ? const Color(0xFFF1F5F9)
+                                : isSelected
+                                    ? _getBrandColor()
+                                    : Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isBooked
+                                  ? const Color(0xFFCBD5E1)
+                                  : isSelected
+                                      ? _getBrandColor()
+                                      : const Color(0xFFE2E8F0),
+                              width: isSelected ? 1.5 : 1,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: _getBrandColor().withAlpha(60),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        "Slot $index",
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          color: isBooked
+                                              ? const Color(0xFF94A3B8)
+                                              : isSelected
+                                                  ? Colors.white
+                                                  : const Color(0xFF0F172A),
+                                          decoration: isBooked ? TextDecoration.lineThrough : null,
+                                        ),
+                                      ),
+                                      if (isBooked) ...[
+                                        const SizedBox(width: 5),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFEE2E2),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: const Text(
+                                            "Booked",
+                                            style: TextStyle(
+                                              fontSize: 8.5,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFFDC2626),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "${_formatTime12h(startTime)} - ${_formatTime12h(endTime)}",
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: isBooked
+                                          ? const Color(0xFF94A3B8)
+                                          : isSelected
+                                              ? Colors.white.withAlpha(220)
+                                              : const Color(0xFF64748B),
+                                      decoration: isBooked ? TextDecoration.lineThrough : null,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (isSelected) ...[
+                                const SizedBox(width: 6),
+                                const Icon(Icons.check_circle_rounded, size: 14, color: Colors.white),
+                              ],
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

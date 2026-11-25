@@ -454,6 +454,30 @@ class ApiService {
     }
   }
 
+  // GET ALREADY BOOKED SLOTS FOR A SPECIFIC DATE
+  Future<List<String>> getBookedSlots({
+    required String partnerId,
+    String? doctorId,
+    required String date,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/appointment-booked-slots',
+        queryParameters: {
+          'partner_id': partnerId,
+          if (doctorId != null && doctorId.isNotEmpty) 'doctor_id': doctorId,
+          'date': date,
+        },
+      );
+      if (response.statusCode == 200 && response.data is Map && response.data['booked_slots'] is List) {
+        return List<String>.from(response.data['booked_slots'].map((e) => e.toString().trim()));
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
   // --- RAZORPAY APPOINTMENT PAYMENTS (DOCTOR & OTHERS) ---
 
   Future<Map<String, dynamic>> createPaymentOrder(Map<String, dynamic> data) async {
